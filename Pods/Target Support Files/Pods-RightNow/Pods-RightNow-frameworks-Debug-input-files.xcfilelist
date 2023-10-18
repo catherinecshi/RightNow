@@ -1,0 +1,3 @@
+${PODS_ROOT}/Target Support Files/Pods-RightNow/Pods-RightNow-frameworks.sh
+${BUILT_PRODUCTS_DIR}/CameraManager/CameraManager.framework
+${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework
