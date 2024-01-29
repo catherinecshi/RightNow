@@ -1,6 +1,8 @@
 import UIKit
 
 class TimerView: UIView {
+    weak var delegate: TimerViewDelegate?
+    
     let timeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 30)
@@ -18,6 +20,16 @@ class TimerView: UIView {
         return button
     }()
     
+    //dismiss button
+    lazy var dismissButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("X", for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
+        button.setTitleColor(.white, for: .normal)
+        button.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
+        return button
+    }()
+    
     //initialisation and layout code goes below
     init() {
         super.init(frame: .zero)
@@ -32,16 +44,23 @@ class TimerView: UIView {
     private func setupSubviews() {
         addSubview(timeLabel)
         addSubview(startStopButton)
+        addSubview(dismissButton)
     }
     
     private func setupConstraints() {
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         startStopButton.translatesAutoresizingMaskIntoConstraints = false
+        dismissButton.translatesAutoresizingMaskIntoConstraints = false
         
         startStopButton.widthAnchor.constraint(equalToConstant: 150).isActive = true
         startStopButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
         
         NSLayoutConstraint.activate([
+            dismissButton.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor, constant: 10),
+            dismissButton.leadingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.leadingAnchor, constant: 10),
+            dismissButton.widthAnchor.constraint(equalToConstant: 40),
+            dismissButton.heightAnchor.constraint(equalToConstant: 40),
+            
             timeLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             timeLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             
@@ -49,5 +68,9 @@ class TimerView: UIView {
             startStopButton.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: 20)
         ])
 
+    }
+    
+    @objc func dismissSelf() {
+        delegate?.timerViewDidDismiss(self)
     }
 }

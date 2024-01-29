@@ -19,7 +19,7 @@ class AuthService: AuthAPI {
                         promise(.success(nil))
                         return
                     }
-                    guard let id = firebaseUser?.user.providerID,
+                    guard let id = firebaseUser?.user.uid,
                         let email = firebaseUser?.user.email else {
                             promise(.success(nil))
                             return
@@ -35,7 +35,7 @@ class AuthService: AuthAPI {
     func login(email: String, password: String) -> Future<User?, Never> {
         return Future<User?, Never> { promise in
             Auth.auth().signIn(withEmail: email, password: password) {(authResult, _) in
-                guard let id = authResult?.user.providerID,
+                guard let id = authResult?.user.uid,
                     let email = authResult?.user.email else {
                         promise(.success(nil))
                         return
@@ -49,7 +49,7 @@ class AuthService: AuthAPI {
     func signUp(email: String, password: String) -> Future<User?, Never> {
         return Future<User?, Never> { promise in
             Auth.auth().createUser(withEmail: email, password: password) { (authResult, _) in
-                guard let id = authResult?.user.providerID,
+                guard let id = authResult?.user.uid,
                     let email = authResult?.user.email else {
                         promise(.success(nil))
                         return

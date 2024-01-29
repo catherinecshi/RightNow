@@ -7,6 +7,8 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
     private var cameraModel = CameraModel()
     private var cameraView = CameraView()
     
+    var habit: Habit?
+    
     // MARK: Lifecycle Methods
     
     override func viewDidLoad() {
@@ -123,12 +125,18 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
         //additional error handling?
     }
     
+    // MARK: Delegate Methods
+    
     func cameraViewDidTapCapture(_ view: CameraView) {
         cameraModel.capturePhoto()
     }
     
     func cameraViewDidTapSwitchCamera(_ view: CameraView) {
         cameraModel.switchCamera()
+    }
+    
+    func cameraViewDidDismiss(_ view: CameraView) {
+        self.dismiss(animated: true, completion: nil)
     }
 }
 

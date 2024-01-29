@@ -43,7 +43,7 @@ class SplashViewController: UIViewController {
 
     
     func setupViews() {
-        view.backgroundColor = UIConfiguration.tintColor // Assuming you have a UIConfiguration object that has a tintColor
+        view.backgroundColor = UIConfiguration.tintColor
         
         view.addSubview(logoImageView)
         
@@ -69,7 +69,8 @@ class SplashViewController: UIViewController {
     func transitionToMainApp() {
         // Assuming that you've refactored the logic that sets up the main interface into a function called `setupMainTabBarController()` in SceneDelegate.
         if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-            sceneDelegate.setupMainTabBarController()
+            let habitVC = HabitListViewController()
+            navigationController?.pushViewController(habitVC, animated: true)
         }
     }
     

@@ -1,4 +1,5 @@
 import UIKit
+import UserNotifications
 import Firebase
 import FirebaseCore
 import FirebaseFirestoreSwift
@@ -6,26 +7,16 @@ import FirebaseFirestoreSwift
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
-    //launch options
-    var launchedFromNotification = false
-    
+    //called when app has finished launch process
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         //firebase
         FirebaseApp.configure()
-
-        //let db = Firestore.firestore()
         
         // enable offline functioning bc firebase
         Database.database().isPersistenceEnabled = true
         
-        //check if the app was opened from a notification
-        if let notification = launchOptions?[.remoteNotification] as? [String: AnyObject] {
-            launchedFromNotification = true
-            print("LaunchOption = notification")
-        }
-        
-        registerNotificationCategories()
-        UNUserNotificationCenter.current().delegate = self
+        //registerNotificationCategories()
+        //UNUserNotificationCenter.current().delegate = self
         
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(
@@ -51,10 +42,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        /*
         if let eventIdentifier = userInfo["eventIdentifier"] as? String {
             return
             //store this for later use in the future
         }
+         */
         
         print("Notification received with userInfo: \(userInfo)")
         
@@ -64,10 +57,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     //for notification tokens
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        //this is for storing specific tokens for specific users, incase i would want to send notifications to specific users
+        //not permanent
         let deviceToken: String = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         print("Device token is: \(deviceToken)")
     }
-    
+    /*
     func registerNotificationCategories() {
         let goToTimer = UNNotificationAction(identifier: "goToTimer", title: "Clock In", options: [.foreground])
         let goToCamera = UNNotificationAction(identifier: "goToCamera", title: "Record Task", options: [.foreground])
@@ -76,8 +71,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
+     */
 }
 
+/*
 extension AppDelegate: UNUserNotificationCenterDelegate{
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         
@@ -108,4 +105,4 @@ extension AppDelegate: UNUserNotificationCenterDelegate{
       completionHandler()
     }
 }
-
+*/

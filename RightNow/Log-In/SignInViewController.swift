@@ -114,7 +114,8 @@ class SignInViewController: UIViewController {
                 if let status = status, status.title == "Successful" {
                     // This means the login was successful
                     if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-                        sceneDelegate.setupMainTabBarController()
+                        let habitVC = HabitListViewController()
+                        self?.navigationController?.pushViewController(habitVC, animated: true)
                     }
                 } else {
                     let alert = UIAlertController(title: status?.title, message: status?.message, preferredStyle: .alert)

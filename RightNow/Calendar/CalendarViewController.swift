@@ -16,7 +16,7 @@ class CalendarViewController: DayViewController, EKEventEditViewDelegate {
         calendar.timeZone = TimeZone.current
         
         requestAccessToCalendar()
-        requestAccessToNotifications()
+        //requestAccessToNotifications()
         
         //now it will notify the function whenever the app loads
         subscribeToNotifications()
@@ -88,18 +88,6 @@ class CalendarViewController: DayViewController, EKEventEditViewDelegate {
     func requestAccessToCalendar() {
         eventStore.requestAccess(to: .event) { success, error in
             
-        }
-    }
-    
-    //access has been granted on 19/9/2023
-    func requestAccessToNotifications() {
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
-            if granted {
-                //permission granted
-            } else {
-                print("RightNow cannot set up alarms without notifications.")
-            }
         }
     }
     

@@ -30,11 +30,21 @@ class CameraView: UIView {
     //switch camera
     lazy var switchCameraButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("", for: .normal)
+        button.setTitle("Switch", for: .normal)
         button.setImage(UIImage(systemName: "arrow.triangle.2.circlepath.camera"), for: .normal)
         button.backgroundColor = UIColor.white
         button.layer.cornerRadius = 5
         button.addTarget(self, action: #selector(switchCameraButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
+    //dismiss button
+    lazy var dismissButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("X", for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
+        button.setTitleColor(.white, for: .normal)
+        button.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
         return button
     }()
     
@@ -43,6 +53,7 @@ class CameraView: UIView {
         super.init(frame: frame)
         
         //setup subviews
+        setupDismissButton()
         setupCaptureButton()
         setupSwitchCameraButton()
         setupPreviewImageView()
@@ -82,7 +93,7 @@ class CameraView: UIView {
         
         NSLayoutConstraint.activate([
             //sets height
-            previewImageView.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor, constant: 5),
+            previewImageView.topAnchor.constraint(equalTo: dismissButton.bottomAnchor, constant: 10),
             previewImageView.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor, constant: -120),
             
             //align imageview horizontally to center of main view
@@ -138,12 +149,30 @@ class CameraView: UIView {
         ])
     }
     
-    //MARK: delegate methods
+    //setting up dismissal button
+    func setupDismissButton() {
+        addSubview(dismissButton)
+        
+        dismissButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            dismissButton.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor, constant: 10),
+            dismissButton.leadingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.leadingAnchor, constant: 10),
+            dismissButton.widthAnchor.constraint(equalToConstant: 40),
+            dismissButton.heightAnchor.constraint(equalToConstant: 40)
+        ])
+    }
+    
+    //MARK: Delegate Methods
     @objc private func captureButtonTapped() {
         delegate?.cameraViewDidTapCapture(self)
     }
     
     @objc private func switchCameraButtonTapped() {
         delegate?.cameraViewDidTapSwitchCamera(self)
+    }
+    
+    @objc func dismissSelf() {
+        delegate?.cameraViewDidDismiss(self)
     }
 }

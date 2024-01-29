@@ -9,5 +9,7 @@ target 'RightNow' do
 
 	pod 'CameraManager', '~> 5.1'
 	pod 'SDWebImage', :modular_headers => true
-
+    	pod 'RxSwift', '6.6.0'
+    	pod 'RxCocoa', '6.6.0'
+	pod 'RxDataSources', '~> 5.0'
 end

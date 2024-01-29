@@ -1,4 +1,5 @@
 import UIKit
+import FirebaseAuth
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
 
@@ -10,80 +11,106 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
+        window?.backgroundColor = .white
         
-        //checks for the launch option
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate, appDelegate.launchedFromNotification {
-            //go into the notificiation view
-            
-            let clockVC = TimerController()
-            let navigationController = UINavigationController(rootViewController: clockVC)
-            window?.rootViewController = clockVC
+        //notifications
+        UNUserNotificationCenter.current().delegate = self
+
+        //check if timer was running
+        if UserDefaults.standard.bool(forKey: "timerIsRunning") {
+            let habitListVC = HabitListViewController()
+            let navigationController = UINavigationController(rootViewController: habitListVC)
+            window?.rootViewController = navigationController
             window?.makeKeyAndVisible()
+            
+            let elapsedTime = UserDefaults.standard.object(forKey: "timerElapsedTime") as! TimeInterval
+            presentTimerViewController(withElapsedTime: elapsedTime)
         } else {
-            //goes into the splash view
-            //should fix this at some point so it always start from splash
             let splashVC = SplashViewController(state: AppState())
             let navigationController = UINavigationController(rootViewController: splashVC)
             window?.rootViewController = navigationController
             window?.makeKeyAndVisible()
         }
         
-        //set up notification
-        //UNUserNotificationCenter.current().delegate = self
-        
-    }
-    
-    func setupMainTabBarController() -> UITabBarController {
-        //create instances of view controller for each tab
-        let calendarVC = CalendarViewController()
-        calendarVC.tabBarItem = UITabBarItem(title: "Calendar", image: UIImage(systemName: "calendar"), selectedImage: nil)
-        calendarVC.title = "RightNow"
-        
-        let navigationControllerForCalendar = UINavigationController(rootViewController: calendarVC)
-        //navigationControllerForCalendar.tabBarItem = UITabBarItem(title:"Calendar", image: UIImage(systemName: "calendar"), selectedImage: nil)
-        
-        //create instance of camera view controller
-        let cameraVC = CameraController()
-        cameraVC.tabBarItem = UITabBarItem(title: "Camera", image: UIImage(systemName: "camera"), selectedImage: nil)
-        cameraVC.title = "RightNow"
-        let navigationControllerForCamera = UINavigationController(rootViewController: cameraVC)
-        
-        //create instance of clock in & out view controller
-        let clockInOutVC = TimerController()
-        clockInOutVC.tabBarItem = UITabBarItem(title: "Timer", image: UIImage(systemName: "clock"), selectedImage: nil)
-        clockInOutVC.title = "RightNow"
-        let navigationControllerForTimer = UINavigationController(rootViewController: clockInOutVC)
-        
-        //make more view controllers here
-        //to do list stuff
-        //instructions in chatgpt "startup view verifica"
-        
-        //tab bar controller
-        let tabBarController = UITabBarController()
-        tabBarController.tabBar.barTintColor = .white
-        tabBarController.viewControllers = [navigationControllerForCalendar, navigationControllerForCamera, navigationControllerForTimer]
-        navigationControllerForCalendar.tabBarItem.title = "Calendar"
-        navigationControllerForCamera.tabBarItem.title = "Camera"
-        navigationControllerForTimer.tabBarItem.title = "Timer"
-        
-        //window
-        window?.backgroundColor = .white
-        window?.rootViewController = tabBarController
-        window?.makeKeyAndVisible()
-        
-        return tabBarController
     }
     
     //handle notification response
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         
-        // gives the payload of data associated with notif
-        if let tabIndex = response.notification.request.content.userInfo["tabIndex"] as? Int, let tabBarController = window?.rootViewController as? UITabBarController {
-            
-            tabBarController.selectedIndex = tabIndex
+        print("Received notification content: \(response.notification.request.content.userInfo)")
+        
+        /*
+        if Auth.auth().currentUser != nil {
+            //shows habitlistvc if the user is signed in
+            if let navigationController = window?.rootViewController as? UINavigationController {
+                let habitVC = HabitListViewController()
+                navigationController.pushViewController(habitVC, animated: true)
+            }
+        } else {
+            //user is not signed in
+            print("User is not signed in")
+        }
+         */
+        
+        //get the navigation controller from the window's root
+        guard let navigationController = window?.rootViewController as? UINavigationController else {
+            completionHandler()
+            return
         }
         
-        completionHandler()
+        //checks if the habitlistvc is already in the navigation stack
+        if navigationController.viewControllers.contains(where: { $0 is HabitListViewController }) == false {
+            let habitVC = HabitListViewController()
+            navigationController.pushViewController(habitVC, animated: true)
+        }
+        
+        // checks if root is UINavController
+        if let navigationController = window?.rootViewController as? UINavigationController {
+            //initialise habitVC and pushes it
+            let habitVC = HabitListViewController()
+            navigationController.pushViewController(habitVC, animated: true)
+        }
+        
+        //handling notification when app is in foreground
+        
+        
+        // MARK: Handling Action Taps
+        let habitListViewModel = HabitListViewModel()
+        
+        //setting rootviewcontroller (habits)
+        //right now it's assuming root is habitlistvc
+        guard let rootViewController = window?.rootViewController as? HabitListViewController else {
+            completionHandler()
+            return
+        }
+        
+        if let habitID = response.notification.request.content.userInfo["habitID"] as? String {
+            habitListViewModel.fetchHabitFromFirestore(habitID: habitID) { habit in
+                guard let habit = habit else {
+                    completionHandler()
+                    return
+                }
+                
+                //add if more in the future
+                switch response.actionIdentifier {
+                case "Record_Action":
+                    let recordVC = CameraController()
+                    recordVC.habit = habit
+                    recordVC.modalPresentationStyle = .fullScreen
+                    rootViewController.present(recordVC, animated: true, completion: nil)
+                case "Track_Action":
+                    let trackVC = TimerController()
+                    trackVC.habit = habit
+                    trackVC.modalPresentationStyle = .fullScreen
+                    rootViewController.present(trackVC, animated: true, completion: nil)
+                default:
+                    break
+                }
+            }
+        } else {
+            print("Habit was not fetched correctly")
+            completionHandler()
+        }
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -113,25 +140,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-
-    func navigateToViewController<T: UIViewController>(ofType type: T.Type) {
-        print("in navigateToViewController() (scenedelegate)")
-        if let tabBarController = window?.rootViewController as? UITabBarController, let viewControllers = tabBarController.viewControllers {
-            print("root view is UITabBarController and has view controllers (navigateToViewController)")
-            for (index, navigationController) in viewControllers.enumerated() {
-                if let nc = navigationController as? UINavigationController {
-                    if let firstChild = nc.children.first {
-                        print("First child type: \(String(describing: nc.children.first.self))")
-                        print("Target type: \(String(describing: type.self))")
-                        print("Navigation stack: \(nc.viewControllers)")
-                        if firstChild is T {
-                            tabBarController.selectedIndex = index
-                            print("in inner if statement")
-                            break
-                        }
-                    }
-                }
-            }
+    
+    // MARK: My own methods
+    
+    private func presentTimerViewController(withElapsedTime elapsedTime: TimeInterval) {
+        //instantiate timer view controller
+        let timerVC = TimerController()
+        
+        // present timer vc
+        timerVC.modalPresentationStyle = .popover
+        if let popOverController = timerVC.popoverPresentationController {
+            popOverController.permittedArrowDirections = []
+            popOverController.sourceView = self.window?.rootViewController?.view //anchor to root view
+            popOverController.sourceRect = CGRect(x: self.window!.bounds.midX, y: self.window!.bounds.midY, width: 0, height: 0)
+            popOverController.canOverlapSourceViewRect = true
         }
+        
+        //present timer vc
+        self.window?.rootViewController?.present(timerVC, animated: true, completion: {
+            timerVC.showTimeAlert(elapsedTime: elapsedTime)
+        })
     }
 }
