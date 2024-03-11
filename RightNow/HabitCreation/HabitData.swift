@@ -5,4 +5,7 @@ struct HabitData {
     var hour: Int?
     var minute: Int?
     var selectedDays: [String: Bool]?
+    var currentLevel: String?
+    var currentLength: Int?
+    var goalLength: Int?
 }

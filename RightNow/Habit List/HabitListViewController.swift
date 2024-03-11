@@ -134,9 +134,10 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     @objc func addHabitTapped() {
         let creationVC = HabitCreationViewController()
+        let navController = UINavigationController(rootViewController: creationVC)
         //creationVC.viewModel = self.viewModel //passes on the view model from this vc to the creation vc
-        creationVC.modalPresentationStyle = .pageSheet
-        present(creationVC, animated: true, completion: nil)
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true, completion: nil)
     }
     
     // MARK: Notification Methods

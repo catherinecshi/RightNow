@@ -1,29 +1,27 @@
 import Foundation
 import UIKit
 
-class HabitSetTime: UIView {
+protocol HabitSetTimeViewDelegate: AnyObject {
+    func hourSelected(_ hour: Int)
+    func minuteSelected(_ minute: Int)
+    func daySelected(_ days: [String: Bool])
+}
+
+class HabitSetTimeView: UIView {
     //MARK: Initialisation
+    weak var delegate: HabitSetTimeViewDelegate?
     
-    var habitData = HabitData()
     let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     var selectedDays = [String: Bool]()
     
     //initiate labels
-    let viewTitle: UILabel = {
-        let label = UILabel()
-        label.text = ""
-        label.font = UIConfiguration.titleFont
-        label.textColor = .white
-        label.textAlignment = .center
-        return label
-    }()
     
     let whatLabel: UILabel = {
         let label = UILabel()
         label.text = "What Time do You Want to do this Habit?"
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
-        label.textAlignment = .center
+        //label.textAlignment = .center
         return label
     }()
     
@@ -51,74 +49,48 @@ class HabitSetTime: UIView {
         return stackView
     }()
     
-    private let nextButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Next", for: .normal)
-        button.isEnabled = false //button is disabled until a habit is selected
-        return button
-    }()
-    
     //MARK: Initiation
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
-        view.backgroundColor = UIConfiguration.tintColor
+        self.backgroundColor = UIConfiguration.tintColor
         
         //initialise selecteDays with all set to false
         daysOfWeek.forEach { selectedDays[$0] = false}
         
-        setupTitle()
         setupWhatSubtitle()
         setupTimePicker()
         setupDaysSubtitle()
         setupDaysStackView()
-        setupNextButton()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.layoutIfNeeded()
+        print("Height of timePicker: \(timePicker.frame.size.height)")
+    }
     
     //MARK: Setup
     
-    private func setupTitle() {
-        view.addSubview(viewTitle)
-        viewTitle.translatesAutoresizingMaskIntoConstraints = false
-        
-        viewTitle.text = habitData.habitName
-        
-        //make sure it can go to multiple lines if squished
-        viewTitle.numberOfLines = 0 //allows line breaks
-        viewTitle.lineBreakMode = .byWordWrapping //breaks lines by words, not characters
-        
-        NSLayoutConstraint.activate([
-            viewTitle.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            viewTitle.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            viewTitle.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            viewTitle.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
-        ])
-    }
-    
     private func setupWhatSubtitle() {
-        view.addSubview(whatLabel)
+        self.addSubview(whatLabel)
         whatLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            whatLabel.topAnchor.constraint(equalTo: viewTitle.bottomAnchor, constant: 40),
-            whatLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20)
+            whatLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 20),
+            whatLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            whatLabel.heightAnchor.constraint(equalToConstant: 22)
         ])
     }
     
     func setupTimePicker() {
         timePicker.delegate = self
         timePicker.dataSource = self
-        view.addSubview(timePicker)
-        
-        //make picker bigger
-        let scale: CGFloat = 1.5
-        timePicker.transform = CGAffineTransform(scaleX: scale, y: scale)
+        self.addSubview(timePicker)
         
         //change text to white
         timePicker.setValue(UIColor.white, forKey: "textColor")
@@ -127,8 +99,9 @@ class HabitSetTime: UIView {
         timePicker.sizeToFit()
         
         NSLayoutConstraint.activate([
-            timePicker.topAnchor.constraint(equalTo: whatLabel.bottomAnchor, constant: 20),
-            timePicker.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            timePicker.topAnchor.constraint(equalTo: whatLabel.bottomAnchor),
+            timePicker.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            timePicker.heightAnchor.constraint(equalToConstant: 216)
         ])
         
         //start timepicker in the middle
@@ -140,17 +113,18 @@ class HabitSetTime: UIView {
     }
     
     private func setupDaysSubtitle() {
-        view.addSubview(daysLabel)
+        self.addSubview(daysLabel)
         daysLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            daysLabel.topAnchor.constraint(equalTo: timePicker.bottomAnchor, constant: 60),
-            daysLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20)
+            daysLabel.topAnchor.constraint(equalTo: timePicker.bottomAnchor, constant: 20),
+            daysLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            daysLabel.heightAnchor.constraint(equalToConstant: 22)
         ])
     }
     
     private func setupDaysStackView() {
-        view.addSubview(daysStackView)
+        self.addSubview(daysStackView)
         
         for day in daysOfWeek {
             let button = UIButton()
@@ -164,35 +138,12 @@ class HabitSetTime: UIView {
         }
         
         NSLayoutConstraint.activate([
-            daysStackView.topAnchor.constraint(equalTo: daysLabel.bottomAnchor, constant: 10),
-            daysStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            daysStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            daysStackView.heightAnchor.constraint(equalToConstant: 40)
+            daysStackView.topAnchor.constraint(equalTo: daysLabel.bottomAnchor, constant: 20),
+            daysStackView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            daysStackView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
+            daysStackView.heightAnchor.constraint(equalToConstant: 40),
+            daysStackView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
         ])
-    }
-    
-    private func setupNextButton() {
-        //add to view
-        view.addSubview(nextButton)
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            nextButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            nextButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            nextButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -30),
-            nextButton.heightAnchor.constraint(equalToConstant: 100),
-        ])
-        
-        //appearance
-        nextButton.backgroundColor = .white
-        nextButton.setTitleColor(UIConfiguration.tintColor, for: .normal)
-        nextButton.setTitleColor(UIColor.gray, for: .disabled)
-        nextButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 32)
-        nextButton.layer.cornerRadius = 20
-        nextButton.clipsToBounds = true
-        
-        //add action
-        nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
     //MARK: OBJC Methods
@@ -202,37 +153,19 @@ class HabitSetTime: UIView {
         sender.backgroundColor = sender.isSelected ? .white : .lightGray
         selectedDays[sender.titleLabel?.text ?? ""] = sender.isSelected
         
-        //update next button
-        daysSelected()
-    }
-    
-    @objc private func nextButtonTapped() {
-        //save habit name
-        habitData.selectedDays = selectedDays
-        
-        //create and push the next view controller
-        //let setTimeViewController = HabitSetTime()
-        //setTimeViewController.habitData = habitData
-        //navigationController?.pushViewController(setTimeViewController, animated: true)
-    }
-    
-    @objc private func daysSelected() {
-        //check if any days are selected
-        let isAnyDaySelected = selectedDays.contains { $0.value == true }
-        
-        //enable if so
-        nextButton.isEnabled = isAnyDaySelected
+        //update main vc
+        delegate?.daySelected(selectedDays)
     }
 }
 
 //for making my own timepicker
 //arrays
 let hours = Array(1...12)
-let minutes = Array(1...59)
+let minutes = Array(0...59)
 let amPm = ["AM", "PM"]
 
 //data source
-extension HabitSetTime: UIPickerViewDataSource {
+extension HabitSetTimeView: UIPickerViewDataSource {
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return 3
     }
@@ -250,7 +183,7 @@ extension HabitSetTime: UIPickerViewDataSource {
 }
 
 //delegate to handle display and selection
-extension HabitSetTime: UIPickerViewDelegate {
+extension HabitSetTimeView: UIPickerViewDelegate {
     func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
         var title = ""
         
@@ -277,7 +210,7 @@ extension HabitSetTime: UIPickerViewDelegate {
         let selectedMinute = minutes[pickerView.selectedRow(inComponent: 1) % minutes.count]
         
         //update habitdata
-        habitData.hour = selectedHour
-        habitData.minute = selectedMinute
+        delegate?.hourSelected(selectedHour)
+        delegate?.minuteSelected(selectedMinute)
     }
 }
