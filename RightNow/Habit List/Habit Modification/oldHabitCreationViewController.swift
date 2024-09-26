@@ -197,7 +197,9 @@ class oldHabitCreationViewController: UIViewController {
     
     // MARK: Button Methods
     
+    
     @objc func saveButtonTapped() {
+        /*
         //check that things are entered
         guard let name = nameTextField.text, !name.isEmpty,
               let description = descriptionTextField.text, !description.isEmpty else {
@@ -231,9 +233,11 @@ class oldHabitCreationViewController: UIViewController {
             requestAccessToNotifications()
             scheduleNotification(for: newHabit)
         }
+         */
         
         dismiss(animated: true, completion: nil)
     }
+    
     
     @objc func cancelButtonTapped() {
         dismiss(animated: true, completion: nil)

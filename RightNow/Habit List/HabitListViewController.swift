@@ -35,6 +35,8 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         setupAddButton()
         setupSwipes()
         habitsPresent()
+        
+        self.definesPresentationContext = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -135,7 +137,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     @objc func addHabitTapped() {
         let creationVC = HabitCreationViewController()
         let navController = UINavigationController(rootViewController: creationVC)
-        //creationVC.viewModel = self.viewModel //passes on the view model from this vc to the creation vc
+        creationVC.viewModel = self.viewModel //passes on the view model from this vc to the creation vc
         navController.modalPresentationStyle = .pageSheet
         present(navController, animated: true, completion: nil)
     }

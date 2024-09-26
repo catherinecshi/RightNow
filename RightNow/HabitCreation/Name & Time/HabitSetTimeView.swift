@@ -14,7 +14,7 @@ class HabitSetTimeView: UIView {
     let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     var selectedDays = [String: Bool]()
     
-    //initiate labels
+    //initialize labels
     
     let whatLabel: UILabel = {
         let label = UILabel()
@@ -49,7 +49,7 @@ class HabitSetTimeView: UIView {
         return stackView
     }()
     
-    //MARK: Initiation
+    //MARK: Initialization
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -104,12 +104,8 @@ class HabitSetTimeView: UIView {
             timePicker.heightAnchor.constraint(equalToConstant: 216)
         ])
         
-        //start timepicker in the middle
-        let middleHourRow = (10000 / 2) - ((10000 / 2) % hours.count)
-        let middleMinuteRow = (10000 / 2) - ((10000 / 2) % minutes.count)
-        
-        timePicker.selectRow(middleHourRow, inComponent: 0, animated: false)
-        timePicker.selectRow(middleMinuteRow, inComponent: 1, animated: false)
+        //start timepicker at 7am
+        timePicker.selectRow(6, inComponent: 0, animated: false)
     }
     
     private func setupDaysSubtitle() {

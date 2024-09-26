@@ -1,11 +1,21 @@
 import Foundation
 
 struct HabitData {
-    var habitName: String?
+    // basic required info
+    var name: String?
     var hour: Int?
     var minute: Int?
     var selectedDays: [String: Bool]?
+    
+    //  progression
     var currentLevel: String?
     var currentLength: Int?
     var goalLength: Int?
+    
+    // accountability
+    var accountabilityMetric: String?
+    var location: Location?
+    
+    // incentive
+    var incentive: String?
 }

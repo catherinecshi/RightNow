@@ -5,7 +5,7 @@ import FirebaseCore
 import FirebaseFirestoreSwift
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
     //called when app has finished launch process
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -15,8 +15,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // enable offline functioning bc firebase
         Database.database().isPersistenceEnabled = true
         
+        // initialise singleton LocationManager
+        let _ = LocationManager.shared
+        
         //registerNotificationCategories()
-        //UNUserNotificationCenter.current().delegate = self
+        UNUserNotificationCenter.current().delegate = self
         
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(
@@ -62,6 +65,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let deviceToken: String = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         print("Device token is: \(deviceToken)")
     }
+    
+    // MARK: Notification Methods
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // show notification even when app is in foreground
+        completionHandler([.banner, .list, .sound])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        print("User tapped the notification with info: \(userInfo)")
+        
+        // reinitialise LocationManager
+        let _ = LocationManager.shared
+        
+        completionHandler()
+    }
+    
     /*
     func registerNotificationCategories() {
         let goToTimer = UNNotificationAction(identifier: "goToTimer", title: "Clock In", options: [.foreground])
@@ -73,36 +93,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
      */
 }
-
-/*
-extension AppDelegate: UNUserNotificationCenterDelegate{
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        
-        let categoryIdentifier = response.notification.request.content.categoryIdentifier
-        
-        print("received notification with category identifier: \(categoryIdentifier)")
-        
-        if categoryIdentifier == "eventNotification" {
-            print("Category identifier matches!")
-        } else {
-            print("Category identifier does not match!")
-        }
-        
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, let sceneDelegate = windowScene.delegate as? SceneDelegate {
-            switch response.actionIdentifier {
-            case "goToTimer":
-                sceneDelegate.navigateToViewController(ofType: TimerController.self)
-                print("Attempting to navigate to ClockInOutVC")
-            case "goToCamera":
-                sceneDelegate.navigateToViewController(ofType: CameraController.self)
-                print("Attempting to navigate to TakePhotoVC")
-            default:
-                print("in default case")
-                break
-            }
-        }
-
-      completionHandler()
-    }
-}
-*/

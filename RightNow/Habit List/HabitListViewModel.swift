@@ -19,23 +19,29 @@ class HabitListViewModel {
     // MARK: Storage
     
     func addHabit(_ habit: Habit) {
+        print("adding habit")
         habits.append(habit)
         saveHabitsFirestore()
     }
     
     func saveHabitsFirestore() {
+        print("saving habits to firestore")
         if let userId = Auth.auth().currentUser?.uid {
+            print("User is logged in with ID: \(userId)")
             for habit in habits {
                 let habitData = try! JSONEncoder().encode(habit)
                 let habitDict = try! JSONSerialization.jsonObject(with: habitData, options: []) as! [String: Any]
                 
                 db.collection("habits").document(userId).collection("userHabits").document(habit.id.uuidString).setData(habitDict)
             }
+        } else {
+            print("User is not logged in")
         }
     }
     
     //this is for fetching all habits
     func loadHabitsFirestore() {
+        print("loading all habits from firestore")
         if let userId = Auth.auth().currentUser?.uid {
             db.collection("habits").document(userId).collection("userHabits").getDocuments { (querySnapshot, err) in
                 if let err = err {
@@ -99,6 +105,11 @@ class HabitListViewModel {
             return
         }
         
+        // stop geofence tracking if there is a location
+        if let location = habit.location {
+            LocationManager.shared.stopMonitoringGeofence(for: location)
+        }
+        
         //use habit's UUID as the document ID
         let habitId = habit.id.uuidString
         
@@ -107,7 +118,7 @@ class HabitListViewModel {
             habits.remove(at: indexInHabits)
         }
         
-        //delete
+        //delete from firestore
         db.collection("habits").document(userId).collection("userHabits").document(habitId).delete() { err in
             if let err = err {
                 print("Error removing document: \(err)")
@@ -153,7 +164,7 @@ class HabitListViewModel {
     
     func dayOfWeek(from date: Date) -> String {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "EEEE"
+        dateFormatter.dateFormat = "EEE"
         let dayName = dateFormatter.string(from: date)
         return dayName
     }
@@ -165,5 +176,12 @@ class HabitListViewModel {
         let sortedHabits = filteredHabits.sorted { $0.time < $1.time }
         
         return sortedHabits
+    }
+    
+    // MARK: Checking stuff is ok
+    func checkGeofenceLocations() {
+        for habit in habits {
+            
+        }
     }
 }

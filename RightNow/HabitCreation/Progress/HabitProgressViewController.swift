@@ -49,9 +49,9 @@ class HabitProgressViewController: UIViewController {
         setupNextButton()
         setupScroll()
         
-        currentLevelView.updateTitleText(with: habitData.habitName ?? "do your habit")
-        goalLevelView.updateTitleText(with: habitData.habitName ?? "your habit")
-        goalLevelView.updateSelectedDaysLabel(with: habitData.selectedDays!, with: habitData.habitName ?? "your habit")
+        currentLevelView.updateTitleText(with: habitData.name ?? "do your habit")
+        goalLevelView.updateTitleText(with: habitData.name ?? "your habit")
+        goalLevelView.updateSelectedDaysLabel(with: habitData.selectedDays!, with: habitData.name ?? "your habit")
     }
     
     // MARK: Initialisation

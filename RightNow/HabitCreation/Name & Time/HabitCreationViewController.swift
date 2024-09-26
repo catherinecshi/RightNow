@@ -5,6 +5,7 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
     // MARK: Declaration
     let habitSelectionView = HabitSelectionView()
     let setTimeView = HabitSetTimeView()
+    var viewModel: HabitListViewModel?
     
     // might be artifacts of trying to fix the problem with equalorlessthan - don't delete tho
     private var nextButtonBottomConstraint: NSLayoutConstraint!
@@ -38,7 +39,6 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
         button.setTitle("x", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
         button.setTitleColor(.white, for: .normal)
-        button.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
         return button
     }()
     
@@ -112,6 +112,9 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
         
         let dismissBarButton = UIBarButtonItem(customView: dismissButton)
         self.navigationItem.leftBarButtonItem = dismissBarButton
+        
+        // add action
+        dismissButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
     }
     
     private func setupScroll() {
@@ -189,7 +192,7 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
     //activate the next button if appropriate
     private func updateNextButtonState() {
         //check if habit & day have been selected
-        let isHabitSelected = !(habitData.habitName?.isEmpty ?? true)
+        let isHabitSelected = !(habitData.name?.isEmpty ?? true)
         let isDaySelected = habitData.selectedDays?.contains(where: { $0.value }) ?? false
         
         nextButton.isEnabled = isHabitSelected && isDaySelected
@@ -198,7 +201,7 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
-        let progressVC = HabitProgressViewController()
+        let accountabilityVC = HabitAccountabilityViewController()
         
         // back button
         let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
@@ -206,8 +209,9 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
         self.navigationController?.navigationBar.tintColor = .white
         
         // send info forward
-        progressVC.habitData = habitData
-        navigationController?.pushViewController(progressVC, animated: true)
+        accountabilityVC.viewModel = viewModel
+        accountabilityVC.habitData = habitData
+        navigationController?.pushViewController(accountabilityVC, animated: true)
     }
     
     @objc func backButtonTapped() {
@@ -215,6 +219,7 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc private func dismissSelf() {
+        print("trying to dismiss")
         self.dismiss(animated: true, completion: nil)
     }
     
@@ -224,7 +229,7 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
 
 extension HabitCreationViewController: HabitSelectionDelegate {
     func habitSelected(_ habit: String) {
-        habitData.habitName = habit
+        habitData.name = habit
         setTimeView.isHidden = false
         updateNextButtonState()
     }
