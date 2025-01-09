@@ -5,9 +5,11 @@ import FirebaseCore
 import FirebaseFirestoreSwift
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    var window: UIWindow?
+    private let appDelegate = AppDelegateFactory.fetchDelegates
     
-    //called when app has finished launch process
+    //called when app is opened from a state of not running at all
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         //firebase
         FirebaseApp.configure()
@@ -18,19 +20,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // initialise singleton LocationManager
         let _ = LocationManager.shared
         
-        //registerNotificationCategories()
-        UNUserNotificationCenter.current().delegate = self
+        // forward call to composite delegate
+        _ = appDelegate.application?(application, didFinishLaunchingWithOptions: launchOptions) ?? false
         
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(
-            options: authOptions,
-            completionHandler: {_, _ in})
-        application.registerForRemoteNotifications()
+        // set push notifications delegate as notifications delegate
+        UNUserNotificationCenter.current().delegate = PushNotificationDelegate.shared
         
         return true
     }
-
-    // MARK: UISceneSession Lifecycle
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         // Called when a new scene session is being created.
@@ -53,6 +50,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
          */
         
         print("Notification received with userInfo: \(userInfo)")
+
         
         //call completion handler
         completionHandler(.newData)
@@ -61,35 +59,49 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     //for notification tokens
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         //this is for storing specific tokens for specific users, incase i would want to send notifications to specific users
-        //not permanent
-        let deviceToken: String = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-        print("Device token is: \(deviceToken)")
+        
+        appDelegate.application?(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
     }
     
-    // MARK: Notification Methods
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        // show notification even when app is in foreground
-        completionHandler([.banner, .list, .sound])
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        //handle error
+        appDelegate.application?(application, didFailToRegisterForRemoteNotificationsWithError: error)
+    }
+}
+
+// MARK: - Application Lifecycle Methods
+extension AppDelegate {
+    func applicationWillResignActive(_ application: UIApplication) {
+        appDelegate.applicationWillResignActive?(application)
     }
     
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        let userInfo = response.notification.request.content.userInfo
-        print("User tapped the notification with info: \(userInfo)")
-        
-        // reinitialise LocationManager
-        let _ = LocationManager.shared
-        
-        completionHandler()
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        appDelegate.applicationDidEnterBackground?(application)
     }
     
-    /*
-    func registerNotificationCategories() {
-        let goToTimer = UNNotificationAction(identifier: "goToTimer", title: "Clock In", options: [.foreground])
-        let goToCamera = UNNotificationAction(identifier: "goToCamera", title: "Record Task", options: [.foreground])
-        
-        let category = UNNotificationCategory(identifier: "eventNotification", actions: [goToTimer, goToCamera], intentIdentifiers: [], options: [])
-        
-        UNUserNotificationCenter.current().setNotificationCategories([category])
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        appDelegate.applicationWillEnterForeground?(application)
     }
-     */
+    
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        appDelegate.applicationDidBecomeActive?(application)
+    }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        appDelegate.applicationWillTerminate?(application)
+    }
+}
+
+// MARK: - Background fetch delegate
+extension AppDelegate {
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        appDelegate.application?(app, open: url, options: options) ?? false
+    }
+}
+
+extension AppDelegate {
+    func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        //fetch data in background
+        appDelegate.application?(application, performFetchWithCompletionHandler: completionHandler)
+    }
 }

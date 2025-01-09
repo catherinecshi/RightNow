@@ -1,24 +1,22 @@
 import Foundation
 import UIKit
 
-protocol HabitAccountabilityDelegate: AnyObject {
-    func metricSelected(_ metric: String)
+protocol AccountabilityDelegate: AnyObject {
+    func metricSelected(_ metric: AccountabilityMetric)
 }
 
-class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
+class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     // MARK: Declaration
-    weak var delegate: HabitAccountabilityDelegate?
+    weak var delegate: AccountabilityDelegate?
     var habitData = HabitData()
-    var viewModel: HabitListViewModel?
     
     // accountability metric variables
     var metricButtons: [UIButton] = []
-    let metricTextField = UITextField()
-    let predefinedMetrics = ["Location Tracking", "Lock Phone Away", "Accountabuddy", "Take a Photo"]
-    let metricCount = 4
+    let predefinedMetrics: [AccountabilityMetric] = [.screenTime, .locationTracking, .photoEvidence]
+    let metricCount = 3
     
     //initiate labels
-    let viewTitle: UILabel = {
+let viewTitle: UILabel = {
         let label = UILabel()
         label.text = "Create Habit"
         label.font = UIConfiguration.titleFont
@@ -33,15 +31,6 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
         //label.textAlignment = .center
-        return label
-    }()
-    
-    let suggestionsLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Suggestions:"
-        label.font = UIConfiguration.subtitleFont
-        label.textColor = .white
-        label.textAlignment = .center
         return label
     }()
     
@@ -79,8 +68,6 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
         
         setupTitle()
         setupWhatSubtitle()
-        setupMetricTextField()
-        setupSuggestionSubtitle()
         setupNextButton()
         setupMetricButtons()
     }
@@ -110,45 +97,13 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
         ])
     }
     
-    private func setupMetricTextField() {
-        metricTextField.placeholder = "Accountability Metric"
-        metricTextField.borderStyle = .roundedRect
-        metricTextField.delegate = self
-        metricTextField.clearButtonMode = .whileEditing //clear button
-        
-        //add to view
-        view.addSubview(metricTextField)
-        metricTextField.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            metricTextField.topAnchor.constraint(equalTo: whatLabel.bottomAnchor, constant: 20),
-            metricTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            metricTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            metricTextField.heightAnchor.constraint(equalToConstant: 40)
-        ])
-        
-        //target to capture text changes
-        metricTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-    }
-    
-    private func setupSuggestionSubtitle() {
-        view.addSubview(suggestionsLabel)
-        suggestionsLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            suggestionsLabel.topAnchor.constraint(equalTo: metricTextField.bottomAnchor, constant: 40),
-            suggestionsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            suggestionsLabel.heightAnchor.constraint(equalToConstant: 22)
-        ])
-    }
-    
     private func setupMetricButtons() {
         view.addSubview(metricScrollView)
         metricScrollView.addSubview(metricStackView)
         metricStackView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            metricScrollView.topAnchor.constraint(equalTo: suggestionsLabel.bottomAnchor, constant: 20),
+            metricScrollView.topAnchor.constraint(equalTo: whatLabel.bottomAnchor, constant: 20),
             metricScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             metricScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             metricScrollView.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: 20),
@@ -162,7 +117,7 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
         
         for metric in predefinedMetrics {
             let button = UIButton(type: .system)
-            button.setTitle(metric, for: .normal)
+            button.setTitle(metric.displayName, for: .normal)
             button.setTitleColor(.white, for: .normal)
             button.backgroundColor = .white
             button.layer.cornerRadius = 10
@@ -171,7 +126,7 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
             button.layer.borderColor = UIConfiguration.tintColor?.cgColor
             
             //set up image
-            let icon = iconForMetric(name: metric) //method
+            let icon = iconForMetric(name: metric.displayName) //method
             button.setImage(icon, for: .normal)
             button.imageView?.contentMode = .scaleAspectFit
             button.tintColor = UIConfiguration.tintColor //if images are template images
@@ -186,6 +141,7 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
             
             //apply configuration
             button.configuration = configuration
+            button.tag = predefinedMetrics.firstIndex(of: metric) ?? 0
             
             button.addTarget(self, action: #selector(metricButtonTapped), for: .touchUpInside)
             metricStackView.addArrangedSubview(button)
@@ -220,45 +176,24 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
     // MARK: Detect Actions
     
     private func updateNextButtonState() {
-        //check if habit & day have been selected
-        let accountabilityMetricSelected = !(habitData.accountabilityMetric?.isEmpty ?? true)
-        
-        nextButton.isEnabled = accountabilityMetricSelected
-    }
-    
-    @objc private func textFieldDidChange(_ textField: UITextField) {
-        if let text = textField.text, !text.isEmpty {
-            filterMetrics(with: text)
-            delegate?.metricSelected(text) // send to habitData in main VC
-            
-            //updateContentView()
-        } else {
-            //text field is empty, disable next button
-            metricButtons.forEach { $0.isHidden = false }
-            //updateContentView()
-        }
+        nextButton.isEnabled = true
     }
     
     @objc private func metricButtonTapped(_ sender: UIButton) {
-        guard let accMetric = sender.titleLabel?.text else { return }
-        
-        metricTextField.text = accMetric
-        filterMetrics(with: accMetric)
-        delegate?.metricSelected(accMetric) // send to habitData in main VC
+        let selectedMetric = predefinedMetrics[sender.tag]
+        delegate?.metricSelected(selectedMetric)
     }
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
         var nextVC: UIViewController
         
-        if habitData.accountabilityMetric == "Location Tracking" {
+        if habitData.accountabilityMetric == .locationTracking {
             let locationVC = LocationAccountabilityViewController()
-            locationVC.viewModel = viewModel
             locationVC.habitData = habitData
             nextVC = locationVC
         } else {
-            let defaultVC = HabitIncentivesViewController()
-            defaultVC.viewModel = viewModel
+            let defaultVC = IncentivesViewController()
             defaultVC.habitData = habitData
             nextVC = defaultVC
         }
@@ -271,29 +206,19 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
         navigationController?.pushViewController(nextVC, animated: true)
     }
     
-    @objc func backButtonTapped() {
+    @objc private func backButtonTapped() {
         self.navigationController?.popViewController(animated: true)
     }
     
     
     // MARK: Auxillary Methods
     
-    private func filterMetrics(with text: String) {
-        let lowercasedText = text.lowercased()
-        for button in metricButtons {
-            let shouldShow = button.titleLabel?.text?.lowercased().contains(lowercasedText) ?? false
-            button.isHidden = !shouldShow
-        }
-    }
-    
     private func iconForMetric(name: String) -> UIImage? {
         switch name {
-        case "Location Tracking":
+        case "Track your Location":
             return UIImage(systemName: "location")
-        case "Lock Phone Away":
+        case "Track your Screen Time Usage":
             return UIImage(systemName: "iphone.gen1.slash")
-        case "Accountabuddy":
-            return UIImage(systemName: "figure.2.arms.open")
         case "Take a Photo":
             return UIImage(systemName: "photo.badge.checkmark")
         default:
@@ -302,8 +227,8 @@ class HabitAccountabilityViewController: UIViewController, UITextFieldDelegate {
     }
 }
 
-extension HabitAccountabilityViewController: HabitAccountabilityDelegate {
-    func metricSelected(_ metric: String) {
+extension AccountabilityViewController: AccountabilityDelegate {
+    func metricSelected(_ metric: AccountabilityMetric) {
         habitData.accountabilityMetric = metric
         updateNextButtonState()
     }

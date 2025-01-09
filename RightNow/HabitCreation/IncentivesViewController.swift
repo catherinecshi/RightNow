@@ -1,21 +1,19 @@
 import Foundation
 import UIKit
 
-protocol HabitIncentivesDelegate: AnyObject {
-    func incentiveSelected(_ incentive: String)
+protocol IncentivesDelegate: AnyObject {
+    func incentiveSelected(_ incentive: Incentive)
 }
 
-class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
+class IncentivesViewController: UIViewController, UITextFieldDelegate {
     // MARK: Declaration
-    weak var delegate: HabitIncentivesDelegate?
+    weak var delegate: IncentivesDelegate?
     var habitData = HabitData()
-    var viewModel: HabitListViewModel?
     
     // accountability metric variables
     var punishmentButtons: [UIButton] = []
-    let punishmentTextField = UITextField()
-    let predefinedPunishments = ["None", "Lock Phone Away", "Lose Money", "Make Your Own"]
-    let punishmentCount = 4
+    let predefinedPunishments: [Incentive] = [.none, .money, .blockApps]
+    let punishmentCount = 3
     
     //initiate labels
     let viewTitle: UILabel = {
@@ -33,15 +31,6 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
         //label.textAlignment = .center
-        return label
-    }()
-    
-    let suggestionsLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Suggestions:"
-        label.font = UIConfiguration.subtitleFont
-        label.textColor = .white
-        label.textAlignment = .center
         return label
     }()
     
@@ -79,8 +68,6 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
         
         setupTitle()
         setupWhatSubtitle()
-        setupPunishmentTextField()
-        setupSuggestionSubtitle()
         setupNextButton()
         setupPunishmentButtons()
     }
@@ -110,45 +97,13 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
         ])
     }
     
-    private func setupPunishmentTextField() {
-        punishmentTextField.placeholder = "Punishment"
-        punishmentTextField.borderStyle = .roundedRect
-        punishmentTextField.delegate = self
-        punishmentTextField.clearButtonMode = .whileEditing //clear button
-        
-        //add to view
-        view.addSubview(punishmentTextField)
-        punishmentTextField.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            punishmentTextField.topAnchor.constraint(equalTo: whatLabel.bottomAnchor, constant: 20),
-            punishmentTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            punishmentTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            punishmentTextField.heightAnchor.constraint(equalToConstant: 40)
-        ])
-        
-        //target to capture text changes
-        punishmentTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-    }
-    
-    private func setupSuggestionSubtitle() {
-        view.addSubview(suggestionsLabel)
-        suggestionsLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            suggestionsLabel.topAnchor.constraint(equalTo: punishmentTextField.bottomAnchor, constant: 40),
-            suggestionsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            suggestionsLabel.heightAnchor.constraint(equalToConstant: 22)
-        ])
-    }
-    
     private func setupPunishmentButtons() {
         view.addSubview(punishmentScrollView)
         punishmentScrollView.addSubview(punishmentStackView)
         punishmentStackView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            punishmentScrollView.topAnchor.constraint(equalTo: suggestionsLabel.bottomAnchor, constant: 20),
+            punishmentScrollView.topAnchor.constraint(equalTo: whatLabel.bottomAnchor, constant: 20),
             punishmentScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             punishmentScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             punishmentScrollView.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: 20),
@@ -162,7 +117,7 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
         
         for punishment in predefinedPunishments {
             let button = UIButton(type: .system)
-            button.setTitle(punishment, for: .normal)
+            button.setTitle(punishment.displayName, for: .normal)
             button.setTitleColor(.white, for: .normal)
             button.backgroundColor = .white
             button.layer.cornerRadius = 10
@@ -171,7 +126,7 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
             button.layer.borderColor = UIConfiguration.tintColor?.cgColor
             
             //set up image
-            let icon = iconForPunishment(name: punishment) //method
+            let icon = iconForPunishment(name: punishment.displayName) //method
             button.setImage(icon, for: .normal)
             button.imageView?.contentMode = .scaleAspectFit
             button.tintColor = UIConfiguration.tintColor //if images are template images
@@ -186,6 +141,7 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
             
             //apply configuration
             button.configuration = configuration
+            button.tag = predefinedPunishments.firstIndex(of: punishment) ?? 0
             
             button.addTarget(self, action: #selector(punishmentButtonTapped), for: .touchUpInside)
             punishmentStackView.addArrangedSubview(button)
@@ -220,40 +176,23 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
     // MARK: Detect Actions
     
     private func updateNextButtonState() {
-        //check if habit & day have been selected
-        let accountabilityMetricSelected = !(habitData.accountabilityMetric?.isEmpty ?? true)
-        
-        nextButton.isEnabled = accountabilityMetricSelected
-    }
-    
-    @objc private func textFieldDidChange(_ textField: UITextField) {
-        if let text = textField.text, !text.isEmpty {
-            filterIncentives(with: text)
-            delegate?.incentiveSelected(text) // send to habitData in main VC
-        } else {
-            //text field is empty, disable next button
-            punishmentButtons.forEach { $0.isHidden = false }
-        }
+        nextButton.isEnabled = true
     }
     
     @objc private func punishmentButtonTapped(_ sender: UIButton) {
-        guard let incentive = sender.titleLabel?.text else { return }
-        
-        punishmentTextField.text = incentive
-        filterIncentives(with: incentive)
-        delegate?.incentiveSelected(incentive) // send to habitData in main VC
+        let selectedIncentive = predefinedPunishments[sender.tag]
+        delegate?.incentiveSelected(selectedIncentive) // send to habitData in main VC
     }
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
-        let murphyVC = HabitMurphyjitsuViewController()
+        let murphyVC = MurphyjitsuViewController()
         
         // back button
         let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
         navigationItem.backBarButtonItem = backButton
         self.navigationController?.navigationBar.tintColor = .white
         
-        murphyVC.viewModel = viewModel
         murphyVC.habitData = habitData
         navigationController?.pushViewController(murphyVC, animated: true)
     }
@@ -265,21 +204,13 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
     
     // MARK: Auxillary Methods
     
-    private func filterIncentives(with text: String) {
-        let lowercasedText = text.lowercased()
-        for button in punishmentButtons {
-            let shouldShow = button.titleLabel?.text?.lowercased().contains(lowercasedText) ?? false
-            button.isHidden = !shouldShow
-        }
-    }
-    
     private func iconForPunishment(name: String) -> UIImage? {
         switch name {
         case "None":
             return UIImage(systemName: "xmark.circle")
-        case "Lock Phone Away":
+        case "Block Apps":
             return UIImage(systemName: "iphone.gen1.slash")
-        case "Lose Money":
+        case "Stake Money":
             return UIImage(systemName: "dollarsign.arrow.circlepath")
         case "Make Your Own":
             return UIImage(systemName: "person.3.fill")
@@ -289,8 +220,8 @@ class HabitIncentivesViewController: UIViewController, UITextFieldDelegate {
     }
 }
 
-extension HabitIncentivesViewController: HabitIncentivesDelegate {
-    func incentiveSelected(_ incentive: String) {
+extension IncentivesViewController: IncentivesDelegate {
+    func incentiveSelected(_ incentive: Incentive) {
         habitData.incentive = incentive
         updateNextButtonState()
     }

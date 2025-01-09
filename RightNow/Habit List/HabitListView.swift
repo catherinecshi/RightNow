@@ -11,7 +11,6 @@ class HabitListView: UIView {
         //setup subviews
         setupTitle()
         setupTableView()
-        setupConstraints()
     }
     
     required init?(coder: NSCoder) {
@@ -49,11 +48,9 @@ class HabitListView: UIView {
         tableView.register(HabitTableViewCell.self, forCellReuseIdentifier: "HabitCell")
         
         addSubview(tableView)
-    }
-    
-    private func setupConstraints() {
+        
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
             tableView.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.trailingAnchor)

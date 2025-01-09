@@ -1,10 +1,9 @@
 import UIKit
 import FirebaseAuth
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
@@ -13,10 +12,28 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         window = UIWindow(windowScene: windowScene)
         window?.backgroundColor = .white
         
-        //notifications
-        UNUserNotificationCenter.current().delegate = self
-
+        if #available(iOS 13.0, *) { // force light mode for UI
+            window?.overrideUserInterfaceStyle = .light
+        }
+        
+        // if from notification, send information to PushNotificationDelegate
+        PushNotificationDelegate.shared.window = window
+        
+        if Auth.auth().currentUser != nil {
+            // show habitlistvc if the user is signed in
+            let habitVC = HabitListViewController()
+            window?.rootViewController = UINavigationController(rootViewController: habitVC)
+            window?.makeKeyAndVisible()
+        } else {
+            // user is not signed in
+            print("User is not signed in")
+            let welcomeVC = WelcomeViewController(state: AppState.shared)
+            window?.rootViewController = UINavigationController(rootViewController: welcomeVC)
+            window?.makeKeyAndVisible()
+        }
+        
         //check if timer was running
+        /*
         if UserDefaults.standard.bool(forKey: "timerIsRunning") {
             let habitListVC = HabitListViewController()
             let navigationController = UINavigationController(rootViewController: habitListVC)
@@ -31,86 +48,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             window?.rootViewController = navigationController
             window?.makeKeyAndVisible()
         }
-        
-    }
-    
-    //handle notification response
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        
-        print("Received notification content: \(response.notification.request.content.userInfo)")
-        
-        /*
-        if Auth.auth().currentUser != nil {
-            //shows habitlistvc if the user is signed in
-            if let navigationController = window?.rootViewController as? UINavigationController {
-                let habitVC = HabitListViewController()
-                navigationController.pushViewController(habitVC, animated: true)
-            }
-        } else {
-            //user is not signed in
-            print("User is not signed in")
-        }
          */
         
-        //get the navigation controller from the window's root
-        guard let navigationController = window?.rootViewController as? UINavigationController else {
-            completionHandler()
-            return
-        }
-        
-        //checks if the habitlistvc is already in the navigation stack
-        if navigationController.viewControllers.contains(where: { $0 is HabitListViewController }) == false {
-            let habitVC = HabitListViewController()
-            navigationController.pushViewController(habitVC, animated: true)
-        }
-        
-        // checks if root is UINavController
-        if let navigationController = window?.rootViewController as? UINavigationController {
-            //initialise habitVC and pushes it
-            let habitVC = HabitListViewController()
-            navigationController.pushViewController(habitVC, animated: true)
-        }
-        
-        //handling notification when app is in foreground
-        
-        
-        // MARK: Handling Action Taps
-        let habitListViewModel = HabitListViewModel()
-        
-        //setting rootviewcontroller (habits)
-        //right now it's assuming root is habitlistvc
-        guard let rootViewController = window?.rootViewController as? HabitListViewController else {
-            completionHandler()
-            return
-        }
-        
-        if let habitID = response.notification.request.content.userInfo["habitID"] as? String {
-            habitListViewModel.fetchHabitFromFirestore(habitID: habitID) { habit in
-                guard let habit = habit else {
-                    completionHandler()
-                    return
-                }
-                
-                //add if more in the future
-                switch response.actionIdentifier {
-                case "Record_Action":
-                    let recordVC = CameraController()
-                    recordVC.habit = habit
-                    recordVC.modalPresentationStyle = .fullScreen
-                    rootViewController.present(recordVC, animated: true, completion: nil)
-                case "Track_Action":
-                    let trackVC = TimerController()
-                    trackVC.habit = habit
-                    trackVC.modalPresentationStyle = .fullScreen
-                    rootViewController.present(trackVC, animated: true, completion: nil)
-                default:
-                    break
-                }
-            }
-        } else {
-            print("Habit was not fetched correctly")
-            completionHandler()
-        }
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -141,9 +80,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         // to restore the scene back to its current state.
     }
     
-    // MARK: My own methods
-    
-    private func presentTimerViewController(withElapsedTime elapsedTime: TimeInterval) {
+    /*
+    func presentTimerViewController(withElapsedTime elapsedTime: TimeInterval) {
         //instantiate timer view controller
         let timerVC = TimerController()
         
@@ -161,4 +99,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             timerVC.showTimeAlert(elapsedTime: elapsedTime)
         })
     }
+     */
 }
+        

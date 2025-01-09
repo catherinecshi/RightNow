@@ -13,9 +13,9 @@ struct HabitData {
     var goalLength: Int?
     
     // accountability
-    var accountabilityMetric: String?
+    var accountabilityMetric: AccountabilityMetric?
     var location: Location?
     
     // incentive
-    var incentive: String?
+    var incentive: Incentive?
 }

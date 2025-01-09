@@ -4,7 +4,17 @@ class TimerController: UIViewController, TimerModelDelegate, TimerViewDelegate {
     private var timerModel = TimerModel()
     private var timerView = TimerView()
     
-    var habit: Habit?
+    var habit: Habit!
+    
+    init(habit: Habit) {
+        self.habit = habit
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    // Required initializer when subclassing UIViewController
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()

@@ -2,129 +2,213 @@ import UIKit
 
 class HabitEditingViewController: UIViewController {
     
-    // communicate with model
-    var viewModel: HabitListViewModel?
-    
-    //habits
-    var habit: Habit?
+    let viewModel = HabitListViewModel.shared
+    let oldHabit: Habit // the habit being modified
+    var tempHabit = HabitData()
     
     // MARK: UI Components Declaration
     
-    // habit name
-    lazy var nameLabel: UILabel = {
-        return createLabel(withText: "Habit: ")
+    let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    
+    //initialize labels
+    
+    let viewTitle: UILabel = {
+        let label = UILabel()
+        label.font = UIConfiguration.titleFont
+        label.textColor = .white
+        label.textAlignment = .center
+        return label
     }()
     
-    lazy var nameTextField: UITextField = {
-        return createTextField()
-    }()
-    
-    // description
-    lazy var descriptionLabel: UILabel = {
-        return createLabel(withText: "Description: ")
-    }()
-    
-    lazy var descriptionTextField: UITextField = {
-        return createTextField()
+    let whatLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Time"
+        label.font = UIConfiguration.subtitleFont
+        label.textColor = .white
+        return label
     }()
     
     let timePicker: UIDatePicker = {
         let picker = UIDatePicker()
         picker.datePickerMode = .time
         picker.translatesAutoresizingMaskIntoConstraints = false
+        picker.tintColor = .white
+        picker.overrideUserInterfaceStyle = .dark
+        picker.setValue(UIColor.white, forKeyPath: "textColor")
+        picker.setValue(false, forKeyPath: "highlightsToday")
         return picker
     }()
     
-    // toggle for notifications or not
+    let daysStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.distribution = .fillEqually
+        stackView.spacing = 5
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        return stackView
+    }()
+    
     lazy var notificationLabel: UILabel = {
-        return createLabel(withText: "Enable Notifications")
+        let label = UILabel()
+        label.text = "Enable Notifications"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .white
+        return label
     }()
     
     lazy var notificationSwitch: UISwitch = {
-        return createSwitch()
+        let turnOnOff = UISwitch()
+        turnOnOff.isOn = true
+        turnOnOff.translatesAutoresizingMaskIntoConstraints = false
+        return turnOnOff
     }()
     
-    //setting up for the days of the week the habit is active for
-    let daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    var dayLabels: [UILabel] = []
-    var daySwitches: [UISwitch] = []
+    let accountabilityLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Accountability Metric"
+        label.textColor = .white
+        return label
+    }()
     
-    //buttons
-    let saveButton: UIButton = {
+    let accountabilityMetric: UISegmentedControl = {
+        let segmentedControl = UISegmentedControl(items: ["Location Tracking", "Lock Phone Away", "Take a Photo"])
+        segmentedControl.backgroundColor = .lightGray
+        segmentedControl.selectedSegmentTintColor = .white
+
+        // Set white text for all segments
+        let normalAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIConfiguration.tintColor,
+            .font: UIFont.systemFont(ofSize: 16)
+        ]
+        segmentedControl.setTitleTextAttributes(normalAttributes, for: .normal)
+        segmentedControl.setTitleTextAttributes(normalAttributes, for: .selected)
+        
+        segmentedControl.addTarget(self, action: #selector(segmentChanged(_:)), for: .valueChanged)
+        
+        return segmentedControl
+    }()
+    
+    //button to go to the next step
+    private let saveButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Save", for: .normal)
-        //don't change the self to vc.self -> crashes the app
-        button.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
-    let cancelButton: UIButton = {
+    //button to x out
+    private let dismissButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Cancel", for: .normal)
-        button.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("x", for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
+        button.setTitleColor(.white, for: .normal)
         return button
     }()
     
     // MARK: Lifecycle Methods
     
+    init(habit: Habit) {
+        self.oldHabit = habit
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = UIConfiguration.tintColor
         
-        setupHabitInfoUI()
-        setupTimePickerUI()
+        // pre select stuff based on what's true of old habit
+        tempHabit.selectedDays = oldHabit.daysOfTheWeek
+        selectSegment(withText: oldHabit.accountabilityMetric.displayName)
+        
+        setupTitle()
+        setupWhatLabel()
+        setupTimePicker()
+        setupDaysStackView()
+        setupAccountability()
         setupNotificationToggle()
-        setupButtonsUI() //this also sets up the days of the week UI
-        
-        if let habit = habit {
-            nameTextField.text = habit.name
-            descriptionTextField.text = habit.description
-            timePicker.date = habit.time
-            
-            if habit.notificationEnabled {
-                notificationSwitch.isOn = habit.notificationEnabled
-            }
-            
-            for (index, day) in daysOfWeek.enumerated() {
-                daySwitches[index].isOn = habit.daysOfTheWeek[day] ?? false
-            }
-        }
+        setupNextButton()
+        setupDismissButton()
     }
     
     // MARK: Setup
     
-    func setupHabitInfoUI() {
-        view.addSubview(nameLabel)
-        view.addSubview(nameTextField)
-        view.addSubview(descriptionLabel)
-        view.addSubview(descriptionTextField)
+    private func setupTitle() {
+        view.addSubview(viewTitle)
+        viewTitle.translatesAutoresizingMaskIntoConstraints = false
+        viewTitle.text = oldHabit.name
+        
+        //make sure it can go to multiple lines if squished
+        viewTitle.numberOfLines = 0 //allows line breaks
+        viewTitle.lineBreakMode = .byWordWrapping //breaks lines by words, not characters
+        
+        self.navigationItem.titleView = viewTitle
+    }
+    
+    private func setupWhatLabel() {
+        view.addSubview(whatLabel)
+        whatLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            nameLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            nameLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            
-            nameTextField.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
-            nameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            nameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            descriptionLabel.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 20),
-            descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            
-            descriptionTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 10),
-            descriptionTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            descriptionTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            whatLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            whatLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            whatLabel.heightAnchor.constraint(equalToConstant: 22)
         ])
     }
     
-    func setupTimePickerUI() {
+    private func setupTimePicker() {
         view.addSubview(timePicker)
         
+        timePicker.date = oldHabit.time
+        
         NSLayoutConstraint.activate([
-            timePicker.topAnchor.constraint(equalTo: descriptionTextField.bottomAnchor, constant: 20),
-            timePicker.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            timePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            timePicker.centerYAnchor.constraint(equalTo: whatLabel.centerYAnchor),
+            timePicker.leadingAnchor.constraint(equalTo: whatLabel.trailingAnchor, constant: 20)
+        ])
+    }
+    
+    private func setupDaysStackView() {
+        view.addSubview(daysStackView)
+        
+        for day in daysOfWeek {
+            let button = UIButton()
+            button.setTitle(day, for: .normal)
+            button.setTitleColor(UIConfiguration.tintColor, for: .normal)
+            button.setTitleColor(UIConfiguration.tintColor, for: .selected)
+            
+            let isSelected = oldHabit.daysOfTheWeek[day] ?? false
+            button.isSelected = isSelected
+            button.backgroundColor = isSelected ? .white : .lightGray
+            
+            button.layer.cornerRadius = 5
+            button.addTarget(self, action: #selector(dayButtonTapped), for: .touchUpInside)
+            daysStackView.addArrangedSubview(button)
+        }
+        
+        NSLayoutConstraint.activate([
+            daysStackView.topAnchor.constraint(equalTo: timePicker.bottomAnchor, constant: 20),
+            daysStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            daysStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            daysStackView.heightAnchor.constraint(equalToConstant: 40)
+        ])
+    }
+    
+    private func setupAccountability() {
+        view.addSubview(accountabilityLabel)
+        view.addSubview(accountabilityMetric)
+        accountabilityLabel.translatesAutoresizingMaskIntoConstraints = false
+        accountabilityMetric.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            accountabilityLabel.topAnchor.constraint(equalTo: daysStackView.bottomAnchor, constant: 40),
+            accountabilityLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            
+            accountabilityMetric.topAnchor.constraint(equalTo: accountabilityLabel.bottomAnchor, constant: 20),
+            accountabilityMetric.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            accountabilityMetric.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            accountabilityMetric.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
     
@@ -133,7 +217,7 @@ class HabitEditingViewController: UIViewController {
         view.addSubview(notificationSwitch)
         
         NSLayoutConstraint.activate([
-            notificationLabel.topAnchor.constraint(equalTo: timePicker.bottomAnchor, constant: 20),
+            notificationLabel.topAnchor.constraint(equalTo: accountabilityMetric.bottomAnchor, constant: 40),
             notificationLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             
             notificationSwitch.centerYAnchor.constraint(equalTo: notificationLabel.centerYAnchor),
@@ -141,126 +225,103 @@ class HabitEditingViewController: UIViewController {
         ])
     }
     
-    @discardableResult
-    func setupDaysUI() -> UISwitch? {
-        var lastSwitch: UISwitch? = nil
-        
-        for day in daysOfWeek {
-            let label = createLabel(withText: day)
-            let switchControl = createSwitch()
-            
-            dayLabels.append(label)
-            daySwitches.append(switchControl)
-            
-            view.addSubview(label)
-            view.addSubview(switchControl)
-            
-            NSLayoutConstraint.activate([
-                label.topAnchor.constraint(equalTo: lastSwitch?.bottomAnchor ?? notificationLabel.bottomAnchor, constant: 20),
-                label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                
-                switchControl.centerYAnchor.constraint(equalTo: label.centerYAnchor),
-                switchControl.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 10),
-            ])
-            
-            lastSwitch = switchControl
-        }
-        
-        return lastSwitch
-    }
-    
-    func setupButtonsUI() {
+    private func setupNextButton() {
+        //add to view
         view.addSubview(saveButton)
-        view.addSubview(cancelButton)
-        
-        let buttonSpacing: CGFloat = 100
-        
-        //to get bottomanchor for buttons
-        let lastSwitch = setupDaysUI()
+        saveButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            saveButton.topAnchor.constraint(equalTo: lastSwitch?.bottomAnchor ?? notificationLabel.bottomAnchor, constant: 20),
-            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: buttonSpacing/2),
-            
-            cancelButton.topAnchor.constraint(equalTo: lastSwitch?.bottomAnchor ?? notificationLabel.bottomAnchor, constant: 20),
-            cancelButton.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: -buttonSpacing/2)
+            saveButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            saveButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            saveButton.heightAnchor.constraint(equalToConstant: 100),
+            saveButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -30)
         ])
+        
+        //appearance
+        saveButton.backgroundColor = .white
+        saveButton.setTitleColor(UIConfiguration.tintColor, for: .normal)
+        saveButton.setTitleColor(UIColor.gray, for: .disabled)
+        saveButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 32)
+        saveButton.layer.cornerRadius = 20
+        saveButton.clipsToBounds = true
+        
+        //add action
+        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
     
-    //for repetitive initialisations
-    func createLabel(withText text: String) -> UILabel {
-        let label = UILabel()
-        label.text = text
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }
-    
-    func createTextField() -> UITextField {
-        let textField = UITextField()
-        textField.borderStyle = .roundedRect
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        return textField
-    }
-    
-    func createSwitch() -> UISwitch {
-        let turnOnOff = UISwitch()
-        turnOnOff.translatesAutoresizingMaskIntoConstraints = false
-        return turnOnOff
+    private func setupDismissButton() {
+        dismissButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        let dismissBarButton = UIBarButtonItem(customView: dismissButton)
+        self.navigationItem.leftBarButtonItem = dismissBarButton
+        
+        // add action
+        dismissButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
     }
     
     // MARK: Button Methods
     
-    @objc func saveButtonTapped() {
-        //check that things are entered
-        guard let name = nameTextField.text, !name.isEmpty,
-              let description = descriptionTextField.text, !description.isEmpty else {
-            let alert = UIAlertController(title: "Error", message: "Please fill in all the fields", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            present(alert, animated: true, completion: nil)
-            return
-        }
-        
-        //days of the week
-        var selectedDays: [String: Bool] = [:]
-        
-        for (index, day) in daysOfWeek.enumerated() {
-            selectedDays[day] = daySwitches[index].isOn
-        }
-        
-        //extract time
-        let selectedTime = timePicker.date
-        
-        //update habits
-        habit?.name = name
-        habit?.description = description
-        habit?.time = selectedTime
-        habit?.daysOfTheWeek = selectedDays
-        habit?.notificationEnabled = notificationSwitch.isOn
-        
-        if let updatedHabit = habit {
-            //handle notifications
-            cancelNotifications(for: updatedHabit)
-            
-            //enable notifications if user indicates the desire
-            if updatedHabit.notificationEnabled {
-                scheduleNotification(for: updatedHabit)
+    @objc private func dayButtonTapped(_ sender: UIButton) {
+        sender.isSelected = !sender.isSelected
+        sender.backgroundColor = sender.isSelected ? .white : .lightGray
+        tempHabit.selectedDays![sender.titleLabel?.text ?? ""] = sender.isSelected
+    }
+    
+    @objc private func segmentChanged(_ sender: UISegmentedControl) {
+        print("Selected segment: \(sender.selectedSegmentIndex)")
+    }
+    
+    private func selectSegment(withText text: String) {
+        // Loop through the segments to find the one with the matching title
+        for index in 0..<accountabilityMetric.numberOfSegments {
+            if accountabilityMetric.titleForSegment(at: index) == text {
+                accountabilityMetric.selectedSegmentIndex = index
+                return
             }
-            
-            viewModel?.updateHabit(updatedHabit)
+        }
+
+        // If the text is not found, handle appropriately (e.g., default to no selection)
+        print("Segment with text '\(text)' not found.")
+        accountabilityMetric.selectedSegmentIndex = UISegmentedControl.noSegment
+    }
+    
+    @objc private func saveButtonTapped() {
+        // make new habit instance
+        let newHabit = Habit(
+            id: oldHabit.id,
+            name: oldHabit.name,
+            description: oldHabit.description,
+            time: timePicker.date,
+            daysOfTheWeek: tempHabit.selectedDays ?? oldHabit.daysOfTheWeek,
+            accountabilityMetric: tempHabit.accountabilityMetric ?? oldHabit.accountabilityMetric,
+            incentive: tempHabit.incentive ?? oldHabit.incentive,
+            notificationEnabled: oldHabit.notificationEnabled,
+            totalDone: oldHabit.totalDone,
+            totalFailed: oldHabit.totalFailed,
+            streaks: oldHabit.streaks
+        )
+        
+        //handle notifications
+        cancelNotifications(for: oldHabit)
+        
+        //enable notifications if user indicates the desire
+        if newHabit.notificationEnabled {
+            scheduleNotification(for: newHabit)
         }
         
-        print(habit ?? "habit not available during update")
+        // update local and firestore databases with new habit
+        viewModel.updateHabit(newHabit)
         
         dismiss(animated: true, completion: nil)
     }
     
-    @objc func cancelButtonTapped() {
+    @objc private func dismissSelf() {
         dismiss(animated: true, completion: nil)
     }
     
     // MARK: Notifications
     
-    func scheduleNotification(for habit: Habit) {
+    private func scheduleNotification(for habit: Habit) {
         let center = UNUserNotificationCenter.current()
         
         for (day, isActive) in habit.daysOfTheWeek {
@@ -298,7 +359,7 @@ class HabitEditingViewController: UIViewController {
         }
     }
     
-    func cancelNotifications(for habit: Habit) {
+    private func cancelNotifications(for habit: Habit) {
         let center = UNUserNotificationCenter.current()
         
         for day in habit.daysOfTheWeek.keys {

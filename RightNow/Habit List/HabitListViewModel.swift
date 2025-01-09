@@ -3,6 +3,8 @@ import FirebaseAuth
 import FirebaseFirestore
 
 class HabitListViewModel {
+    static let shared = HabitListViewModel()
+    
     var habits: [Habit] = []
     var currentDay: Date = Date() //default to current day
     let db = Firestore.firestore()
@@ -118,6 +120,9 @@ class HabitListViewModel {
             habits.remove(at: indexInHabits)
         }
         
+        // delete the pending notification
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["\(habit.id)"])
+        
         //delete from firestore
         db.collection("habits").document(userId).collection("userHabits").document(habitId).delete() { err in
             if let err = err {
@@ -137,11 +142,22 @@ class HabitListViewModel {
                 habits[index] = updatedHabit
             }
             
+            
+            // update firestore habit
             let habitData = try! JSONEncoder().encode(updatedHabit)
             let habitDict = try! JSONSerialization.jsonObject(with: habitData, options: []) as! [String: Any]
                 
                 db.collection("habits").document(userId).collection("userHabits").document(updatedHabit.id.uuidString).updateData(habitDict)
         }
+    }
+    
+    // MARK: Habit Modification
+    // habit completed
+    func habitCompleted(_ completedHabit: inout Habit) {
+        completedHabit.streaks += 1
+        completedHabit.totalDone += 1
+        
+        updateHabit(completedHabit)
     }
     
     // MARK: Swipe Methods

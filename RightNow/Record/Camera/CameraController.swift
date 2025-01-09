@@ -7,9 +7,19 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
     private var cameraModel = CameraModel()
     private var cameraView = CameraView()
     
-    var habit: Habit?
+    var habit: Habit!
     
     // MARK: Lifecycle Methods
+    
+    init(habit: Habit) {
+        self.habit = habit
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    // Required initializer when subclassing UIViewController
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()

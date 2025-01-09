@@ -1,11 +1,10 @@
 import Foundation
 import UIKit
 
-class HabitCreationViewController: UIViewController, UITextFieldDelegate {
+class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     // MARK: Declaration
-    let habitSelectionView = HabitSelectionView()
-    let setTimeView = HabitSetTimeView()
-    var viewModel: HabitListViewModel?
+    let selectNameView = SelectNameView()
+    let selectTimeView = SelectTimeView()
     
     // might be artifacts of trying to fix the problem with equalorlessthan - don't delete tho
     private var nextButtonBottomConstraint: NSLayoutConstraint!
@@ -142,26 +141,26 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
         ])
         
         // add subviews
-        stackView.addArrangedSubview(habitSelectionView)
-        stackView.addArrangedSubview(setTimeView)
+        stackView.addArrangedSubview(selectNameView)
+        stackView.addArrangedSubview(selectTimeView)
         
         //assign delegates
-        habitSelectionView.delegate = self
-        setTimeView.delegate = self
+        selectNameView.delegate = self
+        selectTimeView.delegate = self
         
         NSLayoutConstraint.activate([
-            habitSelectionView.topAnchor.constraint(equalTo: scrollView.topAnchor)
+            selectNameView.topAnchor.constraint(equalTo: scrollView.topAnchor)
         ])
         
         // dynamic height for first subview (bc it has a scrollview)
-        selectViewHeightConstraint = habitSelectionView.heightAnchor.constraint(equalToConstant: 300)
+        selectViewHeightConstraint = selectNameView.heightAnchor.constraint(equalToConstant: 300)
         selectViewHeightConstraint?.isActive = true
         
         //adjust height based on scrollview
         adjustHabitSelectionViewHeight()
         
         // set non-first views as initially hidden
-        setTimeView.isHidden = true
+        selectTimeView.isHidden = true
     }
     
     // MARK: Supplemental methods
@@ -170,7 +169,7 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
         view.layoutIfNeeded()
         
         let maxPossibleHeight = nextButton.frame.origin.y - scrollView.frame.origin.y - 20 //where 20 is padding
-        let contentHeight = habitSelectionView.calculateContentHeight()
+        let contentHeight = selectNameView.calculateContentHeight()
         
         //reset height for selectview
         selectViewHeightConstraint?.constant = min(contentHeight, maxPossibleHeight) // select whichever one is smaller
@@ -201,7 +200,7 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
-        let accountabilityVC = HabitAccountabilityViewController()
+        let accountabilityVC = AccountabilityViewController()
         
         // back button
         let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
@@ -209,7 +208,6 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
         self.navigationController?.navigationBar.tintColor = .white
         
         // send info forward
-        accountabilityVC.viewModel = viewModel
         accountabilityVC.habitData = habitData
         navigationController?.pushViewController(accountabilityVC, animated: true)
     }
@@ -227,10 +225,10 @@ class HabitCreationViewController: UIViewController, UITextFieldDelegate {
 
 // MARK: Delegates from UIViews
 
-extension HabitCreationViewController: HabitSelectionDelegate {
+extension SelectHabitViewController: SelectNameDelegate {
     func habitSelected(_ habit: String) {
         habitData.name = habit
-        setTimeView.isHidden = false
+        selectTimeView.isHidden = false
         updateNextButtonState()
     }
     
@@ -239,7 +237,7 @@ extension HabitCreationViewController: HabitSelectionDelegate {
     }
 }
 
-extension HabitCreationViewController: HabitSetTimeViewDelegate {
+extension SelectHabitViewController: SelectTimeDelegate {
     func hourSelected(_ hour: Int) {
         habitData.hour = hour
     }

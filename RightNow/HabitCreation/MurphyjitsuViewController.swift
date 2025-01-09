@@ -1,9 +1,9 @@
 import Foundation
 import UIKit
 
-class HabitMurphyjitsuViewController: UIViewController {
+class MurphyjitsuViewController: UIViewController {
     // MARK: Declaration
-    var viewModel: HabitListViewModel?
+    var viewModel = HabitListViewModel.shared
     var habitData = HabitData()
     
     let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -136,11 +136,6 @@ class HabitMurphyjitsuViewController: UIViewController {
     
     
     @objc private func nextButtonTapped() {
-        guard let viewModel = viewModel else {
-            print("viewModel is nil")
-            return
-        }
-        
         // save the habitData
         var habitDate = createDateFromHourMinute(hour: habitData.hour ?? 7, minute: habitData.minute ?? 0)
         var newHabit = Habit(id: UUID(),
@@ -150,16 +145,19 @@ class HabitMurphyjitsuViewController: UIViewController {
                              daysOfTheWeek: habitData.selectedDays!,
                              accountabilityMetric: habitData.accountabilityMetric!,
                              incentive: habitData.incentive!,
-                             notificationEnabled: true)
+                             notificationEnabled: true,
+                             totalDone: 0,
+                             totalFailed: 0,
+                             streaks: 0)
         print(newHabit)
-        
+
         viewModel.addHabit(newHabit)
         requestAccessToNotifications()
         scheduleNotification(for: newHabit)
         
         // monitor location if that is the chosen form of habit accountability
-        if let location = habitData.location {
-            LocationManager.shared.startMonitoringGeofence(for: location)
+        if habitData.location != nil {
+            LocationManager.shared.startMonitoringGeofence(for: newHabit)
         }
         
         dismissSelf()
@@ -186,7 +184,7 @@ class HabitMurphyjitsuViewController: UIViewController {
         return calendar.date(from: dateComponents)
     }
     
-    func requestAccessToNotifications() {
+    private func requestAccessToNotifications() {
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
             if granted {
@@ -198,15 +196,26 @@ class HabitMurphyjitsuViewController: UIViewController {
         }
     }
     
-    func scheduleNotification(for habit: Habit) {
+    private func scheduleNotification(for habit: Habit) {
         let center = UNUserNotificationCenter.current()
         
-        //defining notification actions
-        let recordAction = UNNotificationAction(identifier: "Record_Action", title: "Record Habit", options: [.foreground])
-        let trackAction = UNNotificationAction(identifier: "Track_Action", title: "Track Habit", options: [.foreground])
+        //define notification actions depending on accountability metric
+        var actions = [UNNotificationAction]()
+        
+        switch habit.accountabilityMetric {
+        case .locationTracking:
+            let trackAction = UNNotificationAction(identifier: "Track_Action", title: "Track Habit", options: [.foreground])
+            actions.append(trackAction)
+        case .photoEvidence:
+            let recordAction = UNNotificationAction(identifier: "Record_Action", title: "Record Habit", options: [.foreground])
+            actions.append(recordAction)
+        default:
+            // in the future have location tracking lead to a map
+            break
+        }
         
         //defining notification category
-        let category = UNNotificationCategory(identifier: "Habit_Action_Category", actions: [recordAction, trackAction], intentIdentifiers: [], options: [])
+        let category = UNNotificationCategory(identifier: "Habit_Action_Category", actions: actions, intentIdentifiers: [], options: [])
         center.setNotificationCategories([category])
         
         //creating notification
@@ -217,9 +226,10 @@ class HabitMurphyjitsuViewController: UIViewController {
                 content.body = "Log \(habit.name) now"
                 content.sound = UNNotificationSound.default
                 
-                //user info
+                // information that can be fetched in notification
                 let uuidString = habit.id.uuidString
-                content.userInfo = ["habitID": uuidString]
+                let metric = habit.accountabilityMetric.displayName
+                content.userInfo = ["habitID": uuidString, "metric": metric]
                 
                 //categories
                 content.categoryIdentifier = "Habit_Action_Category"
@@ -239,7 +249,7 @@ class HabitMurphyjitsuViewController: UIViewController {
                 components.weekday = daysOfWeek.firstIndex(of: day)! + 1 //plus one bc sunday starts at 1
                 
                 let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-                let request = UNNotificationRequest(identifier: "\(habit.id)_\(day)", content: content, trigger: trigger)
+                let request = UNNotificationRequest(identifier: "\(habit.id)", content: content, trigger: trigger)
                 
                 center.add(request) { (error) in
                     if let error = error {

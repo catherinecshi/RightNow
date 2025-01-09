@@ -1,15 +1,15 @@
 import Foundation
 import UIKit
 
-protocol HabitSetTimeViewDelegate: AnyObject {
+protocol SelectTimeDelegate: AnyObject {
     func hourSelected(_ hour: Int)
     func minuteSelected(_ minute: Int)
     func daySelected(_ days: [String: Bool])
 }
 
-class HabitSetTimeView: UIView {
+class SelectTimeView: UIView {
     //MARK: Initialisation
-    weak var delegate: HabitSetTimeViewDelegate?
+    weak var delegate: SelectTimeDelegate?
     
     let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     var selectedDays = [String: Bool]()
@@ -87,7 +87,7 @@ class HabitSetTimeView: UIView {
         ])
     }
     
-    func setupTimePicker() {
+    private func setupTimePicker() {
         timePicker.delegate = self
         timePicker.dataSource = self
         self.addSubview(timePicker)
@@ -106,6 +106,7 @@ class HabitSetTimeView: UIView {
         
         //start timepicker at 7am
         timePicker.selectRow(6, inComponent: 0, animated: false)
+        timePicker.selectRow(1200, inComponent: 1, animated: false)
     }
     
     private func setupDaysSubtitle() {
@@ -144,7 +145,7 @@ class HabitSetTimeView: UIView {
     
     //MARK: OBJC Methods
     
-    @objc func dayButtonTapped(_ sender: UIButton) {
+    @objc private func dayButtonTapped(_ sender: UIButton) {
         sender.isSelected = !sender.isSelected
         sender.backgroundColor = sender.isSelected ? .white : .lightGray
         selectedDays[sender.titleLabel?.text ?? ""] = sender.isSelected
@@ -161,7 +162,7 @@ let minutes = Array(0...59)
 let amPm = ["AM", "PM"]
 
 //data source
-extension HabitSetTimeView: UIPickerViewDataSource {
+extension SelectTimeView: UIPickerViewDataSource {
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return 3
     }
@@ -179,7 +180,7 @@ extension HabitSetTimeView: UIPickerViewDataSource {
 }
 
 //delegate to handle display and selection
-extension HabitSetTimeView: UIPickerViewDelegate {
+extension SelectTimeView: UIPickerViewDelegate {
     func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
         var title = ""
         

@@ -3,9 +3,14 @@ import UserNotifications
 
 class HabitListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
-    //call other classes
+    struct LevelSection {
+        let header: String
+        let rows: [Habit]
+    }
+    
     let habitListView = HabitListView(frame: UIScreen.main.bounds)
-    let viewModel = HabitListViewModel()
+    let viewModel = HabitListViewModel.shared
+    var sections = [LevelSection]()
     
     override func loadView() {
         self.view = habitListView
@@ -20,9 +25,15 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        print("viewDidLoad - Direct check of habits:")
+            viewModel.habitsForCurrentDay.forEach { habit in
+                print("Habit: \(habit.name), Level: \(habit.currentLevel.displayName)")
+            }
+        
         //receives callback
         viewModel.onDataLoaded = { [weak self] in
             DispatchQueue.main.async {
+                self?.updateSections()
                 self?.habitListView.tableView.reloadData()
                 self?.habitsPresent()
             }
@@ -41,7 +52,9 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
         
+        updateSections()
         habitListView.tableView.reloadData()
         habitsPresent()
         updateTitle()
@@ -61,6 +74,17 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             habitListView.tableView.backgroundView = nil
             //habitListView.tableView.separatorStyle = .none
         }
+    }
+    
+    func updateSections() {
+        let groupedHabits = Dictionary(grouping: viewModel.habitsForCurrentDay, by: { $0.currentLevel.displayName })
+        print("Grouped habits: \(groupedHabits)")
+        
+        // sort by order cases are established in Level enum
+        sections = groupedHabits.map { key, value in
+            return LevelSection(header: key, rows: value)
+        }.sorted(by: { Level.allCases.firstIndex(of: Level(rawValue: $0.header.lowercased())!)! < Level.allCases.firstIndex(of: Level(rawValue: $1.header.lowercased())!)! })
+        print("Updated Sections: \(sections.count) sections")
     }
     
     func updateTitle() {
@@ -89,6 +113,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         viewModel.handleSwipe(direction: sender.direction)
         
         //update
+        updateSections()
         habitListView.tableView.reloadData()
         habitsPresent()
         updateTitle()
@@ -135,9 +160,8 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     @objc func addHabitTapped() {
-        let creationVC = HabitCreationViewController()
+        let creationVC = SelectHabitViewController()
         let navController = UINavigationController(rootViewController: creationVC)
-        creationVC.viewModel = self.viewModel //passes on the view model from this vc to the creation vc
         navController.modalPresentationStyle = .pageSheet
         present(navController, animated: true, completion: nil)
     }
@@ -155,15 +179,28 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     // MARK: TableView
     
+    func numberOfSections(in tableView: UITableView) -> Int {
+        print("Number of sections: \(sections.count)")
+        return sections.count
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return sections[section].header
+    }
+    
     //this is for making the right number of rows
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.habitsForCurrentDay.count
+        print("Number of rows in section \(section): \(sections[section].rows.count)")
+        return sections[section].rows.count
+        //return viewModel.habitsForCurrentDay.count
     }
     
     //this is for calling cell view
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        print("Configuring cell at section \(indexPath.section), row \(indexPath.row)")
         let cell = tableView.dequeueReusableCell(withIdentifier: "HabitCell", for: indexPath) as! HabitTableViewCell
-        let habit = viewModel.habitsForCurrentDay[indexPath.row]
+        let habit = sections[indexPath.section].rows[indexPath.row]
+        print("Habit for cell: \(habit.name)")
         cell.configure(with: habit)
         
         return cell
@@ -183,16 +220,24 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
             //fetch habit to delete
-            let habitToDelete = self.viewModel.habitsForCurrentDay[indexPath.row]
+            let habitToDelete = self.sections[indexPath.section].rows[indexPath.row]
             
             //delete firestore habit
             self.viewModel.deleteHabit(habit: habitToDelete)
-            
-            //cancel notification
             self.cancelNotification(for: habitToDelete)
             
-            //delete visually
-            tableView.deleteRows(at: [indexPath], with: .automatic)
+            // remove from local sections data
+            var updatedSectionRows = self.sections[indexPath.section].rows
+            updatedSectionRows.remove(at: indexPath.row)
+            
+            // remove the entire section if this was the last row in a section
+            if updatedSectionRows.isEmpty {
+                self.sections.remove(at: indexPath.section)
+                tableView.deleteSections(IndexSet(integer: indexPath.section), with: .automatic)
+            } else {
+                self.sections[indexPath.section] = LevelSection(header: self.sections[indexPath.section].header, rows: updatedSectionRows)
+                tableView.deleteRows(at: [indexPath], with: .automatic)
+            }
             
             //check if there are still habits
             self.habitsPresent()
@@ -208,26 +253,24 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     //for tapping on the container
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true) // for visual feedback
-        let selectedHabit = viewModel.habitsForCurrentDay[indexPath.row]
+        let selectedHabit = sections[indexPath.section].rows[indexPath.row]
         
         //action sheet
         let actionSheet = UIAlertController(title: nil, message: "Choose an action", preferredStyle: .actionSheet)
         
         //edit action
         let editAction = UIAlertAction(title: "Edit Habit", style: .default) { _ in
-            let editingVC = HabitEditingViewController()
-            editingVC.habit = selectedHabit
-            editingVC.viewModel = self.viewModel
-            editingVC.modalPresentationStyle = .overCurrentContext
-            self.present(editingVC, animated: true, completion: nil)
+            let editingVC = HabitEditingViewController(habit: selectedHabit)
+            let navController = UINavigationController(rootViewController: editingVC)
+            editingVC.modalPresentationStyle = .pageSheet
+            self.present(navController, animated: true, completion: nil)
         }
         
         actionSheet.addAction(editAction)
         
         //record
         let recordAction = UIAlertAction(title: "Record Habit", style: .default) { _ in
-            let recordVC = CameraController()
-            recordVC.habit = selectedHabit
+            let recordVC = CameraController(habit: selectedHabit)
             recordVC.modalPresentationStyle = .fullScreen
             self.present(recordVC, animated: true, completion: nil)
         }
@@ -236,13 +279,21 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         //track
         let trackAction = UIAlertAction(title: "Track Habit", style: .default) { _ in
-            let trackVC = TimerController()
-            trackVC.habit = selectedHabit
+            let trackVC = TimerController(habit: selectedHabit)
             trackVC.modalPresentationStyle = .fullScreen
             self.present(trackVC, animated: true, completion: nil)
         }
         
         actionSheet.addAction(trackAction)
+        
+        // check off habit
+        let checkAction = UIAlertAction(title: "Check Off Habit", style: .default) { _ in
+            let checkInVC = CheckInController(habit: selectedHabit)
+            checkInVC.modalPresentationStyle = .fullScreen
+            self.present(checkInVC, animated: true, completion: nil)
+        }
+        
+        actionSheet.addAction(checkAction)
         
         //cancel
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)

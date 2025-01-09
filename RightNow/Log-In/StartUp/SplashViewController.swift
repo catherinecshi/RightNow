@@ -4,7 +4,7 @@ import FirebaseAuth
 class SplashViewController: UIViewController {
 
     //var isActive: Bool = false
-    var state: AppState // Assuming AppState is some model or ViewModel you have
+    var state: AppState
     
     let logoImageView: UIImageView = {
         let imageView = UIImageView(image: UIImage(named: "AppIcon"))

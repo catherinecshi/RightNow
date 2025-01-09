@@ -85,7 +85,7 @@ class ProgressionViewController: UIViewController {
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
-        let murphyjitsuVC = HabitMurphyjitsuViewController()
+        let murphyjitsuVC = MurphyjitsuViewController()
         murphyjitsuVC.habitData = habitData
         navigationController?.pushViewController(murphyjitsuVC, animated: true)
     }

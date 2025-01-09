@@ -16,12 +16,18 @@ class PhotoTakenViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.backgroundColor = .lightGray
+        imageView.layer.cornerRadius = CGFloat(15.0)
+        imageView.clipsToBounds = true
         return imageView
     }()
     
     lazy var saveButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Save", for: .normal)
+        btn.setTitleColor(.white, for: .normal)
+        btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        btn.backgroundColor = .black
+        
         btn.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
         return btn
     }()
@@ -40,63 +46,40 @@ class PhotoTakenViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
+        title = "RightNow"
+        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
         
         //firestore
         //db = Firestore.firestore()
         
-        //title
-        title = "RightNow"
-        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
-        
-        //add image into view
-        view.addSubview(previewImageView)
-        previewImageView.translatesAutoresizingMaskIntoConstraints = false
-        setupConstraintsForPreviewImageView()
-        
-        //add save button
-        view.addSubview(saveButton)
+        // setup
+        setupPreviewImageView()
         setupSaveButton()
-        setupConstraintsForSaveButton()
     }
     
     // MARK: Preview Image View
     
-    private func setupConstraintsForPreviewImageView() {
+    private func setupPreviewImageView() {
+        view.addSubview(previewImageView)
+        previewImageView.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
-            //sets height
             previewImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 5),
             previewImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -120),
-            
-            //align imageview horizontally to center of main view
-            previewImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            //encompasses whole screen
             previewImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             previewImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
+            //align imageview horizontally to center of main view
+            previewImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
-        
-        //round corners
-        let cornerRadius: CGFloat = 15.0
-        previewImageView.layer.cornerRadius = cornerRadius
-        previewImageView.clipsToBounds = true
     }
     
     //MARK: Button Methods
     
     private func setupSaveButton() {
-        //appearance
-        saveButton.setTitle("Save", for: .normal)
-        saveButton.setTitleColor(.white, for: .normal)
-        saveButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        saveButton.backgroundColor = .black
-        
-        //add target to handle
-        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-    }
-    
-    private func setupConstraintsForSaveButton() {
+        view.addSubview(saveButton)
         saveButton.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
             saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
@@ -115,6 +98,8 @@ class PhotoTakenViewController: UIViewController {
                 print("Image upload failed")
             }
         }
+        
+        //self.dismiss(animated: true, completion: nil)
     }
     
     /*

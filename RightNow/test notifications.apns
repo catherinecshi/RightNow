@@ -1,0 +1,8 @@
+{
+    "Simulator Target Bundle": "com.catherinecshi.RightNow",
+    "aps": {
+        "alert": "Push Notifications Test",
+        "sound": "default",
+        "badge": 1
+    }
+}

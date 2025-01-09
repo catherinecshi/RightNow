@@ -5,7 +5,6 @@ import CoreLocation
 
 class LocationAccountabilityViewController: UIViewController, UISearchResultsUpdating, UISearchControllerDelegate, UITableViewDelegate, UITableViewDataSource, MKMapViewDelegate {
     var habitData = HabitData()
-    var viewModel: HabitListViewModel?
     var mapView = MKMapView()
     
     // search and table view
@@ -212,7 +211,7 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
-        let incentivesVC = HabitIncentivesViewController()
+        let incentivesVC = IncentivesViewController()
         
         // back button
         let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
@@ -220,7 +219,6 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
         self.navigationController?.navigationBar.tintColor = .white
         
         // send info forward
-        incentivesVC.viewModel = viewModel
         incentivesVC.habitData = habitData
         navigationController?.pushViewController(incentivesVC, animated: true)
     }

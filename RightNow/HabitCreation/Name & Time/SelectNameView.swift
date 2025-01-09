@@ -1,15 +1,15 @@
 import Foundation
 import UIKit
 
-protocol HabitSelectionDelegate: AnyObject {
+protocol SelectNameDelegate: AnyObject {
     func habitSelected(_ habit: String)
     
     func shouldAdjustHeight()
 }
 
-class HabitSelectionView: UIView, UITextFieldDelegate {
+class SelectNameView: UIView, UITextFieldDelegate {
     // MARK: Declaration
-    weak var delegate: HabitSelectionDelegate?
+    weak var delegate: SelectNameDelegate?
     
     // might be artifacts of trying to fix the problem with equalorlessthan - don't delete tho
     private var scrollViewBottomConstraint: NSLayoutConstraint!
