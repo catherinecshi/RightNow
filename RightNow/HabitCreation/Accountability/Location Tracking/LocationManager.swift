@@ -116,15 +116,21 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 }
                 
                 // check if the time is within the margin of error
-                let timeDifference = calendar.dateComponents([.minute], from: currentTime, to: geofenceData.time).minute ?? 0
-                
-                // send notification and count habit if both add up
-                if correctDay && abs(timeDifference) <= 15 {
+                if let time = geofenceData.time {
+                    let timeDifference = calendar.dateComponents([.minute], from: currentTime, to: time).minute ?? 0
+                    
+                    // send notification and count habit if both add up
+                    if correctDay && abs(timeDifference) <= 30 {
+                        var habit = geofenceData.habit
+                        habitListModel.habitCompleted(&habit)
+                        sendProximityNotification(for: circularRegion.identifier)
+                    } else {
+                        print("Notification skipped - not the time yet")
+                    }
+                } else {
                     var habit = geofenceData.habit
                     habitListModel.habitCompleted(&habit)
                     sendProximityNotification(for: circularRegion.identifier)
-                } else {
-                    print("Notification skipped - not the time yet")
                 }
             }
         }

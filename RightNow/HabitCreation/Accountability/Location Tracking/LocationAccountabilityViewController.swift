@@ -211,7 +211,8 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
-        let incentivesVC = IncentivesViewController()
+        //let incentivesVC = IncentivesViewController()
+        let murphyVC = MurphyjitsuViewController()
         
         // back button
         let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
@@ -219,8 +220,10 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
         self.navigationController?.navigationBar.tintColor = .white
         
         // send info forward
-        incentivesVC.habitData = habitData
-        navigationController?.pushViewController(incentivesVC, animated: true)
+        //incentivesVC.habitData = habitData
+       // navigationController?.pushViewController(incentivesVC, animated: true)
+        murphyVC.habitData = habitData
+        navigationController?.pushViewController(murphyVC, animated: true)
     }
     
     @objc func backButtonTapped() {

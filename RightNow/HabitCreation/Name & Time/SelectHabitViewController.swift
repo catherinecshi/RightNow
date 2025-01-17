@@ -5,11 +5,10 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     // MARK: Declaration
     let selectNameView = SelectNameView()
     let selectTimeView = SelectTimeView()
+    let selectCueView = SelectCueView()
     
     // might be artifacts of trying to fix the problem with equalorlessthan - don't delete tho
-    private var nextButtonBottomConstraint: NSLayoutConstraint!
     private var selectViewHeightConstraint: NSLayoutConstraint?
-    private var setTimeViewTopConstraint: NSLayoutConstraint?
     
     // some generic habit variables
     var habitData = HabitData()
@@ -22,6 +21,41 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         label.textColor = .white
         label.textAlignment = .center
         return label
+    }()
+    
+    let containerView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    let timeOrCueLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Do you prefer to be reminded at a specific time or after a cue?"
+        label.font = UIConfiguration.subtitleFont
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.textColor = .white
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let timeOrCue: UISegmentedControl = {
+        let segmentedControl = UISegmentedControl(items: ["Time", "Cue"])
+        segmentedControl.backgroundColor = .lightGray
+        segmentedControl.selectedSegmentTintColor = .white
+
+        // Set white text for all segments
+        let normalAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIConfiguration.tintColor,
+            .font: UIFont.systemFont(ofSize: 16)
+        ]
+        segmentedControl.setTitleTextAttributes(normalAttributes, for: .normal)
+        segmentedControl.setTitleTextAttributes(normalAttributes, for: .selected)
+        
+        segmentedControl.selectedSegmentIndex = 0 // defaults to time
+        
+        return segmentedControl
     }()
     
     //button to go to the next step
@@ -62,6 +96,10 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         setupNextButton()
         setupDismissButton()
         setupScroll()
+        setupNameView()
+        setupSegmentedControl()
+        setupContainerView()
+        setupSubviews()
     }
     
     override func viewDidLayoutSubviews() {
@@ -139,18 +177,74 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: nextButton.topAnchor)
         ])
-        
-        // add subviews
+    }
+    
+    private func setupNameView() {
         stackView.addArrangedSubview(selectNameView)
-        stackView.addArrangedSubview(selectTimeView)
-        
-        //assign delegates
         selectNameView.delegate = self
-        selectTimeView.delegate = self
         
         NSLayoutConstraint.activate([
-            selectNameView.topAnchor.constraint(equalTo: scrollView.topAnchor)
+            selectNameView.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
+            selectNameView.trailingAnchor.constraint(equalTo: stackView.trailingAnchor)
         ])
+    }
+    
+    private func setupSegmentedControl() {
+        stackView.addArrangedSubview(timeOrCueLabel)
+        stackView.addArrangedSubview(timeOrCue)
+        
+        NSLayoutConstraint.activate([
+            timeOrCueLabel.topAnchor.constraint(equalTo: selectNameView.bottomAnchor, constant: 20),
+            timeOrCueLabel.leadingAnchor.constraint(equalTo: stackView.leadingAnchor, constant: 20),
+            timeOrCueLabel.trailingAnchor.constraint(equalTo: stackView.trailingAnchor, constant: -20),
+            
+            timeOrCue.topAnchor.constraint(equalTo: timeOrCueLabel.bottomAnchor, constant: 20),
+            timeOrCue.leadingAnchor.constraint(equalTo: stackView.leadingAnchor, constant: 20),
+            timeOrCue.trailingAnchor.constraint(equalTo: stackView.trailingAnchor, constant: -20),
+        ])
+        
+        timeOrCue.addTarget(self, action: #selector(segmentChanged(_:)), for: .valueChanged)
+        
+        // initially hidden
+        timeOrCueLabel.isHidden = true
+        timeOrCue.isHidden = true
+    }
+    
+    private func setupContainerView() {
+        stackView.addArrangedSubview(containerView)
+        
+        NSLayoutConstraint.activate([
+            containerView.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: stackView.trailingAnchor),
+            containerView.topAnchor.constraint(equalTo: timeOrCue.bottomAnchor, constant: 20),
+            containerView.heightAnchor.constraint(equalToConstant: 400)
+        ])
+    }
+    
+    private func setupSubviews() {
+        // add subviews
+        containerView.addSubview(selectTimeView)
+        containerView.addSubview(selectCueView)
+        
+        selectTimeView.delegate = self
+        selectCueView.delegate = self
+        selectTimeView.translatesAutoresizingMaskIntoConstraints = false
+        selectCueView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            selectTimeView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            selectTimeView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            selectTimeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            selectTimeView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            
+            selectCueView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            selectCueView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            selectCueView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            selectCueView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        ])
+        containerView.isHidden = true
+        selectTimeView.isHidden = true
+        selectCueView.isHidden = true
         
         // dynamic height for first subview (bc it has a scrollview)
         selectViewHeightConstraint = selectNameView.heightAnchor.constraint(equalToConstant: 300)
@@ -158,9 +252,6 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         
         //adjust height based on scrollview
         adjustHabitSelectionViewHeight()
-        
-        // set non-first views as initially hidden
-        selectTimeView.isHidden = true
     }
     
     // MARK: Supplemental methods
@@ -188,6 +279,23 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     
     // MARK: Detect Actions
     
+    @objc private func segmentChanged(_ sender: UISegmentedControl) {
+        switch sender.selectedSegmentIndex {
+        case 0: // time
+            UIView.animate(withDuration: 0.3) {
+                self.selectTimeView.isHidden = false
+                self.selectCueView.isHidden = true
+            }
+        case 1:
+            UIView.animate(withDuration: 0.3) {
+                self.selectTimeView.isHidden = true
+                self.selectCueView.isHidden = false
+            }
+        default:
+            break
+        }
+    }
+    
     //activate the next button if appropriate
     private func updateNextButtonState() {
         //check if habit & day have been selected
@@ -197,6 +305,13 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         nextButton.isEnabled = isHabitSelected && isDaySelected
     }
     
+    private func disableNextButtonState() {
+        nextButton.isEnabled = false
+    }
+    
+    private func enableNextButtonState() {
+        nextButton.isEnabled = true
+    }
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
@@ -228,6 +343,9 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
 extension SelectHabitViewController: SelectNameDelegate {
     func habitSelected(_ habit: String) {
         habitData.name = habit
+        timeOrCueLabel.isHidden = false
+        timeOrCue.isHidden = false
+        containerView.isHidden = false
         selectTimeView.isHidden = false
         updateNextButtonState()
     }
@@ -249,5 +367,40 @@ extension SelectHabitViewController: SelectTimeDelegate {
     func daySelected(_ days: [String: Bool]) {
         habitData.selectedDays = days
         updateNextButtonState()
+    }
+}
+
+extension SelectHabitViewController: SelectCueDelegate {
+    func cueSelected(_ cue: String) {
+        habitData.cue = cue
+        
+        // check if days of week match up so you can't select a cue that doesn't exist during the day you want to do your new habit
+        if let chainedHabit = HabitListViewModel.shared.habits.first(where: { $0.name == cue }), let daysOfWeek = habitData.selectedDays {
+            let isSubset = TimeFormatter.isSubsetOfDays(sub: daysOfWeek, whole: chainedHabit.daysOfTheWeek)
+            
+            if isSubset {
+                updateNextButtonState()
+            } else {
+                disableNextButtonState()
+            }
+        }
+    }
+    
+    func daySelectedCues(_ days: [String: Bool]) {
+        habitData.selectedDays = days
+        updateNextButtonState()
+        
+        // check if days of week match up so you can't select a cue that doesn't exist during the day you want to do your new habit
+        if let cue = habitData.cue,
+           let chainedHabit = HabitListViewModel.shared.habits.first(where: { $0.name == cue }),
+           let daysOfWeek = habitData.selectedDays {
+            let isSubset = TimeFormatter.isSubsetOfDays(sub: daysOfWeek, whole: chainedHabit.daysOfTheWeek)
+            
+            if isSubset {
+                updateNextButtonState()
+            } else {
+                disableNextButtonState()
+            }
+        }
     }
 }

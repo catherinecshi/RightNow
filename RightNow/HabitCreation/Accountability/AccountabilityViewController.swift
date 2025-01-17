@@ -12,11 +12,13 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     
     // accountability metric variables
     var metricButtons: [UIButton] = []
-    let predefinedMetrics: [AccountabilityMetric] = [.screenTime, .locationTracking, .photoEvidence]
+    let predefinedMetrics: [AccountabilityMetric] = [.screenTime, .locationTracking, .photoEvidence, .selfTracking]
     let metricCount = 3
     
+    private var selectedButton: UIButton?
+    
     //initiate labels
-let viewTitle: UILabel = {
+    let viewTitle: UILabel = {
         let label = UILabel()
         label.text = "Create Habit"
         label.font = UIConfiguration.titleFont
@@ -27,7 +29,7 @@ let viewTitle: UILabel = {
     
     let whatLabel: UILabel = {
         let label = UILabel()
-        label.text = "How do you want to keep yourself accountable?"
+        label.text = "How do you want to track your habit?"
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
         //label.textAlignment = .center
@@ -115,21 +117,39 @@ let viewTitle: UILabel = {
             metricStackView.widthAnchor.constraint(equalTo: metricScrollView.widthAnchor),
         ])
         
-        for metric in predefinedMetrics {
+        let screenWidth = UIScreen.main.bounds.width
+        let buttonWidth = (screenWidth - 60) / 2
+        let buttonHeight = buttonWidth
+        
+        var currentRowStack: UIStackView?
+        
+        for (index, metric) in predefinedMetrics.enumerated() {
+            // create a new horizontal stack for every 2 buttons
+            if index % 2 == 0 {
+                currentRowStack = UIStackView()
+                currentRowStack?.axis = .horizontal
+                currentRowStack?.spacing = 20
+                currentRowStack?.distribution = .fillEqually
+                metricStackView.addArrangedSubview(currentRowStack!)
+            }
+            
             let button = UIButton(type: .system)
             button.setTitle(metric.displayName, for: .normal)
             button.setTitleColor(.white, for: .normal)
-            button.backgroundColor = .white
+            button.tintColor = UIConfiguration.tintColor
             button.layer.cornerRadius = 10
             button.clipsToBounds = true //for rounded radius
-            button.layer.borderWidth = 1
-            button.layer.borderColor = UIConfiguration.tintColor?.cgColor
+            button.layer.borderWidth = 2
+            button.layer.borderColor = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+            
+            NSLayoutConstraint.activate([
+                button.heightAnchor.constraint(equalToConstant: buttonHeight)
+            ])
             
             //set up image
-            let icon = iconForMetric(name: metric.displayName) //method
+            let icon = iconForMetric(name: metric.displayName, color: .white)
             button.setImage(icon, for: .normal)
             button.imageView?.contentMode = .scaleAspectFit
-            button.tintColor = UIConfiguration.tintColor //if images are template images
             
             //adjust image and title positions
             button.contentHorizontalAlignment = .left
@@ -144,7 +164,7 @@ let viewTitle: UILabel = {
             button.tag = predefinedMetrics.firstIndex(of: metric) ?? 0
             
             button.addTarget(self, action: #selector(metricButtonTapped), for: .touchUpInside)
-            metricStackView.addArrangedSubview(button)
+            currentRowStack?.addArrangedSubview(button)
             metricButtons.append(button)
         }
     }
@@ -180,6 +200,57 @@ let viewTitle: UILabel = {
     }
     
     @objc private func metricButtonTapped(_ sender: UIButton) {
+        // deselect previously selected button if there was one
+        if let previousButton = selectedButton, previousButton != sender {
+            previousButton.isSelected = false
+            
+            let previousTitle = descriptionToTitle(description: previousButton.titleLabel?.text)
+            previousButton.setTitle(previousTitle, for: .normal)
+            var previousConfig = previousButton.configuration ?? UIButton.Configuration.filled()
+            previousConfig.baseForegroundColor = .white
+            previousButton.tintColor = UIConfiguration.tintColor
+            previousButton.configuration = previousConfig
+            
+            let previousIcon = iconForMetric(name: previousTitle, color: .white)
+            previousButton.setImage(previousIcon, for: .normal)
+            previousButton.imageView?.contentMode = .scaleAspectFit
+        }
+        
+        sender.isSelected.toggle()
+        var config = sender.configuration ?? UIButton.Configuration.filled()
+        
+        if sender.isSelected {
+            selectedButton = sender
+            
+            let newDescription = titleToDescription(title: sender.titleLabel?.text)
+            sender.setTitle(newDescription, for: .normal)
+            config.baseForegroundColor = UIConfiguration.tintColor
+            sender.tintColor = .white
+            
+            // change icon color
+            let icon = iconForMetric(name: sender.titleLabel?.text, color: UIConfiguration.tintColor ?? .black)
+            sender.setImage(icon, for: .normal)
+            sender.imageView?.contentMode = .scaleAspectFit
+        } else {
+            // button untapped -> reset appearance
+            selectedButton = nil
+            
+            let newTitle = descriptionToTitle(description: sender.titleLabel?.text)
+            sender.setTitle(newTitle, for: .normal)
+            config.baseForegroundColor = .white
+            sender.tintColor = UIConfiguration.tintColor
+            
+            let icon = iconForMetric(name: newTitle, color: .white)
+            sender.setImage(icon, for: .normal)
+            sender.imageView?.contentMode = .scaleAspectFit
+        }
+        
+        sender.configuration = config
+        
+        UIView.animate(withDuration: 0.2) {
+            sender.layoutIfNeeded()
+        }
+        
         let selectedMetric = predefinedMetrics[sender.tag]
         delegate?.metricSelected(selectedMetric)
     }
@@ -193,7 +264,8 @@ let viewTitle: UILabel = {
             locationVC.habitData = habitData
             nextVC = locationVC
         } else {
-            let defaultVC = IncentivesViewController()
+            //let defaultVC = IncentivesViewController()
+            let defaultVC = MurphyjitsuViewController()
             defaultVC.habitData = habitData
             nextVC = defaultVC
         }
@@ -213,16 +285,48 @@ let viewTitle: UILabel = {
     
     // MARK: Auxillary Methods
     
-    private func iconForMetric(name: String) -> UIImage? {
+    private func iconForMetric(name: String?, color: UIColor) -> UIImage? {
         switch name {
         case "Track your Location":
-            return UIImage(systemName: "location")
+            return UIImage(systemName: "location")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Track your Screen Time Usage":
-            return UIImage(systemName: "iphone.gen1.slash")
+            return UIImage(systemName: "iphone.gen1.slash")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Take a Photo":
-            return UIImage(systemName: "photo.badge.checkmark")
+            return UIImage(systemName: "photo.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
+        case "Self Tracking":
+            return UIImage(systemName: "person.crop.circle.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
         default:
-            return UIImage(systemName: "checkmark")
+            return UIImage(systemName: "checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
+        }
+    }
+    
+    private func titleToDescription(title: String?) -> String {
+        switch title {
+        case "Track your Location":
+            return "Complete habit by being at a specific place during the time for your habit"
+        case "Track your Screen Time Usage":
+            return "Complete your habit by using or blocking an app for a specific time"
+        case "Take a Photo":
+            return "Complete your habit by taking a photo of you doing the habit"
+        case "Self Tracking":
+            return "Check off your habit yourself, no automatic tracking!"
+        default:
+            return "Check off your habit yourself, no automatic tracking!"
+        }
+    }
+    
+    private func descriptionToTitle(description: String?) -> String {
+        switch description {
+        case "Complete habit by being at a specific place during the time for your habit":
+            return "Track your Location"
+        case "Complete your habit by using or blocking an app for a specific time":
+            return "Track your Screen Time Usage"
+        case "Complete your habit by taking a photo of you doing the habit":
+            return "Take a Photo"
+        case "Check off your habit yourself, no automatic tracking!":
+            return "Self Tracking"
+        default:
+            return "Self Tracking"
         }
     }
 }

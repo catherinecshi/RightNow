@@ -6,6 +6,7 @@ struct HabitData {
     var hour: Int?
     var minute: Int?
     var selectedDays: [String: Bool]?
+    var cue: String?
     
     //  progression
     var currentLevel: String?

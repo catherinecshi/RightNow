@@ -126,8 +126,14 @@ class HabitTableViewCell: UITableViewCell {
         } else {
             dateFormatter.dateFormat = "h:mm a"
         }
-
-        timeLabel.text = dateFormatter.string(from: habit.time)
+        
+        if let time = habit.time {
+            timeLabel.text = dateFormatter.string(from: time)
+        } else if let cue = habit.cue {
+            timeLabel.text = cue
+        } else {
+            print("something weird - no cue or time")
+        }
         
         nameLabel.text = habit.name
         streaksLabel.text = "\(habit.streaks)"

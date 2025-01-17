@@ -1,9 +1,14 @@
 import Foundation
 import UIKit
 
+protocol HabitCompleteDelegate: AnyObject {
+    func completeHabit(for habit: inout Habit)
+}
+
 class CheckInController: UIViewController {
     // MARK: Declaration
     var habit: Habit!
+    weak var delegate: HabitCompleteDelegate?
     
     //button to go to the next step
     private let checkInButton: UIButton = {
@@ -98,10 +103,11 @@ class CheckInController: UIViewController {
     }
     
     @objc private func habitCompleted() {
-        HabitListViewModel.shared.habitCompleted(&habit)
-        
-        // cancels off view go back to home
-        dismissSelf()
+        let habitCopy = habit
+        dismiss(animated: true) { [weak self] in
+            guard var habit = habitCopy else { return }
+            self?.delegate?.completeHabit(for: &habit)
+        }
     }
     
     @objc private func dismissSelf() {

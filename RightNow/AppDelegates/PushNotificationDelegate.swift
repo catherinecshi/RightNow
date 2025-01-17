@@ -14,7 +14,7 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         registerForPushNotifications()
         //removePendingNotifications()
-        getPendingNotifications()
+        //getPendingNotifications()
         
         return true
     }
@@ -148,10 +148,10 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     }
 }
     
-
+// MARK: - Common Methods to Reference Externally
 extension PushNotificationDelegate {
     // request push notification access
-    private func registerForPushNotifications() {
+    func registerForPushNotifications() {
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         notificationCenter.requestAuthorization(options: authOptions) { granted, error in
             if let error = error {
@@ -169,6 +169,84 @@ extension PushNotificationDelegate {
                 print("User denied push notifications")
                 // handle cases when permission is not granted
             }
+        }
+    }
+    
+    func requestAccessToNotifications() {
+        notificationCenter.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
+            if granted {
+                print("Notification permission granted!")
+            } else {
+                print("Notification permission denied because: \(error?.localizedDescription ?? " no error")")
+                //maybe make this an alert in the future
+            }
+        }
+    }
+    
+    func scheduleNotificationsForHabit(_ habit: Habit) {
+        for (day, isActive) in habit.daysOfTheWeek {
+            guard isActive else { continue }
+            
+            let content = UNMutableNotificationContent()
+            content.title = "Right Now"
+            
+            if let _ = habit.time { // for time based habits
+                content.body = "Are you starting to \(habit.name) now?"
+            } else if let cue = habit.cue { // for cue based habits
+                content.body = "Did you \(habit.name) after \(cue)?"
+            } else {
+                print("something weird going on - no time for habit and no cue either")
+            }
+            
+            content.sound = UNNotificationSound.default
+            
+            // information that can be fetched in notification
+            let uuidString = habit.id.uuidString
+            let metric = habit.accountabilityMetric.displayName
+            content.userInfo = ["habitID": uuidString, "metric": metric]
+            
+            // debug printing
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .long
+            dateFormatter.timeStyle = .medium
+            dateFormatter.timeZone = TimeZone.current
+            
+            // getting days of week
+            let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+            let calendar = Calendar.current
+            var components: DateComponents
+            
+            if let habitTime = habit.time {
+                print("Scheduling notification for \(day) at \(dateFormatter.string(from: habitTime))")
+                components = calendar.dateComponents([.hour, .minute], from: habitTime)
+            } else {
+                var standardTime = DateComponents()
+                standardTime.hour = 20 // 8 PM
+                standardTime.minute = 0
+                
+                print("Scheduling notification for \(day) at standard time")
+                components = standardTime
+            }
+            
+            components.weekday = daysOfWeek.firstIndex(of: day)! + 1 // + 1 bc Sunday starts at 1
+            
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+            let request = UNNotificationRequest(identifier: "\(uuidString)_\(day)", content: content, trigger: trigger)
+            
+            notificationCenter.add(request) { (error) in
+                if let error = error {
+                    print("Error scheduling notification for \(day): \(error)")
+                } else {
+                    print("Notification scheduled!")
+                }
+            }
+        }
+    }
+    
+    func cancelNotifications(for habit: Habit) {
+        for day in habit.daysOfTheWeek.keys {
+            let identifier = "\(habit.id)_\(day)"
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
         }
     }
 }
@@ -210,5 +288,71 @@ extension PushNotificationDelegate {
     
     private func removePendingNotifications() {
         notificationCenter.removeAllPendingNotificationRequests()
+    }
+    
+    // check that the pending notifications matches the habits available
+    func auditNotifications() {
+        let notificationCenter = UNUserNotificationCenter.current()
+        
+        notificationCenter.getPendingNotificationRequests { [weak self] requests in
+            guard let self = self else { return }
+            
+            // set of existing notification IDs
+            var existingNotificationIds = Set<String>()
+            for request in requests {
+                existingNotificationIds.insert(request.identifier)
+            }
+            
+            // set of expected notification IDs based on local habits
+            var expectedNotificationIds = Set<String>()
+            for habit in HabitListViewModel.shared.habits {
+                let habitId = habit.id.uuidString
+                
+                for (day, isEnabled) in habit.daysOfTheWeek where isEnabled {
+                    expectedNotificationIds.insert("\(habitId)_\(day)")
+                }
+            }
+            
+            // for notifications that shouldn't exist based on expectation
+            let notificationsToRemove = existingNotificationIds.subtracting(expectedNotificationIds)
+            if !notificationsToRemove.isEmpty {
+                print("Removing \(notificationsToRemove.count) unexpected notifications")
+                notificationCenter.removePendingNotificationRequests(withIdentifiers: Array(notificationsToRemove))
+            }
+            
+            // find missing notifications that should exist based on expectation
+            let missingNotifications = expectedNotificationIds.subtracting(existingNotificationIds)
+            if !missingNotifications.isEmpty {
+                print("Found \(missingNotifications.count) missing notifications")
+                // schedule notifications
+                for notificationId in missingNotifications {
+                    if let habit = findHabitForNotificationId(notificationId) {
+                        scheduleNotificationsForHabit(habit)
+                    }
+                }
+            }
+            
+            print("----------------")
+            print("Notification audit complete:")
+            print("- Total existing notifications: \(existingNotificationIds.count)")
+            print("- Expected notifications: \(expectedNotificationIds.count)")
+            print("- Removed unexpected notifications: \(notificationsToRemove.count)")
+            print("- Recreated missing notifications: \(missingNotifications.count)")
+            
+            //getPendingNotifications()
+            print("---------------")
+        }
+    }
+    
+    private func findHabitForNotificationId(_ notificationId: String) -> Habit? {
+        // Check if it's a day-specific notification
+        if notificationId.contains("_") {
+            let components = notificationId.split(separator: "_")
+            if let habitId = components.first {
+                return HabitListViewModel.shared.habits.first { $0.id.uuidString == String(habitId) }
+            }
+        }
+        // Check if it's a basic habit notification
+        return HabitListViewModel.shared.habits.first { $0.id.uuidString == notificationId }
     }
 }

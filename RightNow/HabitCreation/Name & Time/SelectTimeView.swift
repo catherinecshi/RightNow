@@ -58,10 +58,10 @@ class SelectTimeView: UIView {
         //initialise selecteDays with all set to false
         daysOfWeek.forEach { selectedDays[$0] = false}
         
-        setupWhatSubtitle()
-        setupTimePicker()
         setupDaysSubtitle()
         setupDaysStackView()
+        setupWhatSubtitle()
+        setupTimePicker()
     }
     
     required init?(coder: NSCoder) {
@@ -76,13 +76,47 @@ class SelectTimeView: UIView {
     
     //MARK: Setup
     
+    private func setupDaysSubtitle() {
+        self.addSubview(daysLabel)
+        daysLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            daysLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 20),
+            daysLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            daysLabel.heightAnchor.constraint(equalToConstant: 22)
+        ])
+    }
+    
+    private func setupDaysStackView() {
+        self.addSubview(daysStackView)
+        
+        for day in daysOfWeek {
+            let button = UIButton()
+            button.setTitle(day, for: .normal)
+            button.setTitleColor(UIConfiguration.tintColor, for: .normal)
+            button.setTitleColor(UIConfiguration.tintColor, for: .selected)
+            button.backgroundColor = .lightGray
+            button.layer.cornerRadius = 5
+            button.addTarget(self, action: #selector(dayButtonTapped), for: .touchUpInside)
+            daysStackView.addArrangedSubview(button)
+        }
+        
+        NSLayoutConstraint.activate([
+            daysStackView.topAnchor.constraint(equalTo: daysLabel.bottomAnchor, constant: 20),
+            daysStackView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            daysStackView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
+            daysStackView.heightAnchor.constraint(equalToConstant: 40)
+        ])
+    }
+    
     private func setupWhatSubtitle() {
         self.addSubview(whatLabel)
         whatLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            whatLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 20),
+            whatLabel.topAnchor.constraint(equalTo: daysStackView.bottomAnchor, constant: 40),
             whatLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            whatLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
             whatLabel.heightAnchor.constraint(equalToConstant: 22)
         ])
     }
@@ -107,40 +141,6 @@ class SelectTimeView: UIView {
         //start timepicker at 7am
         timePicker.selectRow(6, inComponent: 0, animated: false)
         timePicker.selectRow(1200, inComponent: 1, animated: false)
-    }
-    
-    private func setupDaysSubtitle() {
-        self.addSubview(daysLabel)
-        daysLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            daysLabel.topAnchor.constraint(equalTo: timePicker.bottomAnchor, constant: 20),
-            daysLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
-            daysLabel.heightAnchor.constraint(equalToConstant: 22)
-        ])
-    }
-    
-    private func setupDaysStackView() {
-        self.addSubview(daysStackView)
-        
-        for day in daysOfWeek {
-            let button = UIButton()
-            button.setTitle(day, for: .normal)
-            button.setTitleColor(UIConfiguration.tintColor, for: .normal)
-            button.setTitleColor(UIConfiguration.tintColor, for: .selected)
-            button.backgroundColor = .lightGray
-            button.layer.cornerRadius = 5
-            button.addTarget(self, action: #selector(dayButtonTapped), for: .touchUpInside)
-            daysStackView.addArrangedSubview(button)
-        }
-        
-        NSLayoutConstraint.activate([
-            daysStackView.topAnchor.constraint(equalTo: daysLabel.bottomAnchor, constant: 20),
-            daysStackView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
-            daysStackView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
-            daysStackView.heightAnchor.constraint(equalToConstant: 40),
-            daysStackView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
-        ])
     }
     
     //MARK: OBJC Methods

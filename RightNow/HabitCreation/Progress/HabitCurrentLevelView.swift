@@ -178,11 +178,13 @@ class HabitCurrentLevelView: UIView, UITextFieldDelegate {
         delegate?.levelSelected(levels[selectedIndex])
         updateLengthVisibility(forLevel: selectedIndex)
     }
+     
     
     private func updateSelectedLevelLabel() {
         let selectedIndex = Int(levelSlider.value.rounded())
         selectedLevelLabel.text = levels[selectedIndex]
     }
+     
     
     private func updateLengthVisibility(forLevel levelIndex: Int) {
         let shouldShow = levelIndex != 0
@@ -194,6 +196,7 @@ class HabitCurrentLevelView: UIView, UITextFieldDelegate {
         
         delegate?.heightUpdated()
     }
+     
     
     @objc private func lengthSliderValueChanged(_ sender: UISlider) {
         let selectedValue = Int(sender.value.rounded())

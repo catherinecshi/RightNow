@@ -71,7 +71,7 @@ class HabitEditingViewController: UIViewController {
     }()
     
     let accountabilityMetric: UISegmentedControl = {
-        let segmentedControl = UISegmentedControl(items: ["Location Tracking", "Lock Phone Away", "Take a Photo"])
+        let segmentedControl = UISegmentedControl(items: ["Location Tracking", "Lock Phone Away", "Take a Photo", "Self Tracking"])
         segmentedControl.backgroundColor = .lightGray
         segmentedControl.selectedSegmentTintColor = .white
 
@@ -159,14 +159,16 @@ class HabitEditingViewController: UIViewController {
     }
     
     private func setupTimePicker() {
-        view.addSubview(timePicker)
-        
-        timePicker.date = oldHabit.time
-        
-        NSLayoutConstraint.activate([
-            timePicker.centerYAnchor.constraint(equalTo: whatLabel.centerYAnchor),
-            timePicker.leadingAnchor.constraint(equalTo: whatLabel.trailingAnchor, constant: 20)
-        ])
+        if let time = oldHabit.time {
+            view.addSubview(timePicker)
+            
+            timePicker.date = time
+            
+            NSLayoutConstraint.activate([
+                timePicker.centerYAnchor.constraint(equalTo: whatLabel.centerYAnchor),
+                timePicker.leadingAnchor.constraint(equalTo: whatLabel.trailingAnchor, constant: 20)
+            ])
+        }
     }
     
     private func setupDaysStackView() {
@@ -298,15 +300,16 @@ class HabitEditingViewController: UIViewController {
             notificationEnabled: oldHabit.notificationEnabled,
             totalDone: oldHabit.totalDone,
             totalFailed: oldHabit.totalFailed,
-            streaks: oldHabit.streaks
+            streaks: oldHabit.streaks,
+            lastUpdateDate: Date()
         )
         
         //handle notifications
-        cancelNotifications(for: oldHabit)
+        PushNotificationDelegate.shared.cancelNotifications(for: oldHabit)
         
         //enable notifications if user indicates the desire
         if newHabit.notificationEnabled {
-            scheduleNotification(for: newHabit)
+            PushNotificationDelegate.shared.scheduleNotificationsForHabit(newHabit)
         }
         
         // update local and firestore databases with new habit
@@ -317,54 +320,5 @@ class HabitEditingViewController: UIViewController {
     
     @objc private func dismissSelf() {
         dismiss(animated: true, completion: nil)
-    }
-    
-    // MARK: Notifications
-    
-    private func scheduleNotification(for habit: Habit) {
-        let center = UNUserNotificationCenter.current()
-        
-        for (day, isActive) in habit.daysOfTheWeek {
-            if isActive {
-                let content = UNMutableNotificationContent()
-                content.title = "Right Now"
-                content.body = "Log \(habit.name) now"
-                content.sound = UNNotificationSound.default
-                
-                //just making the console readable
-                let triggerDate = habit.time
-                
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateStyle = .long
-                dateFormatter.timeStyle = .medium
-                dateFormatter.timeZone = TimeZone.current
-                print("Scheduling notification for \(day) at \(dateFormatter.string(from: triggerDate))")
-                
-                //getting the days of week
-                let calendar = Calendar.current
-                var components = calendar.dateComponents([.hour, .minute], from: habit.time)
-                components.weekday = daysOfWeek.firstIndex(of: day)! + 1 //plus one bc sunday starts at 1
-                
-                let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-                let request = UNNotificationRequest(identifier: "\(habit.id)_\(day)", content: content, trigger: trigger)
-                
-                center.add(request) { (error) in
-                    if let error = error {
-                        print("Error scheduling notification for \(day): \(error)")
-                    } else {
-                        print("Notification scheduled")
-                    }
-                }
-            }
-        }
-    }
-    
-    private func cancelNotifications(for habit: Habit) {
-        let center = UNUserNotificationCenter.current()
-        
-        for day in habit.daysOfTheWeek.keys {
-            let identifier = "\(habit.id)_\(day)"
-            center.removePendingNotificationRequests(withIdentifiers: [identifier])
-        }
     }
 }

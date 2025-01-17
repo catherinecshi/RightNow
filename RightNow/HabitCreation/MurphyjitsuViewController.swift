@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 class MurphyjitsuViewController: UIViewController {
-    // MARK: Declaration
+    // MARK: - Declaration
     var viewModel = HabitListViewModel.shared
     var habitData = HabitData()
     
@@ -17,6 +17,57 @@ class MurphyjitsuViewController: UIViewController {
         return label
     }()
     
+    let habitDetails: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = UIConfiguration.genericFont
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    let confidenceLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = UIConfiguration.subtitleFont
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "How confident are you that you'll keep up the habit for a month?"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let confidenceSlider: UISlider = {
+        let slider = UISlider()
+        slider.minimumValue = 0
+        slider.maximumValue = 100
+        slider.value = 100 // initial value
+        slider.isContinuous = true
+        slider.tintColor = .white
+        slider.translatesAutoresizingMaskIntoConstraints = false
+        return slider
+    }()
+    
+    let selectedConfidenceLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIConfiguration.subtitleFont
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let reminderLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIConfiguration.genericFont
+        label.textColor = .white
+        label.numberOfLines = 0
+        label.text = "If your confidence is lower than 90%, it's worth thinking about what makes you lose confidence and how you can remedy those problems"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     //button to go to the next step
     private let nextButton: UIButton = {
         let button = UIButton(type: .system)
@@ -25,23 +76,7 @@ class MurphyjitsuViewController: UIViewController {
         return button
     }()
     
-    let yourHabit: UILabel = {
-        let label = UILabel()
-        label.text = "Your Habit Is: "
-        label.font = UIConfiguration.titleFont
-        label.textColor = .white
-        label.textAlignment = .center
-        return label
-    }()
-    
-    let habitDetails: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    // MARK: Lifecycle
+    // MARK: - Lifecycle Methods
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,11 +84,14 @@ class MurphyjitsuViewController: UIViewController {
         
         setupTitle()
         setupNextButton()
-        setupYourHabit()
         setupHabitDetails()
+        setupConfidenceLabel()
+        setupConfidenceSlider()
+        setupSelectedConfidence()
+        setupReminderLabel()
     }
     
-    // MARK: Initialisation
+    // MARK: - Setup UI Componenets
     
     private func setupTitle() {
         view.addSubview(viewTitle)
@@ -90,29 +128,16 @@ class MurphyjitsuViewController: UIViewController {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
-    private func setupYourHabit() {
-        view.addSubview(yourHabit)
-        yourHabit.translatesAutoresizingMaskIntoConstraints = false
-        
-        if let habitName = habitData.name, !habitName.isEmpty {
-            yourHabit.text = "Your Habit Is: \(habitName)"
-        }
-        
-        NSLayoutConstraint.activate([
-            yourHabit.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            yourHabit.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            yourHabit.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
-        ])
-    }
-    
     private func setupHabitDetails() {
         view.addSubview(habitDetails)
         habitDetails.translatesAutoresizingMaskIntoConstraints = false
         
-        var detailsText = "Done at: "
+        var detailsText = "Your goal is to \(habitData.name ?? "do your habit") "
         
         if let hour = habitData.hour, let minute = habitData.minute {
-            detailsText += "\(hour):\(String(format: "%02d", minute))"
+            detailsText += "at \(hour):\(String(format: "%02d", minute))"
+        } else if let cue = habitData.cue {
+            detailsText += "after you \(cue)"
         } else {
             detailsText += "Not set"
         }
@@ -123,42 +148,101 @@ class MurphyjitsuViewController: UIViewController {
         }
         
         if let accountabilityMetric = habitData.accountabilityMetric {
-            detailsText += "\nWe'll keep you accountable through \(accountabilityMetric)"
+            detailsText += " and you'll track your habit by \(accountabilityMetric.displayName)"
         }
         
         habitDetails.text = detailsText
         
         NSLayoutConstraint.activate([
-            habitDetails.topAnchor.constraint(equalTo: yourHabit.bottomAnchor, constant: 20),
-            habitDetails.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            habitDetails.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
+            habitDetails.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 40),
+            habitDetails.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -40)
         ])
     }
     
+    private func setupConfidenceLabel() {
+        view.addSubview(confidenceLabel)
+        
+        NSLayoutConstraint.activate([
+            confidenceLabel.topAnchor.constraint(equalTo: habitDetails.bottomAnchor, constant: 40),
+            confidenceLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            confidenceLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ])
+    }
+    
+    private func setupConfidenceSlider() {
+        view.addSubview(confidenceSlider)
+        
+        NSLayoutConstraint.activate([
+            confidenceSlider.topAnchor.constraint(equalTo: confidenceLabel.bottomAnchor, constant: 20),
+            confidenceSlider.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            confidenceSlider.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ])
+        
+        confidenceSlider.addTarget(self, action: #selector(confidenceSliderValueChanged(_:)), for: .valueChanged)
+        confidenceSlider.isUserInteractionEnabled = true
+    }
+    
+    private func setupSelectedConfidence() {
+        view.addSubview(selectedConfidenceLabel)
+        
+        selectedConfidenceLabel.text = "I am 100% confident I will keep up my habit to \(String(describing: habitData.name)) for a month"
+        
+        NSLayoutConstraint.activate([
+            selectedConfidenceLabel.topAnchor.constraint(equalTo: confidenceSlider.bottomAnchor, constant: 10),
+            selectedConfidenceLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            selectedConfidenceLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ])
+    }
+    
+    private func setupReminderLabel() {
+        view.addSubview(reminderLabel)
+        
+        NSLayoutConstraint.activate([
+            reminderLabel.topAnchor.constraint(equalTo: selectedConfidenceLabel.bottomAnchor, constant: 40),
+            reminderLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            reminderLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ])
+        
+        reminderLabel.isHidden = true
+    }
+    
+    // MARK: - Action Methods
+
+    @objc private func confidenceSliderValueChanged(_ sender: UISlider) {
+        let selectedValue = Int(sender.value.rounded())
+        
+        if let name = habitData.name {
+            selectedConfidenceLabel.text = "I am \(selectedValue)% confident I will keep up my habit to \(name) for a month"
+        } else {
+            selectedConfidenceLabel.text = "I am \(selectedValue)% confident I will keep up my habit for a month"
+        }
+        
+        // hide or display reminder label depending on confidence
+        if selectedValue < 90 {
+            reminderLabel.isHidden = false
+        } else {
+            reminderLabel.isHidden = true
+        }
+    }
     
     @objc private func nextButtonTapped() {
         // save the habitData
-        var habitDate = createDateFromHourMinute(hour: habitData.hour ?? 7, minute: habitData.minute ?? 0)
-        var newHabit = Habit(id: UUID(),
+        let habitDate = TimeFormatter.hourMinuteToDate(hour: habitData.hour ?? 7, minute: habitData.minute ?? 0)
+        let newHabit = Habit(id: UUID(),
                              name: habitData.name!,
                              description: "",
                              time: habitDate!,
                              daysOfTheWeek: habitData.selectedDays!,
                              accountabilityMetric: habitData.accountabilityMetric!,
-                             incentive: habitData.incentive!,
+                             incentive: habitData.incentive ?? .none,
                              notificationEnabled: true,
                              totalDone: 0,
                              totalFailed: 0,
-                             streaks: 0)
-        print(newHabit)
-
-        viewModel.addHabit(newHabit)
-        requestAccessToNotifications()
-        scheduleNotification(for: newHabit)
+                             streaks: 0,
+                             lastUpdateDate: Date())
         
-        // monitor location if that is the chosen form of habit accountability
-        if habitData.location != nil {
-            LocationManager.shared.startMonitoringGeofence(for: newHabit)
-        }
+        viewModel.addHabit(newHabit)
         
         dismissSelf()
     }
@@ -166,99 +250,5 @@ class MurphyjitsuViewController: UIViewController {
     
     @objc private func dismissSelf() {
         self.dismiss(animated: true, completion: nil)
-    }
-    
-    func createDateFromHourMinute(hour: Int, minute: Int) -> Date? {
-        let calendar = Calendar.current
-        let currentDate = Date()
-        
-        let components = calendar.dateComponents([.year, .month, .day], from: currentDate)
-        
-        var dateComponents = DateComponents()
-        dateComponents.year = components.year
-        dateComponents.month = components.month
-        dateComponents.day = components.day
-        dateComponents.hour = hour
-        dateComponents.minute = minute
-        
-        return calendar.date(from: dateComponents)
-    }
-    
-    private func requestAccessToNotifications() {
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
-            if granted {
-                print("Notification permission granted!")
-            } else {
-                print("Notification permission denied because: \(error?.localizedDescription ?? " no error")")
-                //maybe make this an alert in the future
-            }
-        }
-    }
-    
-    private func scheduleNotification(for habit: Habit) {
-        let center = UNUserNotificationCenter.current()
-        
-        //define notification actions depending on accountability metric
-        var actions = [UNNotificationAction]()
-        
-        switch habit.accountabilityMetric {
-        case .locationTracking:
-            let trackAction = UNNotificationAction(identifier: "Track_Action", title: "Track Habit", options: [.foreground])
-            actions.append(trackAction)
-        case .photoEvidence:
-            let recordAction = UNNotificationAction(identifier: "Record_Action", title: "Record Habit", options: [.foreground])
-            actions.append(recordAction)
-        default:
-            // in the future have location tracking lead to a map
-            break
-        }
-        
-        //defining notification category
-        let category = UNNotificationCategory(identifier: "Habit_Action_Category", actions: actions, intentIdentifiers: [], options: [])
-        center.setNotificationCategories([category])
-        
-        //creating notification
-        for (day, isActive) in habit.daysOfTheWeek {
-            if isActive {
-                let content = UNMutableNotificationContent()
-                content.title = "Right Now"
-                content.body = "Log \(habit.name) now"
-                content.sound = UNNotificationSound.default
-                
-                // information that can be fetched in notification
-                let uuidString = habit.id.uuidString
-                let metric = habit.accountabilityMetric.displayName
-                content.userInfo = ["habitID": uuidString, "metric": metric]
-                
-                //categories
-                content.categoryIdentifier = "Habit_Action_Category"
-                
-                //just making the console readable
-                let triggerDate = habit.time
-                
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateStyle = .long
-                dateFormatter.timeStyle = .medium
-                dateFormatter.timeZone = TimeZone.current
-                print("Scheduling notification for \(day) at \(dateFormatter.string(from: triggerDate))")
-                
-                //getting the days of week
-                let calendar = Calendar.current
-                var components = calendar.dateComponents([.hour, .minute], from: habit.time)
-                components.weekday = daysOfWeek.firstIndex(of: day)! + 1 //plus one bc sunday starts at 1
-                
-                let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-                let request = UNNotificationRequest(identifier: "\(habit.id)", content: content, trigger: trigger)
-                
-                center.add(request) { (error) in
-                    if let error = error {
-                        print("Error scheduling notification for \(day): \(error)")
-                    } else {
-                        print("Notification scheduled")
-                    }
-                }
-            }
-        }
     }
 }

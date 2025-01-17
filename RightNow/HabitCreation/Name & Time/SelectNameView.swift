@@ -23,7 +23,7 @@ class SelectNameView: UIView, UITextFieldDelegate {
     //initiate labels
     let whatLabel: UILabel = {
         let label = UILabel()
-        label.text = "What Habit do You Want to Start?"
+        label.text = "Which Habit do You Want to Start?"
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
         //label.textAlignment = .center
@@ -124,7 +124,7 @@ class SelectNameView: UIView, UITextFieldDelegate {
         suggestionsLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            suggestionsLabel.topAnchor.constraint(equalTo: habitTextField.bottomAnchor, constant: 40),
+            suggestionsLabel.topAnchor.constraint(equalTo: habitTextField.bottomAnchor, constant: 20),
             suggestionsLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
             suggestionsLabel.heightAnchor.constraint(equalToConstant: 22)
         ])

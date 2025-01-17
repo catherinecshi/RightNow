@@ -2,7 +2,7 @@ import UIKit
 import UserNotifications
 
 class HabitListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    
+    // to section off different levels
     struct LevelSection {
         let header: String
         let rows: [Habit]
@@ -31,11 +31,32 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             }
         
         //receives callback
-        viewModel.onDataLoaded = { [weak self] in
-            DispatchQueue.main.async {
+        viewModel.addObserver { [weak self] changedType in
+            switch changedType {
+            case .levelChanged(let habitId, let oldLevel, let newLevel):
+                // find the habit
+                for section in self?.sections ?? [] {
+                    if let habit = section.rows.first(where: { $0.id == habitId }) {
+                        let alert = CustomAlertViewController(
+                            title: "Congratulations!",
+                            message: "Your habit to \(habit.name) has just leveled up from a \(oldLevel) to \(newLevel) level!"
+                        )
+                        
+                        self?.present(alert, animated: true)
+                        break
+                    }
+                }
+            case .streakChanged(let habitId, let newStreak):
+                // handle streak changes
+                break
+            case .habitCRUD:
                 self?.updateSections()
                 self?.habitListView.tableView.reloadData()
                 self?.habitsPresent()
+                self?.updateTitle()
+                
+                // make sure the  notifications matches with the habits
+                PushNotificationDelegate.shared.auditNotifications()
             }
         }
         
@@ -45,7 +66,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         setupAddButton()
         setupSwipes()
-        habitsPresent()
         
         self.definesPresentationContext = true
     }
@@ -78,20 +98,19 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     func updateSections() {
         let groupedHabits = Dictionary(grouping: viewModel.habitsForCurrentDay, by: { $0.currentLevel.displayName })
-        print("Grouped habits: \(groupedHabits)")
         
         // sort by order cases are established in Level enum
         sections = groupedHabits.map { key, value in
             return LevelSection(header: key, rows: value)
         }.sorted(by: { Level.allCases.firstIndex(of: Level(rawValue: $0.header.lowercased())!)! < Level.allCases.firstIndex(of: Level(rawValue: $1.header.lowercased())!)! })
-        print("Updated Sections: \(sections.count) sections")
     }
     
     func updateTitle() {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/MM/dd"
         let formattedDate = dateFormatter.string(from: viewModel.currentDay)
-        habitListView.titleLabel.text = formattedDate
+        let dayOfWeek = TimeFormatter.weekdayToString(viewModel.currentDay)
+        habitListView.titleLabel.text = "\(formattedDate) - \(dayOfWeek)"
     }
     
     // MARK: Swipe Methods
@@ -166,21 +185,40 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         present(navController, animated: true, completion: nil)
     }
     
-    // MARK: Notification Methods
+    // MARK: Alert Methods
     
-    func cancelNotification(for habit: Habit) {
-        let center = UNUserNotificationCenter.current()
-        
-        for day in habit.daysOfTheWeek.keys {
-            let identifier = "\(habit.id)_\(day)"
-            center.removePendingNotificationRequests(withIdentifiers: [identifier])
+    // in the future makes sure this only fires in cases where it makes sense - like if someone frequents a location, don't fire it everytime they go to a place
+    // checks if the habit has already been done for the appropriate number of times that day
+    func isHabitDone(for habit: inout Habit) {
+        if viewModel.isHabitForToday(habit) {
+            print("habit is for today")
+            
+            #if DEBUG
+            viewModel.habitCompleted(&habit)
+            #else
+            // normal user interface
+            if viewModel.isHabitCompletedForDay(habit) {
+                print("habit already completed for today")
+                let alertController = CustomAlertViewController(title: "Habit already completed!", message: "You've already \(habit.name) today!")
+                
+                present(alertController, animated: true, completion: nil)
+            } else {
+                print("habit not completed yet")
+                viewModel.habitCompleted(&habit)
+            }
+            #endif
+        } else {
+            print("trying to present alert for habit not today")
+            let currentDayString = TimeFormatter.weekdayToString(viewModel.currentDay)
+            let alertController = CustomAlertViewController(title: "Habit not for today", message: "You don't have to \(habit.name) on \(currentDayString)!")
+            
+            present(alertController, animated: true, completion: nil)
         }
     }
     
     // MARK: TableView
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        print("Number of sections: \(sections.count)")
         return sections.count
     }
     
@@ -190,17 +228,14 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     //this is for making the right number of rows
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print("Number of rows in section \(section): \(sections[section].rows.count)")
         return sections[section].rows.count
         //return viewModel.habitsForCurrentDay.count
     }
     
     //this is for calling cell view
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        print("Configuring cell at section \(indexPath.section), row \(indexPath.row)")
         let cell = tableView.dequeueReusableCell(withIdentifier: "HabitCell", for: indexPath) as! HabitTableViewCell
         let habit = sections[indexPath.section].rows[indexPath.row]
-        print("Habit for cell: \(habit.name)")
         cell.configure(with: habit)
         
         return cell
@@ -222,9 +257,8 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             //fetch habit to delete
             let habitToDelete = self.sections[indexPath.section].rows[indexPath.row]
             
-            //delete firestore habit
+            //delete habit from firestore + locally, also delete notification
             self.viewModel.deleteHabit(habit: habitToDelete)
-            self.cancelNotification(for: habitToDelete)
             
             // remove from local sections data
             var updatedSectionRows = self.sections[indexPath.section].rows
@@ -289,6 +323,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         // check off habit
         let checkAction = UIAlertAction(title: "Check Off Habit", style: .default) { _ in
             let checkInVC = CheckInController(habit: selectedHabit)
+            checkInVC.delegate = self
             checkInVC.modalPresentationStyle = .fullScreen
             self.present(checkInVC, animated: true, completion: nil)
         }
@@ -307,5 +342,11 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         //present
         present(actionSheet, animated: true, completion: nil)
+    }
+}
+
+extension HabitListViewController: HabitCompleteDelegate {
+    func completeHabit(for habit: inout Habit) {
+        isHabitDone(for: &habit)
     }
 }
