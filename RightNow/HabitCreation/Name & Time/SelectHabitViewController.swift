@@ -107,6 +107,11 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         setupInset()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        //showUseDeviceFocus()
+    }
+    
     // MARK: Setup UI
     
     private func setupTitle() {
@@ -286,11 +291,13 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
                 self.selectTimeView.isHidden = false
                 self.selectCueView.isHidden = true
             }
-        case 1:
+            //removeWakingUpFocus()
+        case 1: // cue
             UIView.animate(withDuration: 0.3) {
                 self.selectTimeView.isHidden = true
                 self.selectCueView.isHidden = false
             }
+            //showWakingUpFocus()
         default:
             break
         }
@@ -348,6 +355,8 @@ extension SelectHabitViewController: SelectNameDelegate {
         containerView.isHidden = false
         selectTimeView.isHidden = false
         updateNextButtonState()
+        
+        //removeUseDeviceFocus()
     }
     
     func shouldAdjustHeight() {
@@ -360,7 +369,7 @@ extension SelectHabitViewController: SelectTimeDelegate {
         habitData.hour = hour
     }
     
-    func minuteSelected(_ minute: Int) {
+    func minuteSelected(_ minute: Int){
         habitData.minute = minute
     }
     
@@ -402,5 +411,23 @@ extension SelectHabitViewController: SelectCueDelegate {
                 disableNextButtonState()
             }
         }
+    }
+}
+
+extension SelectHabitViewController {
+    func showUseDeviceFocus() {
+        selectNameView.showFocusOnUseDevice()
+    }
+    
+    func removeUseDeviceFocus() {
+        selectNameView.removeFocus()
+    }
+    
+    func showWakingUpFocus() {
+        selectCueView.showFocusOnTextField()
+    }
+    
+    func removeWakingUpFocus() {
+        selectCueView.removeFocus()
     }
 }

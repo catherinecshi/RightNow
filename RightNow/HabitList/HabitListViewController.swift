@@ -1,5 +1,6 @@
 import UIKit
 import UserNotifications
+import LocalAuthentication
 
 class HabitListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // to section off different levels
@@ -11,6 +12,27 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     let habitListView = HabitListView(frame: UIScreen.main.bounds)
     let viewModel = HabitListViewModel.shared
     var sections = [LevelSection]()
+    
+    private lazy var focusView: FocusView = {
+        let view = FocusView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        view.alpha = 0.0
+        return view
+    }()
+    
+    private lazy var onboardingLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "Tap here to create your first habit!"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
     
     override func loadView() {
         self.view = habitListView
@@ -67,6 +89,38 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         setupAddButton()
         setupSwipes()
         
+        if FirstLaunchManager.shared.shouldShowWelcomeAlert {
+            DispatchQueue.main.asyncAfter(deadline: .now()) { [weak self] in
+                let alert = CustomAlertViewController(
+                    title: "Welcome!",
+                    message: "Welcome to Right Now! To get you situated, let's make your first habit."
+                )
+
+                alert.completionOk = { [weak self] in
+                    if FirstLaunchManager.shared.shouldShowOnboarding {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                            self?.setupOnboarding()
+                            self?.showOnboardingFocus()
+                            FirstLaunchManager.shared.markOnboardingAsShown()
+                            print("habit creation onboarding shown")
+                        }
+                    }
+                }
+                
+                print("presenting welcome alert")
+                self?.present(alert, animated: true)
+                FirstLaunchManager.shared.markWelcomeAsShown()
+            }
+        } else if FirstLaunchManager.shared.shouldShowOnboarding {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                self?.setupOnboarding()
+                self?.showOnboardingFocus()
+                FirstLaunchManager.shared.markOnboardingAsShown()
+                print("habit creation onboarding shown without welcome alert")
+            }
+        }
+        
+        FirstLaunchManager.shared.markAsLaunched()
         self.definesPresentationContext = true
     }
     
@@ -179,6 +233,8 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     @objc func addHabitTapped() {
+        hideOnboardingFocus()
+        
         let creationVC = SelectHabitViewController()
         let navController = UINavigationController(rootViewController: creationVC)
         navController.modalPresentationStyle = .pageSheet
@@ -348,5 +404,53 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
 extension HabitListViewController: HabitCompleteDelegate {
     func completeHabit(for habit: inout Habit) {
         isHabitDone(for: &habit)
+    }
+}
+
+// for onboarding process
+extension HabitListViewController {
+    func setupOnboarding() {
+        view.addSubview(focusView)
+        view.addSubview(onboardingLabel)
+        
+        NSLayoutConstraint.activate([
+            focusView.topAnchor.constraint(equalTo: view.topAnchor),
+            focusView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            focusView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            focusView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            // position label above add button
+            onboardingLabel.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -20),
+            onboardingLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            onboardingLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            onboardingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40)
+        ])
+    }
+    
+    func showOnboardingFocus() {
+        view.bringSubviewToFront(focusView)
+        view.bringSubviewToFront(onboardingLabel)
+        view.bringSubviewToFront(addButton)
+        
+        // make focus oval around add button
+        focusView.ovalRect = addButton.frame.insetBy(dx: -10, dy: -10)
+        
+        focusView.isHidden = false
+        onboardingLabel.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.focusView.alpha = 1.0
+            self.onboardingLabel.alpha = 1.0
+        }
+    }
+    
+    func hideOnboardingFocus() {
+        UIView.animate(withDuration: 0.3, animations: {
+            self.focusView.alpha = 0.0
+            self.onboardingLabel.alpha = 0.0
+        }, completion: { _ in
+            self.focusView.isHidden = true
+            self.onboardingLabel.isHidden = true
+        })
     }
 }

@@ -5,6 +5,8 @@ enum AccountabilityMetric: String, Codable {
     case screenTime
     case photoEvidence
     case selfTracking
+    case objectDetection
+    case stayStill
     
     var displayName: String {
         switch self {
@@ -12,6 +14,8 @@ enum AccountabilityMetric: String, Codable {
         case .screenTime: return "Track your Screen Time Usage"
         case .photoEvidence: return "Take a Photo"
         case .selfTracking: return "Self Tracking"
+        case .objectDetection: return "Object Detection"
+        case .stayStill: return "Stay Still"
         }
     }
 }

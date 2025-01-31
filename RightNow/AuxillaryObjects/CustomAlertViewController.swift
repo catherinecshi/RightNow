@@ -2,8 +2,8 @@ import Foundation
 import UIKit
 
 class CustomAlertViewController: UIViewController {
-    private var completionOk: (() -> Void)?
-    private var completionCancel: (() -> Void)?
+    var completionOk: (() -> Void)?
+    var completionCancel: (() -> Void)?
     
     private var alertTitle: String
     private var message: String
@@ -147,10 +147,11 @@ class CustomAlertViewController: UIViewController {
         // Cancel Button (if applicable)
         if cancelButtonTitle != nil {
             containerView.addSubview(cancelButton)
-            cancelButton.setTitle("Cancel", for: .normal)
+            cancelButton.setTitle(cancelButtonTitle, for: .normal)
+            cancelButton.setTitleColor(UIColor.gray, for: .normal)
             
             NSLayoutConstraint.activate([
-                cancelButton.topAnchor.constraint(equalTo: okButton.bottomAnchor, constant: 20),
+                cancelButton.topAnchor.constraint(equalTo: okButton.bottomAnchor),
                 cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
                 cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
                 cancelButton.heightAnchor.constraint(equalToConstant: 30),

@@ -31,8 +31,8 @@ class CameraView: UIView {
     lazy var switchCameraButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Switch", for: .normal)
-        button.setImage(UIImage(systemName: "arrow.triangle.2.circlepath.camera"), for: .normal)
-        button.backgroundColor = UIColor.white
+        button.setImage(UIImage(systemName: "arrow.triangle.2.circlepath.camera")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        button.backgroundColor = .clear
         button.layer.cornerRadius = 5
         button.addTarget(self, action: #selector(switchCameraButtonTapped), for: .touchUpInside)
         return button
@@ -41,7 +41,7 @@ class CameraView: UIView {
     //dismiss button
     lazy var dismissButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("X", for: .normal)
+        button.setTitle("x", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)

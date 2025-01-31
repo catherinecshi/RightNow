@@ -46,28 +46,17 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         
         if let _ = Auth.auth().currentUser {
             switch actionIdentifier {
-            case "Track_Action":
-                retrieveHabit(from: response.notification) { habit in
-                    if let habit = habit {
-                        self.presentTimerController(habit: habit)
-                        print("record action timer vc presented")
-                    } else {
-                        self.setDefaultRootViewController()
-                        print("track action default root vc presented")
-                    }
-                    completionHandler()
-                }
-            case "Record_Action":
-                retrieveHabit(from: response.notification) { habit in
-                    if let habit = habit {
-                        self.presentCameraController(habit: habit)
-                        print("track action camera vc presented")
-                    } else {
-                        self.setDefaultRootViewController()
-                        print("record action default root vc presented")
-                    }
-                    completionHandler()
-                }
+            case "Snooze_5":
+                handleSnooze5Minutes(notification: response.notification)
+                completionHandler()
+            case "Snooze_Next_Cue":
+                setDefaultRootViewController()
+                print("snooze next cue")
+                completionHandler()
+            case "Snooze_Idle":
+                setDefaultRootViewController()
+                print("Snooze idle")
+                completionHandler()
             default:
                 setDefaultRootViewController()
                 print("default vc presented")
@@ -76,6 +65,28 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         } else {
             print("not logged in")
             setWelcomeViewController()
+        }
+    }
+    
+    private func handleSnooze5Minutes(notification: UNNotification) {
+        retrieveHabit(from: notification) { habit in
+            guard let habit = habit else { return }
+            
+            let content = notification.request.content.mutableCopy() as! UNMutableNotificationContent
+            content.categoryIdentifier = "HabitReminder"
+            
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5 * 60, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "\(habit.id.uuidString)_snoozed",
+                content: content,
+                trigger: trigger
+            )
+            
+            self.notificationCenter.add(request) { error in
+                if let error = error {
+                    print("Error scheduling snoozed notification: \(error)")
+                }
+            }
         }
     }
     
@@ -163,7 +174,8 @@ extension PushNotificationDelegate {
                 DispatchQueue.main.async {
                     UIApplication.shared.registerForRemoteNotifications()
                     UNUserNotificationCenter.current().delegate = self
-                print("User granted push notifications")
+                    //self.setupNotificationCategories()
+                    print("User granted push notifications")
                 }
             } else {
                 print("User denied push notifications")
@@ -189,6 +201,7 @@ extension PushNotificationDelegate {
             
             let content = UNMutableNotificationContent()
             content.title = "Right Now"
+            //content.categoryIdentifier = "HabitReminder"
             
             if let _ = habit.time { // for time based habits
                 content.body = "Are you starting to \(habit.name) now?"
@@ -248,6 +261,38 @@ extension PushNotificationDelegate {
             let identifier = "\(habit.id)_\(day)"
             notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
         }
+    }
+    
+    private func setupNotificationCategories() {
+        // create actions
+        let snooze5Action = UNNotificationAction(
+            identifier: "Snooze_5",
+            title: "Snooze for 5 mins",
+            options: .foreground
+        )
+        
+        let snoozeNextCueAction = UNNotificationAction(
+            identifier: "Snooze_Next_Cue",
+            title: "Reschedule habit for today",
+            options: .foreground
+        )
+        
+        let snoozeIdleAction = UNNotificationAction(
+            identifier: "Snooze_Idle",
+            title: "Snooze until next idle moment",
+            options: .foreground
+        )
+        
+        // create the category with all the actions
+        let category = UNNotificationCategory(
+            identifier: "HabitReminder",
+            actions: [snooze5Action, snoozeNextCueAction, snoozeIdleAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        // register the category
+        notificationCenter.setNotificationCategories([category])
     }
 }
 

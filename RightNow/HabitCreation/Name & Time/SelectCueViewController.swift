@@ -22,6 +22,22 @@ class SelectCueView: UIView, UITextFieldDelegate {
     let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     var selectedDays = [String: Bool]()
     
+    // for the onboarding process
+    private var focusView: FocusView?
+    
+    private var onboardingLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "Let's use the device immediately after waking up."
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
+    
     let daysLabel: UILabel = {
         let label = UILabel()
         label.text = "Which Days do You Want to do this Habit?"
@@ -52,7 +68,7 @@ class SelectCueView: UIView, UITextFieldDelegate {
     
     let suggestionsLabel: UILabel = {
         let label = UILabel()
-        label.text = "Or do you want to chain it with a pre-existing habit?"
+        label.text = "No existing habit to chain to currently"
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
         label.textAlignment = .center
@@ -263,6 +279,8 @@ class SelectCueView: UIView, UITextFieldDelegate {
         
         //update main vc
         delegate?.daySelectedCues(selectedDays)
+        
+        //removeFocus()
     }
     
     @objc private func keyboardWillShow(notification: NSNotification) {
@@ -325,5 +343,58 @@ class SelectCueView: UIView, UITextFieldDelegate {
         }
         
         return totalHeight
+    }
+}
+
+extension SelectCueView {
+    public func showFocusOnTextField() {
+        guard let window = window else { return }
+        
+        focusView?.removeFromSuperview()
+        onboardingLabel.removeFromSuperview()
+        
+        // set the text field text
+        cueTextField.text = "Waking Up"
+        delegate?.cueSelected("Waking Up")
+        
+        // create and setup focus view
+        focusView = FocusView()
+        guard let focusView = focusView else { return }
+        
+        window.addSubview(focusView)
+        focusView.frame = window.bounds
+        focusView.isUserInteractionEnabled = false
+        
+        let textFieldFrame = cueTextField.convert(cueTextField.bounds, to: window)
+        focusView.ovalRect = textFieldFrame.insetBy(dx: -4, dy: -4)
+        
+        window.addSubview(onboardingLabel)
+        onboardingLabel.isUserInteractionEnabled = false
+        
+        NSLayoutConstraint.activate([
+            onboardingLabel.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor, constant: textFieldFrame.minY - 80),
+            onboardingLabel.centerXAnchor.constraint(equalTo: window.centerXAnchor),
+            onboardingLabel.leadingAnchor.constraint(equalTo: window.leadingAnchor, constant: 40),
+            onboardingLabel.trailingAnchor.constraint(equalTo: window.trailingAnchor, constant: -40)
+        ])
+        
+        onboardingLabel.alpha = 0.0
+        onboardingLabel.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.onboardingLabel.alpha = 1.0
+        }
+    }
+    
+    public func removeFocus() {
+        print("remove focus called in cue")
+        UIView.animate(withDuration: 0.3, animations: {
+            self.onboardingLabel.alpha = 0.0
+            self.focusView?.alpha = 0.0
+        }, completion: { _ in
+            self.focusView?.removeFromSuperview()
+            self.focusView = nil
+            self.onboardingLabel.removeFromSuperview()
+        })
     }
 }

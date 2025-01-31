@@ -12,7 +12,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     
     // accountability metric variables
     var metricButtons: [UIButton] = []
-    let predefinedMetrics: [AccountabilityMetric] = [.screenTime, .locationTracking, .photoEvidence, .selfTracking]
+    let predefinedMetrics: [AccountabilityMetric] = [.stayStill, .locationTracking, .objectDetection, .selfTracking]
     let metricCount = 3
     
     private var selectedButton: UIButton?
@@ -61,6 +61,24 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         return stackView
     }()
     
+    let timeLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIConfiguration.subtitleFont
+        label.textColor = .white
+        return label
+    }()
+    
+    let timePicker: UIDatePicker = {
+        let picker = UIDatePicker()
+        picker.datePickerMode = .time
+        picker.translatesAutoresizingMaskIntoConstraints = false
+        picker.tintColor = .white
+        picker.overrideUserInterfaceStyle = .dark
+        picker.setValue(UIColor.white, forKeyPath: "textColor")
+        picker.setValue(false, forKeyPath: "highlightsToday")
+        return picker
+    }()
+    
     // MARK: Initialisation
     
     override func viewDidLoad() {
@@ -72,6 +90,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         setupWhatSubtitle()
         setupNextButton()
         setupMetricButtons()
+        setupTimePicker()
     }
     
     // MARK: Setup UI
@@ -108,7 +127,8 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             metricScrollView.topAnchor.constraint(equalTo: whatLabel.bottomAnchor, constant: 20),
             metricScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             metricScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            metricScrollView.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: 20),
+            //metricScrollView.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: 20),
+            metricScrollView.heightAnchor.constraint(equalToConstant: 400),
             
             metricStackView.topAnchor.constraint(equalTo: metricScrollView.topAnchor),
             metricStackView.leadingAnchor.constraint(equalTo: metricScrollView.leadingAnchor),
@@ -167,6 +187,28 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             currentRowStack?.addArrangedSubview(button)
             metricButtons.append(button)
         }
+    }
+    
+    private func setupTimePicker() {
+        view.addSubview(timeLabel)
+        view.addSubview(timePicker)
+        timeLabel.translatesAutoresizingMaskIntoConstraints = false
+        timePicker.translatesAutoresizingMaskIntoConstraints = false
+        
+        timeLabel.text = "How long do you want to Stay Still for?"
+        
+        NSLayoutConstraint.activate([
+            timeLabel.topAnchor.constraint(equalTo: metricStackView.bottomAnchor, constant: 20),
+            timeLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            timeLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            
+            timePicker.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: 20),
+            timePicker.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            timePicker.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ])
+        
+        timeLabel.isHidden = true
+        timePicker.isHidden = true
     }
     
     private func setupNextButton() {
@@ -253,6 +295,9 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         
         let selectedMetric = predefinedMetrics[sender.tag]
         delegate?.metricSelected(selectedMetric)
+        
+        timeLabel.isHidden = false
+        timePicker.isHidden = false
     }
     
     @objc private func nextButtonTapped() {
@@ -289,9 +334,9 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         switch name {
         case "Track your Location":
             return UIImage(systemName: "location")?.withTintColor(color, renderingMode: .alwaysOriginal)
-        case "Track your Screen Time Usage":
-            return UIImage(systemName: "iphone.gen1.slash")?.withTintColor(color, renderingMode: .alwaysOriginal)
-        case "Take a Photo":
+        case "Stay Still":
+            return UIImage(systemName: "hourglass.circle")?.withTintColor(color, renderingMode: .alwaysOriginal)
+        case "Object Detection":
             return UIImage(systemName: "photo.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Self Tracking":
             return UIImage(systemName: "person.crop.circle.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
@@ -304,9 +349,9 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         switch title {
         case "Track your Location":
             return "Complete habit by being at a specific place during the time for your habit"
-        case "Track your Screen Time Usage":
-            return "Complete your habit by using or blocking an app for a specific time"
-        case "Take a Photo":
+        case "Stay Still":
+            return "Stay still in front of something, like your laptop for work"
+        case "Object Detection":
             return "Complete your habit by taking a photo of you doing the habit"
         case "Self Tracking":
             return "Check off your habit yourself, no automatic tracking!"

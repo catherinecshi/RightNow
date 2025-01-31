@@ -17,8 +17,25 @@ class SelectNameView: UIView, UITextFieldDelegate {
     // some generic habit variables
     var habitButtons: [UIButton] = []
     let habitTextField = UITextField()
-    let predefinedHabits = ["Read", "Meditate", "Journal", "Exercise"]
-    let habitCount = 4
+    let predefinedHabits = ["Read", "Meditate", "Journal", "Exercise", "Walk"]
+    let habitCount = 5
+    
+    // for the onboarding process
+    private var focusView: FocusView?
+    private var useDeviceButton: UIButton?
+    
+    private var onboardingLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "For your first habit, let's get used to using RightNow."
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
     
     //initiate labels
     let whatLabel: UILabel = {
@@ -173,8 +190,14 @@ class SelectNameView: UIView, UITextFieldDelegate {
             
             //apply configuration
             button.configuration = configuration
-            
             button.addTarget(self, action: #selector(habitButtonTapped), for: .touchUpInside)
+            
+            // for onboarding
+            if habit == "Use Device" {
+                useDeviceButton = button
+            }
+            
+            
             habitsStackView.addArrangedSubview(button)
             habitButtons.append(button)
         }
@@ -205,12 +228,14 @@ class SelectNameView: UIView, UITextFieldDelegate {
     }
     
     @objc private func habitButtonTapped(_ sender: UIButton) {
+        print("Habit button tapped")
         guard let habitName = sender.titleLabel?.text else { return }
         
         habitTextField.text = habitName
         filterHabits(with: habitName)
         delegate?.habitSelected(habitName) // send to habitData in main VC
         updateContentView()
+        //removeFocus()
     }
     
     @objc private func keyboardWillShow(notification: NSNotification) {
@@ -282,6 +307,66 @@ class SelectNameView: UIView, UITextFieldDelegate {
         let total = contentHeight + spacing
         
         scrollViewBottomConstraint.constant = total
+    }
+    
+    // for onboarding
+    public func showFocusOnUseDevice() {
+        guard let useDeviceButton = useDeviceButton else { return }
+        guard let window = window else { return }
+        
+        // Remove existing views
+        focusView?.removeFromSuperview()
+        onboardingLabel.removeFromSuperview()
+        
+        // Create and setup focus view
+        focusView = FocusView()
+        guard let focusView = focusView else { return }
+        
+        // Add focus view to window
+        window.addSubview(focusView)
+        focusView.frame = window.bounds
+        focusView.isUserInteractionEnabled = false
+        
+        let buttonFrame = useDeviceButton.convert(useDeviceButton.bounds, to: window)
+        focusView.ovalRect = buttonFrame.insetBy(dx: -4, dy: -4)
+        
+        // Add label to window instead of self
+        window.addSubview(onboardingLabel)
+        onboardingLabel.isUserInteractionEnabled = false
+        
+        // Convert the button's frame to window coordinates for positioning the label
+        NSLayoutConstraint.activate([
+            onboardingLabel.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor, constant: buttonFrame.maxY + 20),
+            onboardingLabel.centerXAnchor.constraint(equalTo: window.centerXAnchor),
+            onboardingLabel.leadingAnchor.constraint(equalTo: window.leadingAnchor, constant: 40),
+            onboardingLabel.trailingAnchor.constraint(equalTo: window.trailingAnchor, constant: -40)
+        ])
+        
+        // Animate the label appearance
+        onboardingLabel.alpha = 0.0
+        onboardingLabel.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.onboardingLabel.alpha = 1.0
+        }
+    }
+    
+    public func removeFocus() {
+        print("remove focus called")
+        UIView.animate(withDuration: 0.3, animations: {
+            self.onboardingLabel.alpha = 0.0
+            self.focusView?.alpha = 0.0
+        }, completion: { _ in
+            // Then clean up any window-level views
+           if let window = self.window {
+               for subview in window.subviews {
+                   if subview is FocusView || subview == self.onboardingLabel {
+                       subview.removeFromSuperview()
+                   }
+               }
+           }
+           self.focusView = nil
+        })
     }
     
     // MARK: Intrinsic Content Size for Subview

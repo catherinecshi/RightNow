@@ -42,6 +42,8 @@
 		FB23F3E62D34389D006A4A16 /* AccountabilityMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3E52D34389D006A4A16 /* AccountabilityMetric.swift */; };
 		FB23F3E82D3438C3006A4A16 /* Incentive.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3E72D3438C3006A4A16 /* Incentive.swift */; };
 		FB23F3EB2D347F6B006A4A16 /* SelectCueViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3EA2D347F6B006A4A16 /* SelectCueViewController.swift */; };
+		FB23F3ED2D3F0217006A4A16 /* FocusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3EC2D3F0217006A4A16 /* FocusView.swift */; };
+		FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */; };
 		FB2665B22CF535C80025353D /* PushNotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B12CF535C80025353D /* PushNotificationDelegate.swift */; };
 		FB2665B42CF5466E0025353D /* CompositeAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B32CF5466E0025353D /* CompositeAppDelegate.swift */; };
 		FB2665B92CF55CE30025353D /* AppDelegateFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */; };
@@ -121,6 +123,8 @@
 		FB23F3E52D34389D006A4A16 /* AccountabilityMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountabilityMetric.swift; sourceTree = "<group>"; };
 		FB23F3E72D3438C3006A4A16 /* Incentive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Incentive.swift; sourceTree = "<group>"; };
 		FB23F3EA2D347F6B006A4A16 /* SelectCueViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCueViewController.swift; sourceTree = "<group>"; };
+		FB23F3EC2D3F0217006A4A16 /* FocusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusView.swift; sourceTree = "<group>"; };
+		FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchManager.swift; sourceTree = "<group>"; };
 		FB2665B12CF535C80025353D /* PushNotificationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationDelegate.swift; sourceTree = "<group>"; };
 		FB2665B32CF5466E0025353D /* CompositeAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeAppDelegate.swift; sourceTree = "<group>"; };
 		FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateFactory.swift; sourceTree = "<group>"; };
@@ -332,6 +336,8 @@
 				FB8E9CD02AF8987A0055DADC /* UIConfiguration.swift */,
 				FB23F3DF2D330D84006A4A16 /* CustomAlertViewController.swift */,
 				FB23F3E32D343798006A4A16 /* TimeFormatter.swift */,
+				FB23F3EC2D3F0217006A4A16 /* FocusView.swift */,
+				FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */,
 			);
 			path = AuxillaryObjects;
 			sourceTree = "<group>";
@@ -589,6 +595,7 @@
 				FB22A7F92AB7E80D00F63D42 /* WelcomeViewController.swift in Sources */,
 				FB22A7EC2AB7E58200F63D42 /* StatusViewModel.swift in Sources */,
 				FB0E0E752B828B57003177AF /* HabitGoalLevelView.swift in Sources */,
+				FB23F3ED2D3F0217006A4A16 /* FocusView.swift in Sources */,
 				FB6E527D2AE2021300499E1C /* HabitListViewController.swift in Sources */,
 				FB2A2B372C8CBBE3003F31B2 /* Location.swift in Sources */,
 				FB23F3E82D3438C3006A4A16 /* Incentive.swift in Sources */,
@@ -621,6 +628,7 @@
 				FB2A2B402CA60102003F31B2 /* GeofenceData.swift in Sources */,
 				FB0E0E6F2B814143003177AF /* HabitProgressViewController.swift in Sources */,
 				FB34FCC22AD837870032872E /* CameraViewDelegate.swift in Sources */,
+				FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */,
 				FB28B52F2B69559B004D5953 /* SelectNameView.swift in Sources */,
 				FB6E52822AE3296500499E1C /* HabitEditingViewController.swift in Sources */,
 				FB3E30B32ABC7CD6005B5E88 /* TimerController.swift in Sources */,
@@ -792,6 +800,7 @@
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "To track your habit";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "To track your habit";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "To track your habit";
@@ -827,6 +836,7 @@
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "To track your habit";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "To track your habit";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "To track your habit";

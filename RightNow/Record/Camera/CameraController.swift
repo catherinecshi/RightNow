@@ -117,9 +117,24 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
         
         if let data = photoData, let image = UIImage(data: data) {
             cameraView.previewImageView.image = image
-            let photoTakenVC = PhotoTakenViewController()
-            photoTakenVC.previewImageView.image = image
-            self.navigationController?.pushViewController(photoTakenVC, animated: true)
+            
+            let alertVC = CustomAlertViewController(
+                title: "Photo Taken!",
+                message: "Is this object a Cup?",
+                okButtonTitle: "Yes",
+                cancelButtonTitle: "No",
+                completionOk: { [weak self] in
+                    let photoTakenVC = PhotoTakenViewController()
+                    photoTakenVC.previewImageView.image = image
+                    self?.navigationController?.pushViewController(photoTakenVC, animated: true)
+                },
+                completionCancel: { [weak self] in
+                    // reset camera view
+                    self?.cameraView.previewImageView.image = nil
+                }
+            )
+            
+            present(alertVC, animated: true)
         }
     }
     
