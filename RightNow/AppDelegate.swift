@@ -17,8 +17,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // enable offline functioning bc firebase
         Database.database().isPersistenceEnabled = true
         
-        // initialise singleton LocationManager
-        let _ = LocationManager.shared
+        // initialise LocationManager
+        let locationManager = LocationManager.shared
+        locationManager.synchronizeGeofencesWithHabits()
         
         // forward call to composite delegate
         _ = appDelegate.application?(application, didFinishLaunchingWithOptions: launchOptions) ?? false

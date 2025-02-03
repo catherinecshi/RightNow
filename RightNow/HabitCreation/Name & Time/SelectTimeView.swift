@@ -205,9 +205,20 @@ extension SelectTimeView: UIPickerViewDelegate {
         //modulo arithmetic to determine the actual hour or minute
         let selectedHour = hours[pickerView.selectedRow(inComponent: 0) % hours.count]
         let selectedMinute = minutes[pickerView.selectedRow(inComponent: 1) % minutes.count]
+        let isPM = pickerView.selectedRow(inComponent: 2) % amPm.count == 1 // true if PM
+        
+        // convert to 24-hour format
+        let convertedHour: Int
+        if isPM {
+            // 12 stays the same, other hours add 12
+            convertedHour = selectedHour == 12 ? 12 : selectedHour + 12
+        } else {
+            // 12 becomes 0, all others stay the same
+            convertedHour = selectedHour == 12 ? 0 : selectedHour
+        }
         
         //update habitdata
-        delegate?.hourSelected(selectedHour)
+        delegate?.hourSelected(convertedHour)
         delegate?.minuteSelected(selectedMinute)
     }
 }

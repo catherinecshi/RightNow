@@ -235,6 +235,7 @@ class MurphyjitsuViewController: UIViewController {
                              time: habitDate!,
                              daysOfTheWeek: habitData.selectedDays!,
                              accountabilityMetric: habitData.accountabilityMetric!,
+                             location: habitData.location,
                              incentive: habitData.incentive ?? .none,
                              notificationEnabled: true,
                              totalDone: 0,

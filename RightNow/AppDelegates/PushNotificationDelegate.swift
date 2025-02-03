@@ -296,6 +296,78 @@ extension PushNotificationDelegate {
     }
 }
 
+// MARK: - Create Custom Notification
+extension PushNotificationDelegate {
+    struct NotificationConfig {
+        let title: String
+        let body: String
+        let identifier: String
+        let userInfo: [AnyHashable: Any]?
+        let timeInterval: TimeInterval
+        let sound: UNNotificationSound?
+        let categoryIdentifier: String?
+        
+        // default values
+        init(
+            title: String,
+            body: String,
+            identifier: String,
+            userInfo: [AnyHashable: Any]? = nil,
+            timeInterval: TimeInterval = 1,
+            sound: UNNotificationSound? = .default,
+            categoryIdentifier: String? = nil
+        ) {
+            self.title = title
+            self.body = body
+            self.identifier = identifier
+            self.userInfo = userInfo
+            self.timeInterval = timeInterval
+            self.sound = sound
+            self.categoryIdentifier = categoryIdentifier
+        }
+    }
+    
+    func sendImmediateNotification(
+        config: NotificationConfig,
+        completion: ((Error?) -> Void)? = nil
+    ) {
+        let content = UNMutableNotificationContent()
+        content.title = config.title
+        content.body = config.body
+        
+        // optional configuration
+        if let sound = config.sound {
+            content.sound = sound
+        }
+        
+        if let userInfo = config.userInfo {
+            content.userInfo = userInfo
+        }
+        
+        if let categoryIdentifier = config.categoryIdentifier {
+            content.categoryIdentifier = categoryIdentifier
+        }
+        
+        let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: config.timeInterval,
+            repeats: false
+        )
+        
+        let request = UNNotificationRequest(
+            identifier: config.identifier,
+            content: content,
+            trigger: trigger
+        )
+        
+        notificationCenter.add(request) { error in
+            if let error = error {
+                print("Error sending notification: \(error.localizedDescription)")
+            }
+            completion?(error)
+        }
+    }
+}
+
 // MARK: - Debugging Purposes
 extension PushNotificationDelegate {
     private func getPendingNotifications() {

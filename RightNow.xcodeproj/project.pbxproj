@@ -345,8 +345,10 @@
 		FB23F3E22D34376D006A4A16 /* Location */ = {
 			isa = PBXGroup;
 			children = (
+				FB2A2B3F2CA60102003F31B2 /* GeofenceData.swift */,
 				FB2A2B362C8CBBE3003F31B2 /* Location.swift */,
 				FB2A2AE92C82694D003F31B2 /* LocationDataManager.swift */,
+				FB2A2B342C8CAB0F003F31B2 /* LocationManager.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -374,20 +376,10 @@
 		FB2A2B312C8BB0AF003F31B2 /* Accountability */ = {
 			isa = PBXGroup;
 			children = (
-				FB2A2B3E2C9CF44C003F31B2 /* Location Tracking */,
 				FB0E0E6A2B7FB140003177AF /* AccountabilityViewController.swift */,
+				FB2A2B322C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift */,
 			);
 			path = Accountability;
-			sourceTree = "<group>";
-		};
-		FB2A2B3E2C9CF44C003F31B2 /* Location Tracking */ = {
-			isa = PBXGroup;
-			children = (
-				FB2A2B322C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift */,
-				FB2A2B342C8CAB0F003F31B2 /* LocationManager.swift */,
-				FB2A2B3F2CA60102003F31B2 /* GeofenceData.swift */,
-			);
-			path = "Location Tracking";
 			sourceTree = "<group>";
 		};
 		FB34FCC72AD9C1310032872E /* Camera */ = {

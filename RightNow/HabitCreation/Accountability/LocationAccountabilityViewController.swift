@@ -206,6 +206,7 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
         let longitude = coordinate.longitude
         
         habitData.location = Location(id: UUID(), name: habitData.name ?? "habit location", latitude: latitude, longitude: longitude)
+        print("added location \(habitData.location?.name ?? "no location") at latitude \(latitude) and longitude \(longitude)")
         updateNextButtonState()
     }
     

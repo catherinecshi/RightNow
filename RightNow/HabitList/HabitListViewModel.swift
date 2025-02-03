@@ -55,6 +55,7 @@ class HabitListViewModel {
         
         // monitor location if that is the chosen form of habit accountability
         if habit.location != nil {
+            print("starting geofence monitoring for \(habit.name)")
             LocationManager.shared.startMonitoringGeofence(for: habit)
         }
         
