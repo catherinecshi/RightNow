@@ -18,8 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         Database.database().isPersistenceEnabled = true
         
         // initialise LocationManager
-        let locationManager = LocationManager.shared
-        locationManager.synchronizeGeofencesWithHabits()
+        let _ = LocationManager.shared
         
         // forward call to composite delegate
         _ = appDelegate.application?(application, didFinishLaunchingWithOptions: launchOptions) ?? false

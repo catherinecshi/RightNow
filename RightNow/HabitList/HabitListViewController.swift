@@ -76,9 +76,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
                 self?.habitListView.tableView.reloadData()
                 self?.habitsPresent()
                 self?.updateTitle()
-                
-                // make sure the  notifications matches with the habits
-                PushNotificationDelegate.shared.auditNotifications()
             }
         }
         
@@ -132,6 +129,23 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         habitListView.tableView.reloadData()
         habitsPresent()
         updateTitle()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        // hide navigation bar when leaving this view
+        // this ensures other views in the navigation stack have a navigation bar
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // adjust bottom constraint for add button to account for tab bar
+        if let existingConstraint = addButton.constraints.first(where: { $0.firstAttribute == .bottom }) {
+            existingConstraint.constant = -(view.safeAreaInsets.bottom + 20)
+        }
     }
     
     func habitsPresent() {

@@ -21,8 +21,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         if Auth.auth().currentUser != nil {
             // show habitlistvc if the user is signed in
-            let habitVC = HabitListViewController()
-            window?.rootViewController = UINavigationController(rootViewController: habitVC)
+            let tabBarController = TabBarController()
+            window?.rootViewController = tabBarController
             window?.makeKeyAndVisible()
         } else {
             // user is not signed in

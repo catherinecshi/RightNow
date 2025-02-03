@@ -44,6 +44,8 @@
 		FB23F3EB2D347F6B006A4A16 /* SelectCueViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3EA2D347F6B006A4A16 /* SelectCueViewController.swift */; };
 		FB23F3ED2D3F0217006A4A16 /* FocusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3EC2D3F0217006A4A16 /* FocusView.swift */; };
 		FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */; };
+		FB23F3F12D51688A006A4A16 /* TabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3F02D516889006A4A16 /* TabBarController.swift */; };
+		FB23F3F32D51698F006A4A16 /* MaowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3F22D51698F006A4A16 /* MaowViewController.swift */; };
 		FB2665B22CF535C80025353D /* PushNotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B12CF535C80025353D /* PushNotificationDelegate.swift */; };
 		FB2665B42CF5466E0025353D /* CompositeAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B32CF5466E0025353D /* CompositeAppDelegate.swift */; };
 		FB2665B92CF55CE30025353D /* AppDelegateFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */; };
@@ -125,6 +127,8 @@
 		FB23F3EA2D347F6B006A4A16 /* SelectCueViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCueViewController.swift; sourceTree = "<group>"; };
 		FB23F3EC2D3F0217006A4A16 /* FocusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusView.swift; sourceTree = "<group>"; };
 		FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchManager.swift; sourceTree = "<group>"; };
+		FB23F3F02D516889006A4A16 /* TabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarController.swift; sourceTree = "<group>"; };
+		FB23F3F22D51698F006A4A16 /* MaowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowViewController.swift; sourceTree = "<group>"; };
 		FB2665B12CF535C80025353D /* PushNotificationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationDelegate.swift; sourceTree = "<group>"; };
 		FB2665B32CF5466E0025353D /* CompositeAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeAppDelegate.swift; sourceTree = "<group>"; };
 		FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateFactory.swift; sourceTree = "<group>"; };
@@ -255,6 +259,8 @@
 				FB22A7B32AB7D49C00F63D42 /* AppDelegate.swift */,
 				FB22A7B52AB7D49C00F63D42 /* SceneDelegate.swift */,
 				FB6E52742AE1FC4D00499E1C /* Habit.swift */,
+				FB23F3F02D516889006A4A16 /* TabBarController.swift */,
+				FB23F3F22D51698F006A4A16 /* MaowViewController.swift */,
 				FB2665BC2D0A0CB80025353D /* CheckInController.swift */,
 				FB22A7BC2AB7D49E00F63D42 /* Assets.xcassets */,
 				FB22A7BE2AB7D49E00F63D42 /* LaunchScreen.storyboard */,
@@ -620,6 +626,7 @@
 				FB2A2B402CA60102003F31B2 /* GeofenceData.swift in Sources */,
 				FB0E0E6F2B814143003177AF /* HabitProgressViewController.swift in Sources */,
 				FB34FCC22AD837870032872E /* CameraViewDelegate.swift in Sources */,
+				FB23F3F32D51698F006A4A16 /* MaowViewController.swift in Sources */,
 				FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */,
 				FB28B52F2B69559B004D5953 /* SelectNameView.swift in Sources */,
 				FB6E52822AE3296500499E1C /* HabitEditingViewController.swift in Sources */,
@@ -639,6 +646,7 @@
 				FB22A7EE2AB7E5F700F63D42 /* SignUpViewController.swift in Sources */,
 				FB22A7D22AB7DCD300F63D42 /* CameraController.swift in Sources */,
 				FB22A7F62AB7E7B200F63D42 /* SplashViewController.swift in Sources */,
+				FB23F3F12D51688A006A4A16 /* TabBarController.swift in Sources */,
 				FB22A7CD2AB7D7A000F63D42 /* EKWrapper.swift in Sources */,
 				FB34FCB82AD824070032872E /* TimerModel.swift in Sources */,
 				FB2665B22CF535C80025353D /* PushNotificationDelegate.swift in Sources */,

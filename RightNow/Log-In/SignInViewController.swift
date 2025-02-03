@@ -113,10 +113,7 @@ class SignInViewController: UIViewController {
             .sink(receiveValue: { [weak self] status in
                 if let status = status, status.title == "Successful" {
                     // This means the login was successful
-                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-                        let habitVC = HabitListViewController()
-                        self?.navigationController?.pushViewController(habitVC, animated: true)
-                    }
+                    self?.transitionToMainApp()
                 } else {
                     let alert = UIAlertController(title: status?.title, message: status?.message, preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
@@ -124,6 +121,25 @@ class SignInViewController: UIViewController {
                 }
             })
             .store(in: &cancellableBag)
+    }
+    
+    func transitionToMainApp() {
+        // Create our tab bar controller
+        let tabBarController = TabBarController()
+        
+        // Create a transition animation
+        let transition = CATransition()
+        transition.duration = 0.3
+        transition.type = CATransitionType.push
+        transition.subtype = CATransitionSubtype.fromRight
+        transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+        
+        // Get the window using the current window scene
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            window.layer.add(transition, forKey: nil)
+            window.rootViewController = tabBarController
+        }
     }
 
 }

@@ -67,10 +67,19 @@ class SplashViewController: UIViewController {
     }
 
     func transitionToMainApp() {
-        // Assuming that you've refactored the logic that sets up the main interface into a function called `setupMainTabBarController()` in SceneDelegate.
-        if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-            let habitVC = HabitListViewController()
-            navigationController?.pushViewController(habitVC, animated: true)
+        let tabBarController = TabBarController()
+        
+        // transition animation
+        let transition = CATransition()
+        transition.duration = 0.3
+        transition.type = CATransitionType.push
+        transition.subtype = CATransitionSubtype.fromRight
+        transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            window.layer.add(transition, forKey: nil)
+            window.rootViewController = tabBarController
         }
     }
     

@@ -100,8 +100,9 @@ class HabitListViewModel {
                     //notify that data is loaded
                     self.notifyObservers(of: .habitCRUD)
                     
-                    // make sure notifications match up with habits
+                    // make sure notifications and geofences match up with habits
                     PushNotificationDelegate.shared.auditNotifications()
+                    LocationManager.shared.synchronizeGeofencesWithHabits()
                     
                     // check if any streaks have been broken since last update
                     self.habits = self.habits.map { var habit = $0; habit.updateStats(); return habit }
