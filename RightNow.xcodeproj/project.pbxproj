@@ -51,7 +51,6 @@
 		FB2665B92CF55CE30025353D /* AppDelegateFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */; };
 		FB2665BB2D00EECC0025353D /* test notifications.apns in Resources */ = {isa = PBXBuildFile; fileRef = FB2665BA2D00EECC0025353D /* test notifications.apns */; };
 		FB2665BD2D0A0CB80025353D /* CheckInController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665BC2D0A0CB80025353D /* CheckInController.swift */; };
-		FB28B52F2B69559B004D5953 /* SelectNameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB28B52E2B69559B004D5953 /* SelectNameView.swift */; };
 		FB2A2AEA2C82694D003F31B2 /* LocationDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2AE92C82694D003F31B2 /* LocationDataManager.swift */; };
 		FB2A2B332C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B322C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift */; };
 		FB2A2B352C8CAB0F003F31B2 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B342C8CAB0F003F31B2 /* LocationManager.swift */; };
@@ -80,7 +79,7 @@
 		FBA721392AD3293000E3EC4F /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = FBA721382AD3293000E3EC4F /* FirebaseDatabase */; };
 		FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */; };
 		FBA721422AD636D400E3EC4F /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FBA721412AD636D400E3EC4F /* FirebaseFirestoreSwift */; };
-		FBD216A62B3297780084F70B /* SelectTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeView.swift */; };
+		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
 		FBD591D82AE0A36800B9EA8F /* CalendarKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBD591D72AE0A36800B9EA8F /* CalendarKit */; };
 		FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBDE05182D29BD1D00C46EBB /* Level.swift */; };
 		FBE946712ACF5D1100CA11ED /* PhotoTakenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */; };
@@ -134,7 +133,6 @@
 		FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateFactory.swift; sourceTree = "<group>"; };
 		FB2665BA2D00EECC0025353D /* test notifications.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = "test notifications.apns"; sourceTree = "<group>"; };
 		FB2665BC2D0A0CB80025353D /* CheckInController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInController.swift; sourceTree = "<group>"; };
-		FB28B52E2B69559B004D5953 /* SelectNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectNameView.swift; sourceTree = "<group>"; };
 		FB2A2AE92C82694D003F31B2 /* LocationDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationDataManager.swift; sourceTree = "<group>"; };
 		FB2A2B322C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccountabilityViewController.swift; sourceTree = "<group>"; };
 		FB2A2B342C8CAB0F003F31B2 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
@@ -162,7 +160,7 @@
 		FB8E9CCE2AF8823A0055DADC /* HabitData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitData.swift; sourceTree = "<group>"; };
 		FB8E9CD02AF8987A0055DADC /* UIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIConfiguration.swift; sourceTree = "<group>"; };
 		FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewImageViewConstraints.swift; sourceTree = "<group>"; };
-		FBD216A52B3297780084F70B /* SelectTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeView.swift; sourceTree = "<group>"; };
+		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -206,8 +204,7 @@
 			isa = PBXGroup;
 			children = (
 				FB8E9CCC2AF87FE10055DADC /* SelectHabitViewController.swift */,
-				FB28B52E2B69559B004D5953 /* SelectNameView.swift */,
-				FBD216A52B3297780084F70B /* SelectTimeView.swift */,
+				FBD216A52B3297780084F70B /* SelectTimeViewController.swift */,
 				FB23F3EA2D347F6B006A4A16 /* SelectCueViewController.swift */,
 			);
 			path = "Name & Time";
@@ -628,7 +625,6 @@
 				FB34FCC22AD837870032872E /* CameraViewDelegate.swift in Sources */,
 				FB23F3F32D51698F006A4A16 /* MaowViewController.swift in Sources */,
 				FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */,
-				FB28B52F2B69559B004D5953 /* SelectNameView.swift in Sources */,
 				FB6E52822AE3296500499E1C /* HabitEditingViewController.swift in Sources */,
 				FB3E30B32ABC7CD6005B5E88 /* TimerController.swift in Sources */,
 				FB22A7F02AB7E64D00F63D42 /* SignInViewController.swift in Sources */,
@@ -640,7 +636,7 @@
 				FB8E9CD12AF8987A0055DADC /* UIConfiguration.swift in Sources */,
 				FB22A7D72AB7E3A000F63D42 /* AppState.swift in Sources */,
 				FB34FCC02AD836EC0032872E /* CameraModelDelegate.swift in Sources */,
-				FBD216A62B3297780084F70B /* SelectTimeView.swift in Sources */,
+				FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */,
 				FB22A7C82AB7D67700F63D42 /* CalendarViewController.swift in Sources */,
 				FB6E52752AE1FC4D00499E1C /* Habit.swift in Sources */,
 				FB22A7EE2AB7E5F700F63D42 /* SignUpViewController.swift in Sources */,
