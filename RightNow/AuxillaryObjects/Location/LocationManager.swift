@@ -16,6 +16,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        setupHabitObserver()
     }
     
     func requestAuthorization() {
@@ -93,6 +94,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         case .authorizedAlways:
             startLocationUpdates()
         case .authorizedWhenInUse:
+            
             locationManager.startUpdatingLocation()
         case .notDetermined:
             requestAuthorization()
@@ -230,23 +232,38 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         // ios monitored regions
         let monitoredRegions = locationManager.monitoredRegions
         
-        print("----- Starting Geofence Synchronization --------")
-        print("Found \(currentHabits.count) habits with locations")
-        print("Currently monitoring \(monitoredRegions.count) regions in iOS")
-        print("Locally storing \(monitoredGeofences.count) geofences")
+        GeofenceLogger.shared.log("----- Starting Geofence Synchronization --------")
+        GeofenceLogger.shared.log("Found \(currentHabits.count) habits with locations")
+        GeofenceLogger.shared.log("Currently monitoring \(monitoredRegions.count) regions in iOS")
+        GeofenceLogger.shared.log("Locally storing \(monitoredGeofences.count) geofences")
+        
+        GeofenceLogger.shared.log("\nCurrent monitored regions:")
+        monitoredRegions.forEach { region in
+            GeofenceLogger.shared.log("- \(region.identifier)")
+        }
         
         // remove ios monitored regions
         for region in monitoredRegions {
             if !validHabitNames.contains(region.identifier) {
-                print("Removing outdated iOS region: \(region.identifier)")
+                GeofenceLogger.shared.log("Removing outdated iOS region: \(region.identifier)")
                 locationManager.stopMonitoring(for: region)
+                
+                //verify removals
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self = self else { return }
+                    if self.locationManager.monitoredRegions.contains(where: { $0.identifier == region.identifier }) {
+                        print("⚠️ Region \(region.identifier) still present after removal attempt")
+                    } else {
+                        print("✅ Region \(region.identifier) successfully removed")
+                    }
+                }
             }
         }
         
         // remove local regions
         let outdatedGeofences = monitoredGeofences.keys.filter { !validHabitNames.contains($0) }
         for geofenceName in outdatedGeofences {
-            print("Removing outdated local geofence: \(geofenceName)")
+            GeofenceLogger.shared.log("Removing outdated local geofence: \(geofenceName)")
             monitoredGeofences.removeValue(forKey: geofenceName)
         }
         
@@ -256,14 +273,56 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             let isMonitored = monitoredRegions.contains { $0.identifier == habitName }
             
             if !isMonitored {
-                print("Adding missing geofence for habit: \(habitName)")
+                GeofenceLogger.shared.log("Adding missing geofence for habit: \(habitName)")
                 startMonitoringGeofence(for: habit)
             }
         }
         
         // print final status
-        print("Now monitoring \(locationManager.monitoredRegions.count) regions on iOS")
-        print("Now storing \(monitoredGeofences.count) local geofences")
-        print("------- Synchronization Complete---------")
+        GeofenceLogger.shared.log("\nFinal state - iOS monitored regions:")
+        locationManager.monitoredRegions.forEach { region in
+            GeofenceLogger.shared.log("- \(region.identifier)")
+        }
+        
+        GeofenceLogger.shared.log("Now storing \(monitoredGeofences.count) local geofences")
+        GeofenceLogger.shared.log("------- Synchronization Complete---------")
+    }
+}
+
+// MARK: - Checking Authorization Status and Displaying Appropriate Alerts
+extension Notification.Name {
+    static let locationAuthorizationDidChange = Notification.Name("locationAuthorizationDidChange")
+}
+
+extension LocationManager {
+    var authorizationStatus: CLAuthorizationStatus {
+        return locationManager.authorizationStatus
+    }
+    
+    var hasShownWhenInUseAlert: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "hasShownWhenInUseAlert")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "hasShownWhenInUseAlert")
+        }
+    }
+    
+    // 
+}
+
+// MARK: - Observe Habits
+extension LocationManager {
+    func setupHabitObserver() {
+        HabitListViewModel.shared.addObserver { [weak self] changeType in
+            guard let self = self else { return }
+            
+            switch changeType {
+            case .habitCRUD:
+                self.synchronizeGeofencesWithHabits()
+            default:
+                break
+            }
+        }
     }
 }

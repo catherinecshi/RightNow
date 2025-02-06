@@ -46,12 +46,12 @@
 		FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */; };
 		FB23F3F12D51688A006A4A16 /* TabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3F02D516889006A4A16 /* TabBarController.swift */; };
 		FB23F3F32D51698F006A4A16 /* MaowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3F22D51698F006A4A16 /* MaowViewController.swift */; };
+		FB23F3F52D550516006A4A16 /* GeofenceLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23F3F42D550516006A4A16 /* GeofenceLogger.swift */; };
 		FB2665B22CF535C80025353D /* PushNotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B12CF535C80025353D /* PushNotificationDelegate.swift */; };
 		FB2665B42CF5466E0025353D /* CompositeAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B32CF5466E0025353D /* CompositeAppDelegate.swift */; };
 		FB2665B92CF55CE30025353D /* AppDelegateFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */; };
 		FB2665BB2D00EECC0025353D /* test notifications.apns in Resources */ = {isa = PBXBuildFile; fileRef = FB2665BA2D00EECC0025353D /* test notifications.apns */; };
 		FB2665BD2D0A0CB80025353D /* CheckInController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2665BC2D0A0CB80025353D /* CheckInController.swift */; };
-		FB2A2AEA2C82694D003F31B2 /* LocationDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2AE92C82694D003F31B2 /* LocationDataManager.swift */; };
 		FB2A2B332C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B322C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift */; };
 		FB2A2B352C8CAB0F003F31B2 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B342C8CAB0F003F31B2 /* LocationManager.swift */; };
 		FB2A2B372C8CBBE3003F31B2 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B362C8CBBE3003F31B2 /* Location.swift */; };
@@ -128,12 +128,12 @@
 		FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchManager.swift; sourceTree = "<group>"; };
 		FB23F3F02D516889006A4A16 /* TabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarController.swift; sourceTree = "<group>"; };
 		FB23F3F22D51698F006A4A16 /* MaowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowViewController.swift; sourceTree = "<group>"; };
+		FB23F3F42D550516006A4A16 /* GeofenceLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofenceLogger.swift; sourceTree = "<group>"; };
 		FB2665B12CF535C80025353D /* PushNotificationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationDelegate.swift; sourceTree = "<group>"; };
 		FB2665B32CF5466E0025353D /* CompositeAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeAppDelegate.swift; sourceTree = "<group>"; };
 		FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateFactory.swift; sourceTree = "<group>"; };
 		FB2665BA2D00EECC0025353D /* test notifications.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = "test notifications.apns"; sourceTree = "<group>"; };
 		FB2665BC2D0A0CB80025353D /* CheckInController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInController.swift; sourceTree = "<group>"; };
-		FB2A2AE92C82694D003F31B2 /* LocationDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationDataManager.swift; sourceTree = "<group>"; };
 		FB2A2B322C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccountabilityViewController.swift; sourceTree = "<group>"; };
 		FB2A2B342C8CAB0F003F31B2 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		FB2A2B362C8CBBE3003F31B2 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
@@ -350,8 +350,8 @@
 			children = (
 				FB2A2B3F2CA60102003F31B2 /* GeofenceData.swift */,
 				FB2A2B362C8CBBE3003F31B2 /* Location.swift */,
-				FB2A2AE92C82694D003F31B2 /* LocationDataManager.swift */,
 				FB2A2B342C8CAB0F003F31B2 /* LocationManager.swift */,
+				FB23F3F42D550516006A4A16 /* GeofenceLogger.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -585,7 +585,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB2A2AEA2C82694D003F31B2 /* LocationDataManager.swift in Sources */,
 				FB6E527B2AE201F500499E1C /* HabitListView.swift in Sources */,
 				FB22A7F92AB7E80D00F63D42 /* WelcomeViewController.swift in Sources */,
 				FB22A7EC2AB7E58200F63D42 /* StatusViewModel.swift in Sources */,
@@ -641,6 +640,7 @@
 				FB6E52752AE1FC4D00499E1C /* Habit.swift in Sources */,
 				FB22A7EE2AB7E5F700F63D42 /* SignUpViewController.swift in Sources */,
 				FB22A7D22AB7DCD300F63D42 /* CameraController.swift in Sources */,
+				FB23F3F52D550516006A4A16 /* GeofenceLogger.swift in Sources */,
 				FB22A7F62AB7E7B200F63D42 /* SplashViewController.swift in Sources */,
 				FB23F3F12D51688A006A4A16 /* TabBarController.swift in Sources */,
 				FB22A7CD2AB7D7A000F63D42 /* EKWrapper.swift in Sources */,
@@ -797,9 +797,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "To track your habit";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "To track your habit";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "To track your habit";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -833,9 +833,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "To track your habit";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "To track your habit";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "To track your habit";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

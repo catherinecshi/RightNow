@@ -99,6 +99,7 @@ class HabitListViewModel {
                     
                     //notify that data is loaded
                     self.notifyObservers(of: .habitCRUD)
+                    print(self.habits)
                     
                     // make sure notifications and geofences match up with habits
                     PushNotificationDelegate.shared.auditNotifications()
@@ -155,11 +156,6 @@ class HabitListViewModel {
             return
         }
         
-        // stop geofence tracking if there is a location
-        if let location = habit.location {
-            LocationManager.shared.stopMonitoringGeofence(for: location)
-        }
-        
         //use habit's UUID as the document ID
         let habitId = habit.id.uuidString
         
@@ -173,7 +169,7 @@ class HabitListViewModel {
         center.removePendingNotificationRequests(withIdentifiers: [habitId])
         
         // delete day specific notifications
-        let weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        let weekdays = TimeFormatter.allDays
         let dayIdentifiers = weekdays.map { "\(habitId)_\($0)" }
         center.removePendingNotificationRequests(withIdentifiers: dayIdentifiers)
         
@@ -192,16 +188,26 @@ class HabitListViewModel {
     }
     
     func updateHabit(_ updatedHabit: Habit) {
+        GeofenceLogger.shared.log("Updating habit: \(updatedHabit.name)")
+        GeofenceLogger.shared.log("Location status: \(updatedHabit.location == nil ? "nil" : "has location")")
+        GeofenceLogger.shared.log("Accountability: \(updatedHabit.accountabilityMetric)")
+        
         if let userId = Auth.auth().currentUser?.uid {
             //update local array
             if let index = habits.firstIndex(where: { $0.id == updatedHabit.id}) {
                 habits[index] = updatedHabit
             }
             
-            
             // update firestore habit
             let habitData = try! JSONEncoder().encode(updatedHabit)
-            let habitDict = try! JSONSerialization.jsonObject(with: habitData, options: []) as! [String: Any]
+            var habitDict = try! JSONSerialization.jsonObject(with: habitData, options: []) as! [String: Any]
+            GeofenceLogger.shared.log("Habit dict to save: \(habitDict)")
+            
+            if updatedHabit.location == nil {
+                habitDict["location"] = NSNull()
+            }
+            
+            GeofenceLogger.shared.log("Habit dict to save: \(habitDict)")
                 
                 db.collection("habits").document(userId).collection("userHabits").document(updatedHabit.id.uuidString).updateData(habitDict)
         }
@@ -354,10 +360,26 @@ class HabitListViewModel {
         return habit.daysOfTheWeek[currentDayString] == true
     }
     
-    // MARK: Checking stuff is ok
-    func checkGeofenceLocations() {
+    // MARK: - Location Based Functions
+    func locationBasedHabits() -> [Habit] {
+        var thereIsLocationHabit: [Habit] = []
         for habit in habits {
+            if habit.location != nil {
+                thereIsLocationHabit.append(habit)
+            }
+        }
+        
+        return thereIsLocationHabit
+    }
+    
+    func changeLocationToSelfTrack(habits: [Habit]?) {
+        let habitsToChange = habits ?? locationBasedHabits()
+        
+        for var habit in habitsToChange {
+            habit.accountabilityMetric = .selfTracking
+            habit.location = nil
             
+            updateHabit(habit)
         }
     }
 }

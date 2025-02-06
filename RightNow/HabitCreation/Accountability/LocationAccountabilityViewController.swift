@@ -39,12 +39,23 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
         return button
     }()
     
+    private var locationAuthorizationStatus: CLAuthorizationStatus {
+        return LocationManager.shared.authorizationStatus
+    }
+    
     // MARK: Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIConfiguration.tintColor
         view.clipsToBounds = true
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLocationAuthorizationChange),
+            name: .locationAuthorizationDidChange,
+            object: nil
+        )
         
         setupTitle()
         setupWhatSubtitle()
@@ -53,9 +64,12 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
         setupSearch()
         setupSearchTable()
         
-        LocationManager.shared.requestAuthorization()
-        updateMapView()
+        checkLocationAuthorization()
         addTapGesture()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: UI Setup
@@ -253,7 +267,7 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
         return MKOverlayRenderer(overlay: overlay)
     }
     
-    // MARK: Search Functionalities
+    // MARK: - Search Functionalities
     
     func updateSearchResults(for searchController: UISearchController) {
         if let searchText = searchController.searchBar.text, !searchText.isEmpty {
@@ -322,5 +336,87 @@ class LocationAccountabilityViewController: UIViewController, UISearchResultsUpd
         
         // hide table after selection
         searchTable.isHidden = true
+    }
+    
+    // MARK: - Locaiton Authorization
+    private func checkLocationAuthorization() {
+        switch locationAuthorizationStatus {
+        case .notDetermined:
+            LocationManager.shared.requestAuthorization()
+        case .restricted, .denied:
+            showLocationPermissionAlert()
+        case .authorizedWhenInUse:
+            guard !LocationManager.shared.hasShownWhenInUseAlert else {
+                print("user has seen shown in use alert already. show map view")
+                updateMapView()
+                return
+            }
+            showWhenInUseAlert()
+        case .authorizedAlways:
+            updateMapView()
+        @unknown default:
+            print("unknown location authorization")
+            break
+        }
+    }
+    
+    private func showLocationPermissionAlert() {
+        print("user restricted or denied location authorization - locationaccountabilityvc")
+         
+        let alert = CustomAlertViewController(title: "Location-based Habits need Location Authorization!", 
+                                              message: "Do you want to keep tracking your habits based on their locations?",
+                                              okButtonTitle: "Yes, how do I change my settings?",
+                                              cancelButtonTitle: "No, I don't want to track my habit with my location")
+        
+        alert.completionOk = { [weak self] in
+            print("user indicated they want to change their settings - locationaccountabilityvc")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                let guideAlert = CustomAlertViewController.createLocationSettingsAlert { [weak self] in
+                    print("user has indicated that they have changed their settins - locationaccountabilityvc")
+                    self?.checkLocationAuthorization()
+                }
+                
+                self?.present(guideAlert, animated: true)
+            }
+        }
+        
+        alert.completionCancel = { [weak self] in
+            print("user indicated they don't want to track their habits with location - eject them from current view")
+            self?.navigationController?.popViewController(animated: true)
+        }
+        
+        self.present(alert, animated: true)
+    }
+    
+    private func showWhenInUseAlert() {
+        print("presenting when in use alert - lcoationaccountabilityvc")
+        
+        LocationManager.shared.hasShownWhenInUseAlert = true
+        let alert = CustomAlertViewController(
+            title: "Locations Currently Only Authorized During App Use!",
+            message: "Your habits will only get tracked if you go on RightNow with each habit, so we can check your location. If you change your authorization to Always Allow, we can check your location without you going on RightNow.",
+            okButtonTitle: "How do I switch my authorization status?",
+            cancelButtonTitle: "OK, I'll log onto RightNow every time for my location habits to get tracked!")
+        
+        alert.completionOk = { [weak self] in
+            print("user indicated that they want to go from when in use -> always - locationauthorizationvc")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                let guideAlert = CustomAlertViewController.createLocationSettingsAlert { [weak self] in
+                    print("user indicated that they have changed their settings from when in use -> always - locationauthorizationvc")
+                    self?.checkLocationAuthorization()
+                }
+                
+                self?.present(guideAlert, animated: true)
+            }
+        }
+        
+        self.present(alert, animated: true)
+    }
+    
+    @objc private func handleLocationAuthorizationChange() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.checkLocationAuthorization()
+        }
     }
 }

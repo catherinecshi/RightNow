@@ -23,6 +23,7 @@ class CustomAlertViewController: UIViewController {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
+        label.numberOfLines = 0
         label.font = UIConfiguration.titleFont
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -43,6 +44,8 @@ class CustomAlertViewController: UIViewController {
         button.setTitleColor(UIConfiguration.tintColor, for: .normal)
         button.setTitleColor(UIColor.gray, for: .disabled)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 32)
+        button.titleLabel?.textAlignment = .center
+        button.titleLabel?.numberOfLines = 0
         button.layer.cornerRadius = 20
         button.clipsToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -92,6 +95,14 @@ class CustomAlertViewController: UIViewController {
         setupTitleLabel()
         setupMessageLabel()
         setupButtons()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // update font sizes after layout
+        let okFontSize = calculateFontSize(for: okButtonTitle)
+        okButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: okFontSize)
     }
     
     // MARK: - Setup UI Constraints
@@ -149,9 +160,11 @@ class CustomAlertViewController: UIViewController {
             containerView.addSubview(cancelButton)
             cancelButton.setTitle(cancelButtonTitle, for: .normal)
             cancelButton.setTitleColor(UIColor.gray, for: .normal)
+            cancelButton.titleLabel?.numberOfLines = 0
+            cancelButton.titleLabel?.textAlignment = .center
             
             NSLayoutConstraint.activate([
-                cancelButton.topAnchor.constraint(equalTo: okButton.bottomAnchor),
+                cancelButton.topAnchor.constraint(equalTo: okButton.bottomAnchor, constant: 10),
                 cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
                 cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
                 cancelButton.heightAnchor.constraint(equalToConstant: 30),
@@ -180,5 +193,92 @@ class CustomAlertViewController: UIViewController {
         dismiss(animated: true) {
             self.completionCancel?()
         }
+    }
+    
+    // MARK: - Auxillary Functions
+    private func calculateFontSize(for text: String) -> CGFloat {
+        let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+        let wordCount = words.count
+
+        // Get alert widht
+        let containerWidth = containerView.bounds.width
+        let buttonWidth = containerWidth - 40
+        
+        // Base font sizes according to screen width
+        let baseLargeFontSize: CGFloat
+        let baseMediumFontSize: CGFloat
+        let baseSmallFontSize: CGFloat
+        let baseMiniFontSize: CGFloat
+        
+        // Adjust base sizes according to screen width
+        switch containerWidth {
+        case ..<280: // very narrow alert
+            baseLargeFontSize = 24
+            baseMediumFontSize = 18
+            baseSmallFontSize = 16
+            baseMiniFontSize = 14
+        case 280..<340: // narrow alert
+            baseLargeFontSize = 28
+            baseMediumFontSize = 22
+            baseSmallFontSize = 18
+            baseMiniFontSize = 16
+        default: // standard
+            baseLargeFontSize = 32
+            baseMediumFontSize = 24
+            baseSmallFontSize = 20
+            baseMiniFontSize = 20
+        }
+        
+        let testLabel = UILabel()
+        testLabel.text = text
+        testLabel.numberOfLines = 0
+        
+        // start with base font size based on word count, but rapidly adjust based on how much space it's taking up
+        let initialFontSize: CGFloat
+        switch wordCount {
+        case 0...2:
+            initialFontSize = baseLargeFontSize
+        case 3...5:
+            initialFontSize = baseMediumFontSize
+        case 6...8:
+            initialFontSize = baseSmallFontSize
+        default:
+            initialFontSize = baseMiniFontSize
+        }
+        
+        testLabel.font = UIFont.boldSystemFont(ofSize: initialFontSize)
+        let size = testLabel.sizeThatFits(CGSize(width: buttonWidth, height: .greatestFiniteMagnitude))
+        if size.width > buttonWidth {
+            let scaleFactor = buttonWidth / size.width
+            return max(initialFontSize * scaleFactor, 14) // never go smaller than 14
+        }
+        
+        return initialFontSize
+    }
+}
+
+extension String {
+    func height(withConstrainedWidth width: CGFloat, font: UIFont) -> CGFloat {
+        let constraintRect = CGSize(width: width, height: .greatestFiniteMagnitude)
+        let boundingBox = self.boundingRect(with: constraintRect,
+                                            options: .usesLineFragmentOrigin,
+                                            attributes: [NSAttributedString.Key.font: font],
+                                            context: nil)
+        
+        return ceil(boundingBox.height)
+    }
+}
+
+// MARK: - Common Alerts
+extension CustomAlertViewController {
+    static func createLocationSettingsAlert(completion: (() -> Void)? = nil) -> CustomAlertViewController {
+        let alert = CustomAlertViewController(
+            title: "Granting Location Authorization",
+            message: "Go to Settings > RightNow > Location > Always (To allow background tracking)",
+            okButtonTitle: "I've changed my settings!",
+            completionOk: completion
+        )
+        
+        return alert
     }
 }
