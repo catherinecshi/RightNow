@@ -89,21 +89,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         self.userLocation = location.coordinate
     }
     
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        switch status {
-        case .authorizedAlways:
-            startLocationUpdates()
-        case .authorizedWhenInUse:
-            
-            locationManager.startUpdatingLocation()
-        case .notDetermined:
-            requestAuthorization()
-            break
-        default:
-            stopLocationUpdates()
-        }
-    }
-    
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         if let circularRegion = region as? CLCircularRegion {
             print("Entered region: \(circularRegion.identifier)")
@@ -279,7 +264,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
         
         // print final status
-        GeofenceLogger.shared.log("\nFinal state - iOS monitored regions:")
+        GeofenceLogger.shared.log("\nFinal state - iOS monitored regions:") // THIS PROBABLY WORKS BUT THERE IS A LAG SO IF SOMETHING GETS DELETED IT MIGHT TAKE A WHILE SO THIS MAY BE WRONG SOMETIMES
         locationManager.monitoredRegions.forEach { region in
             GeofenceLogger.shared.log("- \(region.identifier)")
         }

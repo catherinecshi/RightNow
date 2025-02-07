@@ -12,7 +12,7 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     weak var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        registerForPushNotifications()
+        //registerForPushNotifications()
         //removePendingNotifications()
         //getPendingNotifications()
         
@@ -184,13 +184,23 @@ extension PushNotificationDelegate {
         }
     }
     
-    func requestAccessToNotifications() {
-        notificationCenter.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
-            if granted {
-                print("Notification permission granted!")
-            } else {
-                print("Notification permission denied because: \(error?.localizedDescription ?? " no error")")
-                //maybe make this an alert in the future
+    func requestAccessToNotifications(completion: @escaping (Bool) -> Void) {
+        notificationCenter.getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .notDetermined:
+                self.notificationCenter.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
+                    DispatchQueue.main.async {
+                        if granted {
+                            print("Notification permission granted!")
+                            completion(true)
+                        } else {
+                            print("Notification permission denied because: \(error?.localizedDescription ?? " no error")")
+                            completion(false)
+                        }
+                    }
+                }
+            default:
+                completion(true)
             }
         }
     }

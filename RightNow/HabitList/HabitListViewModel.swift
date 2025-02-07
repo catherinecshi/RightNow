@@ -50,7 +50,6 @@ class HabitListViewModel {
         habits.append(habit)
         
         // add notifications for habit
-        PushNotificationDelegate.shared.requestAccessToNotifications()
         PushNotificationDelegate.shared.scheduleNotificationsForHabit(habit)
         
         // monitor location if that is the chosen form of habit accountability

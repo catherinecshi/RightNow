@@ -68,6 +68,21 @@ class MurphyjitsuViewController: UIViewController {
         return label
     }()
     
+    lazy var notificationLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Enable Notifications"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .white
+        return label
+    }()
+    
+    lazy var notificationSwitch: UISwitch = {
+        let turnOnOff = UISwitch()
+        turnOnOff.isOn = true
+        turnOnOff.translatesAutoresizingMaskIntoConstraints = false
+        return turnOnOff
+    }()
+    
     //button to go to the next step
     private let nextButton: UIButton = {
         let button = UIButton(type: .system)
@@ -89,6 +104,10 @@ class MurphyjitsuViewController: UIViewController {
         setupConfidenceSlider()
         setupSelectedConfidence()
         setupReminderLabel()
+        setupNotificationToggle()
+        
+        // ask for notifications
+        requestNotificationPermission()
     }
     
     // MARK: - Setup UI Componenets
@@ -135,7 +154,9 @@ class MurphyjitsuViewController: UIViewController {
         var detailsText = "Your goal is to \(habitData.name ?? "do your habit") "
         
         if let hour = habitData.hour, let minute = habitData.minute {
-            detailsText += "at \(hour):\(String(format: "%02d", minute))"
+            let period = hour >= 12 ? "PM" : "AM"
+            let displayHour = hour % 12 == 0 ? 12 : hour % 12
+            detailsText += "at \(hour):\(String(format: "%02d", minute)) \(period)"
         } else if let cue = habitData.cue {
             detailsText += "after you \(cue)"
         } else {
@@ -207,6 +228,19 @@ class MurphyjitsuViewController: UIViewController {
         reminderLabel.isHidden = true
     }
     
+    func setupNotificationToggle() {
+        view.addSubview(notificationLabel)
+        view.addSubview(notificationSwitch)
+        
+        NSLayoutConstraint.activate([
+            notificationLabel.topAnchor.constraint(equalTo: reminderLabel.bottomAnchor, constant: 40),
+            notificationLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            
+            notificationSwitch.centerYAnchor.constraint(equalTo: notificationLabel.centerYAnchor),
+            notificationSwitch.leadingAnchor.constraint(equalTo: notificationLabel.trailingAnchor, constant: 10)
+        ])
+    }
+    
     // MARK: - Action Methods
 
     @objc private func confidenceSliderValueChanged(_ sender: UISlider) {
@@ -237,7 +271,7 @@ class MurphyjitsuViewController: UIViewController {
                              accountabilityMetric: habitData.accountabilityMetric!,
                              location: habitData.location,
                              incentive: habitData.incentive ?? .none,
-                             notificationEnabled: true,
+                             notificationEnabled: notificationSwitch.isOn,
                              totalDone: 0,
                              totalFailed: 0,
                              streaks: 0,
@@ -251,5 +285,28 @@ class MurphyjitsuViewController: UIViewController {
     
     @objc private func dismissSelf() {
         self.dismiss(animated: true, completion: nil)
+    }
+    
+    // MARK: - Push Notifications
+    private func requestNotificationPermission() {
+        PushNotificationDelegate.shared.requestAccessToNotifications { [weak self] granted in
+            DispatchQueue.main.async {
+                if !granted {
+                    self?.userDeniedNotificationPermissions()
+                }
+            }
+        }
+    }
+    
+    private func userDeniedNotificationPermissions() {
+        notificationSwitch.isOn = false
+        /*
+        DispatchQueue.main.async {
+            let alert = CustomAlertViewController(title: "No worries!",
+                                                  message: "You can change your notifications authorization in the settings!")
+            self.present(alert, animated: true)
+        }
+         */
+        // i feel like there's no non-passive aggressive way to respond to user not giving notifications permissions
     }
 }

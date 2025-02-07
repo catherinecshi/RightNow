@@ -158,8 +158,16 @@ class SelectTimeViewController: UIViewController {
         ])
         
         //start timepicker at 7am
-        timePicker.selectRow(6, inComponent: 0, animated: false)
-        timePicker.selectRow(1200, inComponent: 1, animated: false)
+        let initialHourRow = 6
+        let initialMinuteRow = 1200
+        let initialAMPMRow = 0
+        
+        timePicker.selectRow(initialHourRow, inComponent: 0, animated: false)
+        timePicker.selectRow(initialMinuteRow, inComponent: 1, animated: false)
+        timePicker.selectRow(initialAMPMRow, inComponent: 2, animated: false)
+        
+        // input an initial value incase the user wants their habit to start at 7
+        pickerView(timePicker, didSelectRow: initialHourRow, inComponent: 0)
     }
     
     private func setupNextButton() {

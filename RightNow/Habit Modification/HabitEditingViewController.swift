@@ -287,7 +287,8 @@ class HabitEditingViewController: UIViewController {
         accountabilityMetric.selectedSegmentIndex = UISegmentedControl.noSegment
     }
     
-    @objc private func saveButtonTapped() {
+    @objc private func saveButtonTapped() { // FUTURE CAT REMEMBER TO UPDATE LOCATION TO NIL AS WELL IF METRIC CHANGE
+        // also remember if notifications change to 
         // make new habit instance
         let newHabit = Habit(
             id: oldHabit.id,
