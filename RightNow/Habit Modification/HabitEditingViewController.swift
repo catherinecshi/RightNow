@@ -8,7 +8,7 @@ class HabitEditingViewController: UIViewController {
     
     // MARK: UI Components Declaration
     
-    let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    let daysOfWeek = TimeFormatter.allDays
     
     //initialize labels
     

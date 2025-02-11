@@ -5,7 +5,11 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Declaration
     var habitData = HabitData()
     var habitButtons: [UIButton] = []
-    let predefinedHabits = ["Read", "Meditate", "Journal", "Exercise", "Walk"]
+    let predefinedHabits = ["Read", "Meditate", "Skincare Routine", "Learn a New Language", "Journal", "Exercise", "Walk", "Drink More Water", "Wake Up on Time", "Bedtime Routine", "Stretching", "Brush Teeth", "Gym", "Cold Showers", "Yoga", "Quality Time", "Gratitude Journal", "Floss", "Spend Time in Nature", "Pray", "Random Act of Kindness", "Save", "Draw", "Play the Guitar", "Martial Arts", "Take a Break", "Write", "Rumination", "Clean Room", "Water Plants", "Take off Makeup", "Shave", "Feed Pets"]
+    
+    // for when the user inserts their own habit
+    private var customButton: UIButton?
+    private var isShowingCustomButton = false
     
     //initiate labels
     let viewTitle: UILabel = {
@@ -17,13 +21,18 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         return label
     }()
     
-    private let scrollView = UIScrollView()
-    private let stackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 20
-        stack.distribution = .fill
-        return stack
+    private lazy var scrollableContentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.alwaysBounceVertical = true
+        return scrollView
     }()
     
     private let whatLabel: UILabel = {
@@ -49,6 +58,15 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         label.textColor = .white
         label.textAlignment = .left
         return label
+    }()
+    
+    private lazy var fixedStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 20
+        stack.distribution = .fill
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
     }()
     
     private let habitsStackView: UIStackView = {
@@ -90,8 +108,8 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         
         setupTitle()
         setupNextButton()
+        setupFixedStackView()
         setupScrollView()
-        setupContentStack()
         setupHabitButtons()
         setupDismissButton()
         
@@ -116,34 +134,41 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         self.navigationItem.titleView = viewTitle
     }
     
-    private func setupScrollView() {
-        view.addSubview(scrollView)
-        view.addSubview(stackView)
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.translatesAutoresizingMaskIntoConstraints = false
+    private func setupFixedStackView() {
+        [whatLabel, habitTextField, suggestionsLabel].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            fixedStackView.addArrangedSubview($0)
+        }
+        
+        view.addSubview(fixedStackView)
         
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            scrollView.bottomAnchor.constraint(equalTo: nextButton.topAnchor),
-            
-            stackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
-            stackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
-            stackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
-            stackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
-            stackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
+            fixedStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            fixedStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            fixedStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
-    }
-    
-    private func setupContentStack() {
-        [whatLabel, habitTextField, suggestionsLabel, habitsStackView].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            stackView.addArrangedSubview($0)
-        }
         
         habitTextField.delegate = self
         habitTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+    }
+    
+    private func setupScrollView() {
+        view.addSubview(scrollView)
+        scrollView.addSubview(habitsStackView)
+        habitsStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: fixedStackView.bottomAnchor, constant: 20),
+            scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            scrollView.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: -20),
+            
+            habitsStackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            habitsStackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            habitsStackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            habitsStackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            habitsStackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
+        ])
     }
     
     private func setupHabitButtons() {
@@ -165,7 +190,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         button.layer.borderColor = UIConfiguration.tintColor?.cgColor
         button.contentHorizontalAlignment = .leading
         
-        let icon = iconForHabit(name: title)
+        let icon = HabitIconUtility.icon(for: title)
         button.setImage(icon, for: .normal)
         button.imageView?.contentMode = .scaleAspectFit
         button.tintColor = UIConfiguration.tintColor
@@ -188,8 +213,8 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            nextButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            nextButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            nextButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             nextButton.heightAnchor.constraint(equalToConstant: 100),
             nextButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -30)
         ])
@@ -234,10 +259,12 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Actions
     @objc private func textFieldDidChange(_ textField: UITextField) {
         if let text = textField.text, !text.isEmpty {
+            updateCustomButton(with: text)
             filterHabits(with: text)
             habitData.name = text
             nextButton.isEnabled = true
         } else {
+            removeCustomButton()
             habitButtons.forEach { $0.isHidden = false }
             nextButton.isEnabled = false
         }
@@ -246,23 +273,34 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     @objc private func habitButtonTapped(_ sender: UIButton) {
         guard let habitName = sender.titleLabel?.text else { return }
         habitTextField.text = habitName
+        
+        updateCustomButton(with: habitName)
         filterHabits(with: habitName)
+        
         habitData.name = habitName
         nextButton.isEnabled = true
     }
     
     @objc private func nextButtonTapped() {
-        //create and push the next view controller
-        let timeVC = SelectTimeViewController()
-        
-        // back button
-        let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
-        navigationItem.backBarButtonItem = backButton
-        self.navigationController?.navigationBar.tintColor = .white
-        
-        // send info forward
-        timeVC.habitData = habitData
-        navigationController?.pushViewController(timeVC, animated: true)
+        if HabitListViewModel.shared.habits.contains(where: { $0.name == habitData.name }) {
+            if let habitName = habitData.name {
+                let alert = CustomAlertViewController(title: "That habit already exists!",
+                                                      message: "You already have \(habitName) as a habit!")
+                present(alert, animated: true)
+            }
+        } else {
+            //create and push the next view controller
+            let timeVC = SelectTimeViewController()
+            
+            // back button
+            let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
+            navigationItem.backBarButtonItem = backButton
+            self.navigationController?.navigationBar.tintColor = .white
+            
+            // send info forward
+            timeVC.habitData = habitData
+            navigationController?.pushViewController(timeVC, animated: true)
+        }
     }
     
     @objc func backButtonTapped() {
@@ -293,21 +331,37 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     // MARK: - Auxillary Methods
-    private func iconForHabit(name: String) -> UIImage? {
-        switch name {
-        case "Read": return UIImage(systemName: "book")
-        case "Meditate": return UIImage(systemName: "leaf")
-        case "Journal": return UIImage(systemName: "note.text")
-        case "Exercise": return UIImage(systemName: "figure.walk")
-        default: return UIImage(systemName: "checkmark")
-        }
-    }
-    
     private func filterHabits(with text: String) {
         let lowercasedText = text.lowercased()
         for button in habitButtons {
-            let shouldShow = button.titleLabel?.text?.lowercased().contains(lowercasedText) ?? false
-            button.isHidden = !shouldShow
+            if let buttonTitle = button.titleLabel?.text {
+                let shouldShow = buttonTitle.lowercased().contains(lowercasedText)
+                button.isHidden = !shouldShow
+            }
         }
+    }
+    
+    private func updateCustomButton(with text: String) {
+        if !isShowingCustomButton {
+            let button = createHabitButton(with: text)
+            customButton = button
+            
+            // insert at top of stack view
+            habitsStackView.insertArrangedSubview(button, at: 0)
+            isShowingCustomButton = true
+        } else {
+            // update existing button
+            customButton?.setTitle(text, for: .normal)
+            let icon = HabitIconUtility.icon(for: text)
+            customButton?.setImage(icon, for: .normal)
+        }
+        
+        customButton?.isHidden = false
+    }
+    
+    private func removeCustomButton() {
+        customButton?.removeFromSuperview()
+        customButton = nil
+        isShowingCustomButton = false
     }
 }

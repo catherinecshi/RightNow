@@ -79,6 +79,7 @@
 		FBA721392AD3293000E3EC4F /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = FBA721382AD3293000E3EC4F /* FirebaseDatabase */; };
 		FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */; };
 		FBA721422AD636D400E3EC4F /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FBA721412AD636D400E3EC4F /* FirebaseFirestoreSwift */; };
+		FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */; };
 		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
 		FBD591D82AE0A36800B9EA8F /* CalendarKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBD591D72AE0A36800B9EA8F /* CalendarKit */; };
 		FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBDE05182D29BD1D00C46EBB /* Level.swift */; };
@@ -160,6 +161,7 @@
 		FB8E9CCE2AF8823A0055DADC /* HabitData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitData.swift; sourceTree = "<group>"; };
 		FB8E9CD02AF8987A0055DADC /* UIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIConfiguration.swift; sourceTree = "<group>"; };
 		FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewImageViewConstraints.swift; sourceTree = "<group>"; };
+		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
@@ -341,6 +343,7 @@
 				FB23F3E32D343798006A4A16 /* TimeFormatter.swift */,
 				FB23F3EC2D3F0217006A4A16 /* FocusView.swift */,
 				FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */,
+				FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */,
 			);
 			path = AuxillaryObjects;
 			sourceTree = "<group>";
@@ -588,6 +591,7 @@
 				FB6E527B2AE201F500499E1C /* HabitListView.swift in Sources */,
 				FB22A7F92AB7E80D00F63D42 /* WelcomeViewController.swift in Sources */,
 				FB22A7EC2AB7E58200F63D42 /* StatusViewModel.swift in Sources */,
+				FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */,
 				FB0E0E752B828B57003177AF /* HabitGoalLevelView.swift in Sources */,
 				FB23F3ED2D3F0217006A4A16 /* FocusView.swift in Sources */,
 				FB6E527D2AE2021300499E1C /* HabitListViewController.swift in Sources */,
