@@ -12,8 +12,8 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     
     // accountability metric variables
     var metricButtons: [UIButton] = []
-    let predefinedMetrics: [AccountabilityMetric] = [.stayStill, .locationTracking, .objectDetection, .selfTracking]
-    let metricCount = 3
+    let predefinedMetrics: [AccountabilityMetric] = [.locationTracking, .objectDetection, .stepCount, .selfTracking]
+    let metricCount = 4
     
     private var selectedButton: UIButton?
     
@@ -304,6 +304,8 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             return UIImage(systemName: "location")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Stay Still":
             return UIImage(systemName: "hourglass.circle")?.withTintColor(color, renderingMode: .alwaysOriginal)
+        case "Track your Steps":
+            return UIImage(systemName: "shoeprints.fill")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Object Detection":
             return UIImage(systemName: "photo.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Self Tracking":
@@ -317,10 +319,12 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         switch title {
         case "Track your Location":
             return "Complete habit by being at a specific place during the time for your habit"
-        case "Stay Still": // CHANGE AT SOME POINT
+        case "Stay Still":
             return "Stay still in front of something, like your laptop for work"
+        case "Track your Steps":
+            return "Track your activity levels by a certain time, like 1000 steps after waking up"
         case "Object Detection":
-            return "Complete your habit by taking a photo of you doing the habit"
+            return "Complete your habit by taking a photo of something proving you've finished your habit"
         case "Self Tracking":
             return "Check off your habit yourself, no automatic tracking!"
         default:
@@ -334,8 +338,10 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             return "Track your Location"
         case "Complete your habit by using or blocking an app for a specific time":
             return "Track your Screen Time Usage"
-        case "Complete your habit by taking a photo of you doing the habit":
-            return "Take a Photo"
+        case "Complete your habit by taking a photo of something during your habit":
+            return "Object Detection"
+        case "Track your activity levels by a certain time, like 1000 steps after waking up":
+            return "Track your Steps"
         case "Check off your habit yourself, no automatic tracking!":
             return "Self Tracking"
         default:

@@ -80,6 +80,7 @@
 		FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */; };
 		FBA721422AD636D400E3EC4F /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FBA721412AD636D400E3EC4F /* FirebaseFirestoreSwift */; };
 		FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */; };
+		FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */; };
 		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
 		FBD591D82AE0A36800B9EA8F /* CalendarKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBD591D72AE0A36800B9EA8F /* CalendarKit */; };
 		FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBDE05182D29BD1D00C46EBB /* Level.swift */; };
@@ -162,6 +163,7 @@
 		FB8E9CD02AF8987A0055DADC /* UIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIConfiguration.swift; sourceTree = "<group>"; };
 		FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewImageViewConstraints.swift; sourceTree = "<group>"; };
 		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
+		FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidenceViewController.swift; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
@@ -444,6 +446,7 @@
 				FB0E0E732B8263D1003177AF /* Progress */,
 				FB2A2B382C8D1708003F31B2 /* IncentivesViewController.swift */,
 				FB0E0E6C2B8117E9003177AF /* MurphyjitsuViewController.swift */,
+				FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */,
 			);
 			path = HabitCreation;
 			sourceTree = "<group>";
@@ -646,6 +649,7 @@
 				FB22A7D22AB7DCD300F63D42 /* CameraController.swift in Sources */,
 				FB23F3F52D550516006A4A16 /* GeofenceLogger.swift in Sources */,
 				FB22A7F62AB7E7B200F63D42 /* SplashViewController.swift in Sources */,
+				FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */,
 				FB23F3F12D51688A006A4A16 /* TabBarController.swift in Sources */,
 				FB22A7CD2AB7D7A000F63D42 /* EKWrapper.swift in Sources */,
 				FB34FCB82AD824070032872E /* TimerModel.swift in Sources */,

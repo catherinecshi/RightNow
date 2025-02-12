@@ -7,6 +7,7 @@ enum AccountabilityMetric: String, Codable {
     case selfTracking
     case objectDetection
     case stayStill
+    case stepCount
     
     var displayName: String {
         switch self {
@@ -16,6 +17,7 @@ enum AccountabilityMetric: String, Codable {
         case .selfTracking: return "Self Tracking"
         case .objectDetection: return "Object Detection"
         case .stayStill: return "Stay Still"
+        case .stepCount: return "Track your Steps"
         }
     }
 }

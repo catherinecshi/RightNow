@@ -6,7 +6,7 @@ class MurphyjitsuViewController: UIViewController {
     var viewModel = HabitListViewModel.shared
     var habitData = HabitData()
     
-    let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    let daysOfWeek = TimeFormatter.allDays
     
     let viewTitle: UILabel = {
         let label = UILabel()
@@ -24,6 +24,27 @@ class MurphyjitsuViewController: UIViewController {
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
+    }()
+    
+    private let notificationContainer: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    lazy var notificationLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Enable Notifications"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .white
+        return label
+    }()
+    
+    lazy var notificationSwitch: UISwitch = {
+        let turnOnOff = UISwitch()
+        turnOnOff.isOn = true
+        turnOnOff.translatesAutoresizingMaskIntoConstraints = false
+        return turnOnOff
     }()
     
     let confidenceLabel: UILabel = {
@@ -58,31 +79,6 @@ class MurphyjitsuViewController: UIViewController {
         return label
     }()
     
-    let reminderLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIConfiguration.genericFont
-        label.textColor = .white
-        label.numberOfLines = 0
-        label.text = "If your confidence is lower than 90%, it's worth thinking about what makes you lose confidence and how you can remedy those problems"
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    lazy var notificationLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Enable Notifications"
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = .white
-        return label
-    }()
-    
-    lazy var notificationSwitch: UISwitch = {
-        let turnOnOff = UISwitch()
-        turnOnOff.isOn = true
-        turnOnOff.translatesAutoresizingMaskIntoConstraints = false
-        return turnOnOff
-    }()
-    
     //button to go to the next step
     private let nextButton: UIButton = {
         let button = UIButton(type: .system)
@@ -100,14 +96,14 @@ class MurphyjitsuViewController: UIViewController {
         setupTitle()
         setupNextButton()
         setupHabitDetails()
+        setupNotificationToggle()
         setupConfidenceLabel()
         setupConfidenceSlider()
         setupSelectedConfidence()
-        setupReminderLabel()
-        setupNotificationToggle()
         
-        // ask for notifications
+        // ask for notifications if not yet present
         requestNotificationPermission()
+        checkNotificationPermission(alert: false)
     }
     
     // MARK: - Setup UI Componenets
@@ -181,11 +177,34 @@ class MurphyjitsuViewController: UIViewController {
         ])
     }
     
+    func setupNotificationToggle() {
+        // container for centering
+        view.addSubview(notificationContainer)
+        
+        notificationContainer.addSubview(notificationLabel)
+        notificationContainer.addSubview(notificationSwitch)
+        
+        NSLayoutConstraint.activate([
+            notificationContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            notificationContainer.topAnchor.constraint(equalTo: habitDetails.bottomAnchor, constant: 40),
+            
+            notificationLabel.topAnchor.constraint(equalTo: notificationContainer.topAnchor),
+            notificationLabel.leadingAnchor.constraint(equalTo: notificationContainer.leadingAnchor),
+            notificationLabel.bottomAnchor.constraint(equalTo: notificationContainer.bottomAnchor),
+            
+            notificationSwitch.centerYAnchor.constraint(equalTo: notificationLabel.centerYAnchor),
+            notificationSwitch.leadingAnchor.constraint(equalTo: notificationLabel.trailingAnchor, constant: 10),
+            notificationSwitch.trailingAnchor.constraint(equalTo: notificationContainer.trailingAnchor)
+        ])
+        
+        notificationSwitch.addTarget(self, action: #selector(notificationSwitchChanged(_:)), for: .valueChanged)
+    }
+    
     private func setupConfidenceLabel() {
         view.addSubview(confidenceLabel)
         
         NSLayoutConstraint.activate([
-            confidenceLabel.topAnchor.constraint(equalTo: habitDetails.bottomAnchor, constant: 40),
+            confidenceLabel.topAnchor.constraint(equalTo: notificationContainer.bottomAnchor, constant: 40),
             confidenceLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             confidenceLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
         ])
@@ -216,32 +235,14 @@ class MurphyjitsuViewController: UIViewController {
         ])
     }
     
-    private func setupReminderLabel() {
-        view.addSubview(reminderLabel)
-        
-        NSLayoutConstraint.activate([
-            reminderLabel.topAnchor.constraint(equalTo: selectedConfidenceLabel.bottomAnchor, constant: 40),
-            reminderLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            reminderLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
-        ])
-        
-        reminderLabel.isHidden = true
-    }
-    
-    func setupNotificationToggle() {
-        view.addSubview(notificationLabel)
-        view.addSubview(notificationSwitch)
-        
-        NSLayoutConstraint.activate([
-            notificationLabel.topAnchor.constraint(equalTo: reminderLabel.bottomAnchor, constant: 40),
-            notificationLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            
-            notificationSwitch.centerYAnchor.constraint(equalTo: notificationLabel.centerYAnchor),
-            notificationSwitch.leadingAnchor.constraint(equalTo: notificationLabel.trailingAnchor, constant: 10)
-        ])
-    }
-    
     // MARK: - Action Methods
+    @objc private func notificationSwitchChanged(_ sender: UISwitch) {
+        let isEnabled = sender.isOn
+        
+        if isEnabled {
+            checkNotificationPermission(alert: true)
+        }
+    }
 
     @objc private func confidenceSliderValueChanged(_ sender: UISlider) {
         let selectedValue = Int(sender.value.rounded())
@@ -298,15 +299,29 @@ class MurphyjitsuViewController: UIViewController {
         }
     }
     
+    private func checkNotificationPermission(alert: Bool) {
+        PushNotificationDelegate.shared.getPermissionStatus { status in
+            switch status {
+            case .denied:
+                self.userDeniedNotificationPermissions()
+                
+                if alert {
+                    self.deniedNotificationAlert()
+                }
+            default:
+                return
+            }
+        }
+    }
+    
     private func userDeniedNotificationPermissions() {
         notificationSwitch.isOn = false
-        /*
+    }
+    
+    private func deniedNotificationAlert() {
         DispatchQueue.main.async {
-            let alert = CustomAlertViewController(title: "No worries!",
-                                                  message: "You can change your notifications authorization in the settings!")
+            let alert = CustomAlertViewController.createNotificationSettingsAlert()
             self.present(alert, animated: true)
         }
-         */
-        // i feel like there's no non-passive aggressive way to respond to user not giving notifications permissions
     }
 }

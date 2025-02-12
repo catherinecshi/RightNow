@@ -281,4 +281,14 @@ extension CustomAlertViewController {
         
         return alert
     }
+    
+    static func createNotificationSettingsAlert(completion: (() -> Void)? = nil) -> CustomAlertViewController {
+        let alert = CustomAlertViewController(
+            title: "Notification Permission is Currently Denied!",
+            message: "You can change the settings in Settings > RightNow > Notifications > Allow Notifications",
+            completionOk: completion
+        )
+        
+        return alert
+    }
 }

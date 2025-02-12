@@ -11,6 +11,12 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     private let notificationCenter = UNUserNotificationCenter.current()
     weak var window: UIWindow?
     
+    // for checking notification settings
+    private var _cachedPermissionStatus: UNAuthorizationStatus = .notDetermined // last known status
+    public var cachedPermissionStatus: UNAuthorizationStatus {
+        _cachedPermissionStatus
+    }
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         //registerForPushNotifications()
         //removePendingNotifications()
@@ -170,6 +176,9 @@ extension PushNotificationDelegate {
                 return
             }
             
+            // update cached status after authorization
+            self.getPermissionStatus { _ in }
+            
             if granted {
                 DispatchQueue.main.async {
                     UIApplication.shared.registerForRemoteNotifications()
@@ -235,7 +244,7 @@ extension PushNotificationDelegate {
             dateFormatter.timeZone = TimeZone.current
             
             // getting days of week
-            let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+            let daysOfWeek = TimeFormatter.allDays
             let calendar = Calendar.current
             var components: DateComponents
             
@@ -303,6 +312,16 @@ extension PushNotificationDelegate {
         
         // register the category
         notificationCenter.setNotificationCategories([category])
+    }
+    
+    // get authorization status
+    public func getPermissionStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
+        notificationCenter.getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                self._cachedPermissionStatus = settings.authorizationStatus
+                completion(settings.authorizationStatus)
+            }
+        }
     }
 }
 

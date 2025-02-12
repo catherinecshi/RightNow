@@ -1,3 +1,8 @@
+/**
+ This is the first view controller when the user creates a habit. The user indicates which habit they want to track with the app here.
+It supports users putting in their own habits via the textfield or a list of predefined habits shown at the start. Either way the code 
+ */
+
 import Foundation
 import UIKit
 
@@ -274,7 +279,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         guard let habitName = sender.titleLabel?.text else { return }
         habitTextField.text = habitName
         
-        updateCustomButton(with: habitName)
+        //updateCustomButton(with: habitName)
         filterHabits(with: habitName)
         
         habitData.name = habitName
