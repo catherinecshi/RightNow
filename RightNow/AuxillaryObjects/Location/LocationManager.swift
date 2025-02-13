@@ -147,36 +147,20 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     // MARK: - Auxillary Functions
     func sendProximityNotification(for locationName: String) {
         print("trying to send notification")
-        
-        let config = PushNotificationDelegate.NotificationConfig(
-            title: "Right Now",
-            body: "\(locationName) in progress",
-            identifier: locationName
-        )
-        
-        PushNotificationDelegate.shared.sendImmediateNotification(config: config) { error in
-            if let error = error {
-                print("Failed to send proximity notification: \(error.localizedDescription)")
-            } else {
-                print("Proximity notifiation scheduled successfully")
+        Task {
+            do {
+                try await PushNotificationDelegate.shared.scheduleNow(title: "Right Now", body: "\(locationName) in progress")
+            } catch {
+                print("Failed send proximity notification: \(error)")
             }
         }
     }
     
     func sendEnteringNotification(for locationName: String) {
         print("trying to send entering notification")
-        
-        let config = PushNotificationDelegate.NotificationConfig(
-            title: "Right Now",
-            body: "\(locationName) entered!",
-            identifier: locationName
-        )
-        
-        PushNotificationDelegate.shared.sendImmediateNotification(config: config) { error in
-            if let error = error {
-                print("Failed to send entering notification: \(error.localizedDescription)")
-            } else {
-                print("Entering notification scheduled successfully")
+        Task {
+            do {
+                try await PushNotificationDelegate.shared.scheduleNow(title: "Right Now", body: "\(locationName) entered!")
             }
         }
     }

@@ -306,7 +306,7 @@ class HabitEditingViewController: UIViewController {
         )
         
         //handle notifications
-        PushNotificationDelegate.shared.cancelNotifications(for: oldHabit)
+        PushNotificationDelegate.shared.cancelNotificationForHabit(for: oldHabit)
         
         //enable notifications if user indicates the desire
         if newHabit.notificationEnabled {

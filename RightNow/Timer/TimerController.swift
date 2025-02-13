@@ -1,6 +1,6 @@
 import UIKit
 
-class TimerController: UIViewController, TimerModelDelegate, TimerViewDelegate {
+class TimerController: UIViewController, TimerViewDelegate {
     private var timerModel = TimerModel()
     private var timerView = TimerView()
     
@@ -26,12 +26,8 @@ class TimerController: UIViewController, TimerModelDelegate, TimerViewDelegate {
         timerView.startStopButton.addTarget(self, action: #selector(toggleTimer), for: .touchUpInside)
         
         //add delegate for model for decoupling
-        timerModel.delegate = self
+        //timerModel.delegate = self
         timerView.delegate = self
-        
-        //add observers for when the user leaves app
-        NotificationCenter.default.addObserver(self, selector: #selector(appDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     private func setupTimerViewConstraints() {
@@ -47,16 +43,16 @@ class TimerController: UIViewController, TimerModelDelegate, TimerViewDelegate {
     
     @objc func toggleTimer() {
         if timerModel.timer == nil {
-            timerModel.startTimer()
+            timerModel.startSession()
             timerView.startStopButton.setTitle("Stop", for: .normal)
         } else {
-            timerModel.stopTimer()
+            timerModel.endSession()
             timerView.startStopButton.setTitle("Start", for: .normal)
         }
     }
     
     func timerModelDidUpdateTime(_ timerModel: TimerModel) {
-        guard let startTime = timerModel.startTime else { return }
+        guard let startTime = timerModel.sessionStartTime else { return }
         
         let elapsedTime = Date().timeIntervalSince(startTime)
         
@@ -74,7 +70,7 @@ class TimerController: UIViewController, TimerModelDelegate, TimerViewDelegate {
     // MARK: Persistent Storage
     
     func saveTimerState() {
-        if let startTime = timerModel.startTime {
+        if let startTime = timerModel.sessionStartTime {
             let elapsedTime = Date().timeIntervalSince(startTime)
             UserDefaults.standard.set(elapsedTime, forKey: "timerElapsedTime")
             UserDefaults.standard.set(true, forKey: "timerIsRunning")
@@ -83,32 +79,7 @@ class TimerController: UIViewController, TimerModelDelegate, TimerViewDelegate {
     
     @objc func appDidEnterBackground() {
         saveTimerState()
-        timerModel.stopTimer()
+        timerModel.endSession()
         timerView.startStopButton.setTitle("Start", for: .normal)
-    }
-    
-    @objc func appWillEnterForeground() {
-        //load timer state
-        if let elapsedTime = UserDefaults.standard.object(forKey: "timerElapsedTime") as? TimeInterval {
-            showTimeAlert(elapsedTime: elapsedTime)
-        }
-        
-        UserDefaults.standard.set(false, forKey: "timerIsRunning")
-        UserDefaults.standard.removeObject(forKey: "timerElapsedTime")
-    }
-    
-    func showTimeAlert(elapsedTime: TimeInterval) {
-        let hours = Int(elapsedTime / 3600)
-        let minutes = Int((elapsedTime / 60).truncatingRemainder(dividingBy: 60))
-        let seconds = Int(elapsedTime.truncatingRemainder(dividingBy: 60))
-        
-        let timeString = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
-        
-        let alert = UIAlertController(title: "Timer Paused", message: "Your timer was paused at \(timeString).", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            //actions when user acknowledges the alert
-        })
-        
-        self.present(alert, animated: true, completion: nil)
     }
 }

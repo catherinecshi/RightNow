@@ -59,7 +59,6 @@
 		FB2A2B402CA60102003F31B2 /* GeofenceData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B3F2CA60102003F31B2 /* GeofenceData.swift */; };
 		FB34FCB82AD824070032872E /* TimerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCB72AD824070032872E /* TimerModel.swift */; };
 		FB34FCBA2AD825A20032872E /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCB92AD825A20032872E /* TimerView.swift */; };
-		FB34FCBC2AD830C70032872E /* TimerModelDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCBB2AD830C70032872E /* TimerModelDelegate.swift */; };
 		FB34FCBE2AD8369D0032872E /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCBD2AD8369D0032872E /* CameraModel.swift */; };
 		FB34FCC02AD836EC0032872E /* CameraModelDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCBF2AD836EC0032872E /* CameraModelDelegate.swift */; };
 		FB34FCC22AD837870032872E /* CameraViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCC12AD837870032872E /* CameraViewDelegate.swift */; };
@@ -71,7 +70,6 @@
 		FB6E527B2AE201F500499E1C /* HabitListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E527A2AE201F500499E1C /* HabitListView.swift */; };
 		FB6E527D2AE2021300499E1C /* HabitListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E527C2AE2021300499E1C /* HabitListViewController.swift */; };
 		FB6E52822AE3296500499E1C /* HabitEditingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52812AE3296500499E1C /* HabitEditingViewController.swift */; };
-		FB6E52842AE8167800499E1C /* TimerViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52832AE8167800499E1C /* TimerViewDelegate.swift */; };
 		FB8E9CCA2AF87EB20055DADC /* SingleHabitController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8E9CC92AF87EB20055DADC /* SingleHabitController.swift */; };
 		FB8E9CCD2AF87FE10055DADC /* SelectHabitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8E9CCC2AF87FE10055DADC /* SelectHabitViewController.swift */; };
 		FB8E9CCF2AF8823A0055DADC /* HabitData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8E9CCE2AF8823A0055DADC /* HabitData.swift */; };
@@ -143,7 +141,6 @@
 		FB2A2B3F2CA60102003F31B2 /* GeofenceData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofenceData.swift; sourceTree = "<group>"; };
 		FB34FCB72AD824070032872E /* TimerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModel.swift; sourceTree = "<group>"; };
 		FB34FCB92AD825A20032872E /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
-		FB34FCBB2AD830C70032872E /* TimerModelDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModelDelegate.swift; sourceTree = "<group>"; };
 		FB34FCBD2AD8369D0032872E /* CameraModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraModel.swift; sourceTree = "<group>"; };
 		FB34FCBF2AD836EC0032872E /* CameraModelDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraModelDelegate.swift; sourceTree = "<group>"; };
 		FB34FCC12AD837870032872E /* CameraViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewDelegate.swift; sourceTree = "<group>"; };
@@ -155,7 +152,6 @@
 		FB6E527A2AE201F500499E1C /* HabitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListView.swift; sourceTree = "<group>"; };
 		FB6E527C2AE2021300499E1C /* HabitListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListViewController.swift; sourceTree = "<group>"; };
 		FB6E52812AE3296500499E1C /* HabitEditingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEditingViewController.swift; sourceTree = "<group>"; };
-		FB6E52832AE8167800499E1C /* TimerViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewDelegate.swift; sourceTree = "<group>"; };
 		FB6F03C02AE0BE3300033C9F /* CalendarKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CalendarKit; path = RightNow/CalendarKit; sourceTree = "<group>"; };
 		FB8E9CC92AF87EB20055DADC /* SingleHabitController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleHabitController.swift; sourceTree = "<group>"; };
 		FB8E9CCC2AF87FE10055DADC /* SelectHabitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectHabitViewController.swift; sourceTree = "<group>"; };
@@ -455,10 +451,8 @@
 			isa = PBXGroup;
 			children = (
 				FB34FCB72AD824070032872E /* TimerModel.swift */,
-				FB34FCBB2AD830C70032872E /* TimerModelDelegate.swift */,
 				FB34FCB92AD825A20032872E /* TimerView.swift */,
 				FB3E30B22ABC7CD6005B5E88 /* TimerController.swift */,
-				FB6E52832AE8167800499E1C /* TimerViewDelegate.swift */,
 			);
 			path = Timer;
 			sourceTree = "<group>";
@@ -605,7 +599,6 @@
 				FB22A7B42AB7D49C00F63D42 /* AppDelegate.swift in Sources */,
 				FB6E52772AE1FC9700499E1C /* HabitTableViewCell.swift in Sources */,
 				FB2665B92CF55CE30025353D /* AppDelegateFactory.swift in Sources */,
-				FB6E52842AE8167800499E1C /* TimerViewDelegate.swift in Sources */,
 				FB2665B42CF5466E0025353D /* CompositeAppDelegate.swift in Sources */,
 				FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */,
 				FB23F3E42D343798006A4A16 /* TimeFormatter.swift in Sources */,
@@ -656,7 +649,6 @@
 				FB2665B22CF535C80025353D /* PushNotificationDelegate.swift in Sources */,
 				FB8E9CCD2AF87FE10055DADC /* SelectHabitViewController.swift in Sources */,
 				FB2A2B392C8D1708003F31B2 /* IncentivesViewController.swift in Sources */,
-				FB34FCBC2AD830C70032872E /* TimerModelDelegate.swift in Sources */,
 				FB22A7DB2AB7E3D400F63D42 /* User.swift in Sources */,
 				FB34FCBE2AD8369D0032872E /* CameraModel.swift in Sources */,
 			);

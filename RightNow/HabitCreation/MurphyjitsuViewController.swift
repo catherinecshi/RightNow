@@ -254,11 +254,13 @@ class MurphyjitsuViewController: UIViewController {
         }
         
         // hide or display reminder label depending on confidence
+        /*
         if selectedValue < 90 {
             reminderLabel.isHidden = false
         } else {
             reminderLabel.isHidden = true
         }
+         */
     }
     
     @objc private func nextButtonTapped() {

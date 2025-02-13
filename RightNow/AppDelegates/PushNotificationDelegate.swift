@@ -8,6 +8,20 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     // avoid unnecessary initialisation
     private override init() { }
     
+    enum NotificationError: LocalizedError {
+        case pastDate
+        case schedulingFailed(Error)
+        
+        var errorDescription: String? {
+            switch self {
+            case .pastDate:
+                return "Cannot schedule notification for past date"
+            case .schedulingFailed(let error):
+                return "Failed to schedule notification: \(error)"
+            }
+        }
+    }
+    
     private let notificationCenter = UNUserNotificationCenter.current()
     weak var window: UIWindow?
     
@@ -275,11 +289,19 @@ extension PushNotificationDelegate {
         }
     }
     
-    func cancelNotifications(for habit: Habit) {
+    func cancelNotificationForHabit(for habit: Habit) {
         for day in habit.daysOfTheWeek.keys {
             let identifier = "\(habit.id)_\(day)"
             notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
         }
+    }
+    
+    func cancelNotification(withIdentifier identifier: String) async -> Bool {
+        let requests = await notificationCenter.pendingNotificationRequests()
+        let exists = requests.contains { $0.identifier == identifier }
+        
+        await notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+        return exists
     }
     
     private func setupNotificationCategories() {
@@ -326,74 +348,144 @@ extension PushNotificationDelegate {
 }
 
 // MARK: - Create Custom Notification
-extension PushNotificationDelegate {
-    struct NotificationConfig {
-        let title: String
-        let body: String
-        let identifier: String
-        let userInfo: [AnyHashable: Any]?
-        let timeInterval: TimeInterval
-        let sound: UNNotificationSound?
-        let categoryIdentifier: String?
-        
-        // default values
-        init(
-            title: String,
-            body: String,
-            identifier: String,
-            userInfo: [AnyHashable: Any]? = nil,
-            timeInterval: TimeInterval = 1,
-            sound: UNNotificationSound? = .default,
-            categoryIdentifier: String? = nil
-        ) {
-            self.title = title
-            self.body = body
-            self.identifier = identifier
-            self.userInfo = userInfo
-            self.timeInterval = timeInterval
-            self.sound = sound
-            self.categoryIdentifier = categoryIdentifier
+struct NotificationRequest {
+    let title: String
+    let body: String
+    let trigger: NotificationTrigger?
+    let identifier: String
+    let userInfo: [AnyHashable: Any]?
+    let sound: UNNotificationSound?
+    let categoryIdentifier: String?
+}
+
+enum NotificationTrigger {
+    case time(Date)
+    case interval(TimeInterval)
+    case calendar(DateComponents)
+    
+    var unNotificationTrigger: UNNotificationTrigger {
+        switch self {
+        case .time(let date):
+            let timeInterval = date.timeIntervalSinceNow
+            return UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
+        case .interval(let interval):
+            return UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+        case .calendar(let components):
+            return UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         }
     }
-    
-    func sendImmediateNotification(
-        config: NotificationConfig,
-        completion: ((Error?) -> Void)? = nil
-    ) {
+}
+
+extension PushNotificationDelegate {
+    // main function to call for custom notifications
+    func schedule(request: NotificationRequest) async throws {
         let content = UNMutableNotificationContent()
-        content.title = config.title
-        content.body = config.body
+        content.title = request.title
+        content.body = request.body
+        content.sound = request.sound ?? .default
         
-        // optional configuration
-        if let sound = config.sound {
-            content.sound = sound
-        }
-        
-        if let userInfo = config.userInfo {
+        if let userInfo = request.userInfo {
             content.userInfo = userInfo
         }
         
-        if let categoryIdentifier = config.categoryIdentifier {
+        if let categoryIdentifier = request.categoryIdentifier {
             content.categoryIdentifier = categoryIdentifier
         }
         
-        let trigger = UNTimeIntervalNotificationTrigger(
-            timeInterval: config.timeInterval,
-            repeats: false
-        )
-        
-        let request = UNNotificationRequest(
-            identifier: config.identifier,
+        let notificationRequest = UNNotificationRequest(
+            identifier: request.identifier,
             content: content,
-            trigger: trigger
+            trigger: request.trigger?.unNotificationTrigger
         )
         
-        notificationCenter.add(request) { error in
-            if let error = error {
-                print("Error sending notification: \(error.localizedDescription)")
-            }
-            completion?(error)
+        try await notificationCenter.add(notificationRequest)
+    }
+    
+    // following are convenience methods for scheduling notifications
+    func scheduleOneTime(
+        title: String,
+        body: String,
+        at date: Date,
+        identifier: String = UUID().uuidString
+    ) async throws {
+        let request = NotificationRequest(
+            title: title,
+            body: body,
+            trigger: .time(date),
+            identifier: identifier,
+            userInfo: nil,
+            sound: .default,
+            categoryIdentifier: nil
+        )
+        
+        try await schedule(request: request)
+    }
+    
+    func scheduleNow(
+        title: String,
+        body: String,
+        identifier: String = UUID().uuidString
+    ) async throws {
+        let request = NotificationRequest(
+            title: title,
+            body: body,
+            trigger: nil,
+            identifier: identifier,
+            userInfo: nil,
+            sound: .default,
+            categoryIdentifier: nil
+        )
+        
+        try await schedule(request: request)
+    }
+    
+    func scheduleAfterDelay(
+        title: String,
+        body: String,
+        delay: TimeInterval,
+        identifier: String = UUID().uuidString
+    ) async throws {
+        let request = NotificationRequest(
+            title: title,
+            body: body,
+            trigger: NotificationTrigger.interval(delay),
+            identifier: identifier,
+            userInfo: nil,
+            sound: .default,
+            categoryIdentifier: nil
+        )
+        
+        try await schedule(request: request)
+    }
+    
+    func scheduleTimerSuccessNotification(
+        timeInterval: TimeInterval,
+        title: String = "Work done!",
+        body: String = "You've completed a session!",
+        identifier: String? = nil,
+        categoryIdentifier: String? = nil,
+        userInfo: [AnyHashable: Any]? = nil,
+        completion: ((Error?) -> Void)? = nil
+    ) async throws {
+        // don't schedule if the date is in the past
+        guard timeInterval > 0 else {
+            throw NotificationError.pastDate
         }
+        
+        // create identifier if none provided
+        let notificationIdentifier = identifier ?? UUID().uuidString
+        
+        let request = NotificationRequest(
+            title: title,
+            body: body,
+            trigger: .interval(timeInterval),
+            identifier: notificationIdentifier,
+            userInfo: userInfo,
+            sound: .default,
+            categoryIdentifier: categoryIdentifier
+        )
+        
+        try await schedule(request: request)
     }
 }
 

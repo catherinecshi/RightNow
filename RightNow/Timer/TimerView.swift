@@ -1,5 +1,9 @@
 import UIKit
 
+protocol TimerViewDelegate: AnyObject {
+    func timerViewDidDismiss(_ view: TimerView)
+}
+
 class TimerView: UIView {
     weak var delegate: TimerViewDelegate?
     
