@@ -37,6 +37,9 @@ class TimerModel {
     }
     var currentNotificationIdentifier: String = "workFailed"
     
+    private var lastActiveTimestamp: Date?
+    private var wasScreenOn: Bool = true
+    
     init() {
         let savedFocusTime = UserDefaults.standard.integer(forKey: "userFocusTime")
         let initialFocusTime = savedFocusTime != 0 ? savedFocusTime : 25
@@ -127,23 +130,69 @@ class TimerModel {
     }
     
     @objc private func appDidEnterBackground() {
+        // only care if there is an active session going on
+        guard isSessionActive else { return }
+        
+        // request background execution time
+        var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+        backgroundTask = UIApplication.shared.beginBackgroundTask {
+            // cleanup if we run out o ftime
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+        }
+        
         // check if app went to background due to phone lock
         let isDeviceLocked = !UIApplication.shared.isProtectedDataAvailable
+        print("initial check - session is active: \(isSessionActive), device is locked: \(isDeviceLocked)")
         
-        print("session is active: \(isSessionActive), device is locked: \(isDeviceLocked)")
-        if isSessionActive && !isDeviceLocked {
-            print("trying to send notification")
-            intoBackgroundTime = Date()
+        // check for lock state changes
+        var lockCheckTimer: Timer?
+        var attempts = 0
+        let maxAttempts = 3
+        
+        lockCheckTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] checkTimer in
+            guard let self = self else {
+                checkTimer.invalidate()
+                UIApplication.shared.endBackgroundTask(backgroundTask)
+                return
+            }
             
-            Task {
-                do {
-                    try await PushNotificationDelegate.shared.scheduleNow(title: "Work Stopped", body: "Your work will be forefeited if you don't return to the app in one minute!")
-                    
-                    // schedule notification for them failing work
-                    try await PushNotificationDelegate.shared.scheduleAfterDelay(title: "Work Stopped", body: "You've left the app for too long", delay: TimeInterval(60), identifier: currentNotificationIdentifier)
-                } catch {
-                    print("Background notification didn't send: \(error)")
+            attempts += 1
+            let currentLockState = !UIApplication.shared.isProtectedDataAvailable
+            print("Attempt \(attempts) - device is locked: \(currentLockState)")
+            
+            if attempts >= maxAttempts {
+                print("Final attempt reached - making decision")
+                checkTimer.invalidate()
+                lockCheckTimer = nil
+                
+                if !currentLockState {
+                    print("user left during timer session - call notification")
+                    self.handleBackgroundTransition()
+                } else {
+                    print("conditions not met - session active: \(self.isSessionActive), locked: \(currentLockState)")
                 }
+                
+                // end background task
+                UIApplication.shared.endBackgroundTask(backgroundTask)
+            }
+        }
+        
+        RunLoop.current.add(lockCheckTimer!, forMode: .common)
+    }
+    
+    private func handleBackgroundTransition() {
+        print("trying to send notification")
+        intoBackgroundTime = Date()
+        
+        Task {
+            do {
+                try await PushNotificationDelegate.shared.scheduleNow(title: "Work Stopped", body: "Your work will be forefeited if you don't return to the app in one minute!")
+                
+                // schedule notification for them failing work
+                try await PushNotificationDelegate.shared.scheduleAfterDelay(title: "Work Stopped", body: "You've left the app for too long", delay: TimeInterval(60), identifier: currentNotificationIdentifier)
+            } catch {
+                print("Background notification didn't send: \(error)")
             }
         }
     }

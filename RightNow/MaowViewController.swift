@@ -1,166 +1,74 @@
 import Foundation
 import UIKit
 
-class MaowViewController: UIViewController, TimerModelDelegate {
-    private var imageView = UIImageView()
+class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate {
+    private let timerModel = TimerModel.shared
+    private let maowView: MaowView
+    
     private var isFirstImage = true
     
-    private let timerLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 48, weight: .bold)
-        label.textAlignment = .center
-        label.text = "25:00"
-        label.textColor = UIConfiguration.tintColor
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    init() {
+        self.maowView = MaowView()
+        super.init(nibName: nil, bundle: nil)
+        
+        setupDelegates()
+    }
     
-    private var timerSlider: UISlider = {
-        let slider = UISlider()
-        slider.minimumValue = 10 // 10 minute minimum
-        slider.maximumValue = 120
-        slider.value = Float(TimerModel.shared.focusTime)
-        slider.translatesAutoresizingMaskIntoConstraints = false
-        return slider
-    }()
-    
-    private lazy var startStopButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Work", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 20)
-        button.setTitleColor(UIColor.white, for: .normal)
-        button.backgroundColor = UIConfiguration.tintColor
-        button.layer.cornerRadius = 12
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented yet")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         
-        TimerModel.shared.delegate = self
+        setupView()
+        initialViewSetup() // since timemodel stores the user preferences for how long
         TimerModel.shared.setupObservers()
-        
-        setupImageView()
-        setupTapGesture()
-        setupTimerLabel()
-        setupSlider()
-        setupButton()
-        
-         updateUIForSessionState()
-        
-        print("timer model \(TimerModel.shared.remainingSeconds / 60)")
     }
     
-    private func setupImageView() {
-        if let frontImage = UIImage(named: "patamon_front") {
-            print("Successfully loaded patamon front")
-            imageView.image = frontImage
-        } else {
-            print("Failed to load patamon front")
-        }
-        
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(imageView)
+    private func setupView() {
+        maowView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(maowView)
         
         NSLayoutConstraint.activate([
-            imageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            imageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.3),
-            imageView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.3)
+            maowView.topAnchor.constraint(equalTo: view.topAnchor),
+            maowView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            maowView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            maowView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
     
-    private func setupTapGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        imageView.addGestureRecognizer(tapGesture)
-        imageView.isUserInteractionEnabled = true
+    private func setupDelegates() {
+        TimerModel.shared.delegate = self
+        maowView.delegate = self
     }
     
-    private func setupTimerLabel() {
-        view.addSubview(timerLabel)
-        
-        NSLayoutConstraint.activate([
-            timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            timerLabel.bottomAnchor.constraint(equalTo: imageView.topAnchor, constant: -40)
-        ])
-        
-        // check if the focusTime is supposed to be something different
-        timerModelDidUpdateTime()
+    func maowViewDidTapCharacter() {
+        isFirstImage.toggle()
+        maowView.updateCharacterState(isAsleep: isFirstImage)
     }
     
-    private func setupSlider() {
-        view.addSubview(timerSlider)
-        
-        NSLayoutConstraint.activate([
-            timerSlider.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            timerSlider.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 20),
-            timerSlider.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.7)
-        ])
-        
-        timerSlider.addTarget(self, action: #selector(sliderValueChanged), for: .valueChanged)
+    func maowViewDidTapStart() {
+        TimerModel.shared.buttonTapped()
+        maowView.updateControlsForSession(isActive: TimerModel.shared.isSessionActive)
     }
     
-    private func setupButton() {
-        view.addSubview(startStopButton)
-        
-        NSLayoutConstraint.activate([
-            startStopButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            startStopButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 40),
-            startStopButton.widthAnchor.constraint(equalToConstant: 200),
-            startStopButton.heightAnchor.constraint(equalToConstant: 50)
-        ])
-        
-        startStopButton.addTarget(self, action: #selector(startButtonTapped), for: .touchUpInside)
-    }
-    
-    @objc private func sliderValueChanged() {
-        let minutes = Int(timerSlider.value)
+    func maowViewDidAdjustTime(_ minutes: Int) {
         TimerModel.shared.focusTime = minutes
         TimerModel.shared.remainingSeconds = minutes * 60
         timerModelDidUpdateTime()
     }
     
-    @objc private func handleTap() {
-        // create new image
-        guard let newImage = UIImage(named: isFirstImage ? "patamon_asleep" : "patamon_front") else {
-            print("failed to load image for transition")
-            return
-        }
-        
-        // perform animation
-        UIView.transition(with: imageView,
-                          duration: 0.2,
-                          options: .transitionCrossDissolve,
-                          animations: { [weak self] in
-            self?.imageView.image = newImage
-        })
-        
-        isFirstImage.toggle()
-    }
-    
-    @objc private func startButtonTapped() {
-        TimerModel.shared.buttonTapped()
-        updateUIForSessionState()
-    }
-    
-    private func updateUIForSessionState() {
-        if TimerModel.shared.isSessionActive {
-            startStopButton.setTitle("Give Up", for: .normal)
-            timerSlider.isEnabled = false
-        } else {
-            startStopButton.setTitle("Work", for: .normal)
-            timerSlider.isEnabled = true
-        }
-    }
-    
     func timerModelDidUpdateTime() {
         let minutes = TimerModel.shared.remainingSeconds / 60
         let seconds = TimerModel.shared.remainingSeconds % 60
-        timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
-        
-        updateUIForSessionState()
+        maowView.updateTimeDisplay(minutes: minutes, seconds: seconds)
+        maowView.updateControlsForSession(isActive: TimerModel.shared.isSessionActive)
+    }
+    
+    func initialViewSetup() {
+        timerModelDidUpdateTime()
+        maowView.updateSliderDisplay(value: Float(TimerModel.shared.focusTime))
     }
 }
