@@ -9,6 +9,7 @@ protocol MaowViewDelegate {
 
 class MaowView: UIView {
     var delegate: MaowViewDelegate?
+    
     let imageView = UIImageView()
     
     let timerLabel: UILabel = {
@@ -161,5 +162,9 @@ class MaowView: UIView {
                           animations: { [weak self] in
             self?.imageView.image = newImage
         })
+    }
+    
+    func updateCoinCount(_ count: Int) {
+        
     }
 }

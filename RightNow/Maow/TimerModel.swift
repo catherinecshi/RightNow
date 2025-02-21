@@ -3,6 +3,8 @@ import UIKit
 
 protocol TimerModelDelegate: AnyObject {
     func timerModelDidUpdateTime()
+    func showFailureAlert()
+    func showSuccessAlert()
 }
 
 class TimerModel {
@@ -36,14 +38,18 @@ class TimerModel {
         }
     }
     var currentNotificationIdentifier: String = "workFailed"
-    
-    private var lastActiveTimestamp: Date?
-    private var wasScreenOn: Bool = true
+    private var observersSetup = false // to prevent multiple observers working at once
+    private var isDeviceLocked = false
     
     init() {
         let savedFocusTime = UserDefaults.standard.integer(forKey: "userFocusTime")
         let initialFocusTime = savedFocusTime != 0 ? savedFocusTime : 25
         self.remainingSeconds = initialFocusTime * 60
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        observersSetup = false
     }
     
     
@@ -61,10 +67,18 @@ class TimerModel {
         remainingSeconds = focusTime * 60
         sessionStartTime = nil
         
-        if failed {
-            showFailureNotification()
+        if intoBackgroundTime != nil {
+            if failed {
+                showFailureNotification()
+            } else {
+                showSuccessNotification()
+            }
         } else {
-            showSuccessNotification()
+            if failed {
+                showFailureAlert()
+            } else {
+                showSuccessAlert()
+            }
         }
         
         delegate?.timerModelDidUpdateTime()
@@ -91,7 +105,7 @@ class TimerModel {
         }
     }
     
-    // MARK: - Notifications & Alerts
+    // MARK: - Notifications
     private func showFailureNotification() {
         Task {
             do {
@@ -112,8 +126,26 @@ class TimerModel {
         }
     }
     
+    private func userLeftAppNotification() {
+        print("trying to send notification")
+        
+        Task {
+            do {
+                try await PushNotificationDelegate.shared.scheduleNow(title: "Work Stopped", body: "Your work will be forefeited if you don't return to the app in one minute!")
+                
+                // schedule notification for them failing work
+                try await PushNotificationDelegate.shared.scheduleAfterDelay(title: "Work Stopped", body: "You've left the app for too long", delay: TimeInterval(60), identifier: currentNotificationIdentifier)
+            } catch {
+                print("Background notification didn't send: \(error)")
+            }
+        }
+    }
+    
     // MARK: - App State Observers
     func setupObservers() {
+        // prevent multiple observers being setup at once
+        guard !observersSetup else { return }
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidEnterBackground),
@@ -127,6 +159,22 @@ class TimerModel {
             name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDeviceLock),
+            name: UIApplication.protectedDataWillBecomeUnavailableNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDeviceUnlock),
+            name: UIApplication.protectedDataDidBecomeAvailableNotification,
+            object: nil
+        )
+        
+        observersSetup = true
     }
     
     @objc private func appDidEnterBackground() {
@@ -142,15 +190,17 @@ class TimerModel {
         }
         
         // check if app went to background due to phone lock
-        let isDeviceLocked = !UIApplication.shared.isProtectedDataAvailable
-        print("initial check - session is active: \(isSessionActive), device is locked: \(isDeviceLocked)")
+        let firstIsDeviceLocked = !UIApplication.shared.isProtectedDataAvailable
+        print("initial check - session is active: \(isSessionActive), device is locked: \(firstIsDeviceLocked)")
         
         // check for lock state changes
         var lockCheckTimer: Timer?
         var attempts = 0
         let maxAttempts = 3
+        var hasBeenLocked = false
+        intoBackgroundTime = Date()
         
-        lockCheckTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] checkTimer in
+        lockCheckTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] checkTimer in
             guard let self = self else {
                 checkTimer.invalidate()
                 UIApplication.shared.endBackgroundTask(backgroundTask)
@@ -158,19 +208,25 @@ class TimerModel {
             }
             
             attempts += 1
-            let currentLockState = !UIApplication.shared.isProtectedDataAvailable
-            print("Attempt \(attempts) - device is locked: \(currentLockState)")
+            print("Attempt \(attempts) - device is locked: \(isDeviceLocked)")
             
             if attempts >= maxAttempts {
                 print("Final attempt reached - making decision")
                 checkTimer.invalidate()
                 lockCheckTimer = nil
                 
-                if !currentLockState {
+                // checks if user has locked the phone at least once
+                if isDeviceLocked {
+                    hasBeenLocked = true
+                }
+                
+                // don't send the notificaition if the user came back to the app before the timer's time ran up
+                if !hasBeenLocked && intoBackgroundTime != nil {
                     print("user left during timer session - call notification")
-                    self.handleBackgroundTransition()
+                    self.userLeftAppNotification()
                 } else {
-                    print("conditions not met - session active: \(self.isSessionActive), locked: \(currentLockState)")
+                    intoBackgroundTime = nil
+                    print("conditions not met - session active: \(self.isSessionActive), locked: \(isDeviceLocked)")
                 }
                 
                 // end background task
@@ -179,22 +235,6 @@ class TimerModel {
         }
         
         RunLoop.current.add(lockCheckTimer!, forMode: .common)
-    }
-    
-    private func handleBackgroundTransition() {
-        print("trying to send notification")
-        intoBackgroundTime = Date()
-        
-        Task {
-            do {
-                try await PushNotificationDelegate.shared.scheduleNow(title: "Work Stopped", body: "Your work will be forefeited if you don't return to the app in one minute!")
-                
-                // schedule notification for them failing work
-                try await PushNotificationDelegate.shared.scheduleAfterDelay(title: "Work Stopped", body: "You've left the app for too long", delay: TimeInterval(60), identifier: currentNotificationIdentifier)
-            } catch {
-                print("Background notification didn't send: \(error)")
-            }
-        }
     }
     
     @objc private func appWillEnterForeground() {
@@ -212,5 +252,15 @@ class TimerModel {
         }
         
         self.intoBackgroundTime = nil
+    }
+    
+    @objc private func handleDeviceLock() {
+        isDeviceLocked = true
+        print("Device is being locked")
+    }
+    
+    @objc private func handleDeviceUnlock() {
+        isDeviceLocked = false
+        print("Device is being unlocked")
     }
 }
