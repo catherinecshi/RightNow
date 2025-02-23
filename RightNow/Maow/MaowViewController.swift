@@ -55,6 +55,29 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         coinStackView.addArrangedSubview(coinImageView)
         coinStackView.addArrangedSubview(coinCountLabel)
         
+        NSLayoutConstraint.activate([
+            coinImageView.heightAnchor.constraint(equalToConstant: 32),
+            coinImageView.widthAnchor.constraint(equalToConstant: 32)
+        ])
+        
+        // container view to help with alignment
+        let containerView = UIView()
+        containerView.backgroundColor = .clear
+        
+        containerView.addSubview(coinStackView)
+        coinStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            // Container size
+            containerView.heightAnchor.constraint(equalToConstant: 44),
+            containerView.widthAnchor.constraint(greaterThanOrEqualToConstant: 80), // Minimum width
+            
+            // Stack view constraints - pin to trailing edge
+            coinStackView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            coinStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            coinStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        ])
+        
         // custom bar button item with stack view
         let customBarButton = UIBarButtonItem(customView: coinStackView)
         
@@ -119,7 +142,10 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     }
     
     @objc private func coinButtonTapped() {
-        // put shop in here
+        let shopVC = ShopViewController()
+        let navController = UINavigationController(rootViewController: shopVC)
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true, completion: nil)
     }
     
     func showFailureAlert() {

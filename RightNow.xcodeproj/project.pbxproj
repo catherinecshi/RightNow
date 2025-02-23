@@ -80,6 +80,7 @@
 		FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */; };
 		FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */; };
 		FBC7BD252D5E9A2300F94E04 /* MaowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD242D5E9A2300F94E04 /* MaowView.swift */; };
+		FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD262D69427100F94E04 /* ShopViewController.swift */; };
 		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
 		FBD591D82AE0A36800B9EA8F /* CalendarKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBD591D72AE0A36800B9EA8F /* CalendarKit */; };
 		FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBDE05182D29BD1D00C46EBB /* Level.swift */; };
@@ -162,6 +163,7 @@
 		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
 		FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidenceViewController.swift; sourceTree = "<group>"; };
 		FBC7BD242D5E9A2300F94E04 /* MaowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowView.swift; sourceTree = "<group>"; };
+		FBC7BD262D69427100F94E04 /* ShopViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopViewController.swift; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
@@ -257,6 +259,7 @@
 				FBA7213E2AD6356400E3EC4F /* Maow */,
 				FB22A7B32AB7D49C00F63D42 /* AppDelegate.swift */,
 				FB22A7B52AB7D49C00F63D42 /* SceneDelegate.swift */,
+				FBC7BD262D69427100F94E04 /* ShopViewController.swift */,
 				FB6E52742AE1FC4D00499E1C /* Habit.swift */,
 				FB23F3F02D516889006A4A16 /* TabBarController.swift */,
 				FB2665BC2D0A0CB80025353D /* CheckInController.swift */,
@@ -592,6 +595,7 @@
 				FB22A7F92AB7E80D00F63D42 /* WelcomeViewController.swift in Sources */,
 				FB22A7EC2AB7E58200F63D42 /* StatusViewModel.swift in Sources */,
 				FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */,
+				FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */,
 				FB0E0E752B828B57003177AF /* HabitGoalLevelView.swift in Sources */,
 				FB23F3ED2D3F0217006A4A16 /* FocusView.swift in Sources */,
 				FB6E527D2AE2021300499E1C /* HabitListViewController.swift in Sources */,

@@ -10,7 +10,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Declaration
     var habitData = HabitData()
     var habitButtons: [UIButton] = []
-    let predefinedHabits = ["Read", "Meditate", "Skincare Routine", "Learn a New Language", "Journal", "Exercise", "Walk", "Drink More Water", "Wake Up on Time", "Bedtime Routine", "Stretching", "Brush Teeth", "Gym", "Cold Showers", "Yoga", "Quality Time", "Gratitude Journal", "Floss", "Spend Time in Nature", "Pray", "Random Act of Kindness", "Save", "Draw", "Play the Guitar", "Martial Arts", "Take a Break", "Write", "Rumination", "Clean Room", "Water Plants", "Take off Makeup", "Shave", "Feed Pets"]
+    let predefinedHabits = ["Read", "Meditate", "Skincare Routine", "Learn a New Language", "Journal", "Exercise", "Walk", "Drink More Water", "Wake Up on Time", "Bedtime Routine", "Stretching", "Brush Teeth", "Gym", "Cold Showers", "Yoga", "Quality Time", "Gratitude Journal", "Floss", "Spend Time in Nature", "Pray", "Random Act of Kindness", "Save", "Draw", "Play the Guitar", "Martial Arts", "Take a Break", "Write", "Clean Room", "Water Plants", "Take off Makeup", "Shave", "Feed Pets"]
     
     // for when the user inserts their own habit
     private var customButton: UIButton?
@@ -313,7 +313,6 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc private func dismissSelf() {
-        print("trying to dismiss")
         self.dismiss(animated: true, completion: nil)
     }
     

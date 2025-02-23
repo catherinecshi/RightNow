@@ -67,17 +67,17 @@ class TimerModel {
         remainingSeconds = focusTime * 60
         sessionStartTime = nil
         
-        if intoBackgroundTime != nil {
+        if UIApplication.shared.applicationState == .active {
+            if failed {
+                delegate?.showFailureAlert()
+            } else {
+                delegate?.showSuccessAlert()
+            }
+        } else {
             if failed {
                 showFailureNotification()
             } else {
                 showSuccessNotification()
-            }
-        } else {
-            if failed {
-                showFailureAlert()
-            } else {
-                showSuccessAlert()
             }
         }
         
