@@ -276,6 +276,10 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             let locationVC = LocationAccountabilityViewController()
             locationVC.habitData = habitData
             nextVC = locationVC
+        } else if habitData.accountabilityMetric == .objectDetection {
+            let objectDetectionVC = ObjectDetectionViewController()
+            objectDetectionVC.habitData = habitData
+            nextVC = objectDetectionVC
         } else {
             //let defaultVC = IncentivesViewController()
             let defaultVC = MurphyjitsuViewController()

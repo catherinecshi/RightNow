@@ -60,8 +60,6 @@
 		FB34FCB82AD824070032872E /* TimerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCB72AD824070032872E /* TimerModel.swift */; };
 		FB34FCBA2AD825A20032872E /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCB92AD825A20032872E /* TimerView.swift */; };
 		FB34FCBE2AD8369D0032872E /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCBD2AD8369D0032872E /* CameraModel.swift */; };
-		FB34FCC02AD836EC0032872E /* CameraModelDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCBF2AD836EC0032872E /* CameraModelDelegate.swift */; };
-		FB34FCC22AD837870032872E /* CameraViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCC12AD837870032872E /* CameraViewDelegate.swift */; };
 		FB34FCC42AD837BE0032872E /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCC32AD837BE0032872E /* CameraView.swift */; };
 		FB3E30B32ABC7CD6005B5E88 /* TimerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3E30B22ABC7CD6005B5E88 /* TimerController.swift */; };
 		FB6E52752AE1FC4D00499E1C /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52742AE1FC4D00499E1C /* Habit.swift */; };
@@ -81,6 +79,8 @@
 		FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */; };
 		FBC7BD252D5E9A2300F94E04 /* MaowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD242D5E9A2300F94E04 /* MaowView.swift */; };
 		FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD262D69427100F94E04 /* ShopViewController.swift */; };
+		FBC7BD292D6BB27800F94E04 /* ObjectDetectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */; };
+		FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */; };
 		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
 		FBD591D82AE0A36800B9EA8F /* CalendarKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBD591D72AE0A36800B9EA8F /* CalendarKit */; };
 		FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBDE05182D29BD1D00C46EBB /* Level.swift */; };
@@ -144,8 +144,6 @@
 		FB34FCB72AD824070032872E /* TimerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModel.swift; sourceTree = "<group>"; };
 		FB34FCB92AD825A20032872E /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		FB34FCBD2AD8369D0032872E /* CameraModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraModel.swift; sourceTree = "<group>"; };
-		FB34FCBF2AD836EC0032872E /* CameraModelDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraModelDelegate.swift; sourceTree = "<group>"; };
-		FB34FCC12AD837870032872E /* CameraViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewDelegate.swift; sourceTree = "<group>"; };
 		FB34FCC32AD837BE0032872E /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		FB3E30B22ABC7CD6005B5E88 /* TimerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerController.swift; sourceTree = "<group>"; };
 		FB6E52742AE1FC4D00499E1C /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
@@ -164,6 +162,8 @@
 		FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidenceViewController.swift; sourceTree = "<group>"; };
 		FBC7BD242D5E9A2300F94E04 /* MaowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowView.swift; sourceTree = "<group>"; };
 		FBC7BD262D69427100F94E04 /* ShopViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopViewController.swift; sourceTree = "<group>"; };
+		FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetectionViewController.swift; sourceTree = "<group>"; };
+		FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = yolov8s.mlmodel; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
@@ -254,7 +254,7 @@
 				FB6E52802AE2E7DD00499E1C /* Habit Modification */,
 				FB6E52732AE1FC3500499E1C /* HabitList */,
 				FB22A7D42AB7DD8B00F63D42 /* Log-In */,
-				FB22A7D32AB7DD7E00F63D42 /* Record */,
+				FB22A7D32AB7DD7E00F63D42 /* Object Detection */,
 				FB22A7CE2AB7DA9600F63D42 /* Calendar */,
 				FBA7213E2AD6356400E3EC4F /* Maow */,
 				FB22A7B32AB7D49C00F63D42 /* AppDelegate.swift */,
@@ -263,6 +263,7 @@
 				FB6E52742AE1FC4D00499E1C /* Habit.swift */,
 				FB23F3F02D516889006A4A16 /* TabBarController.swift */,
 				FB2665BC2D0A0CB80025353D /* CheckInController.swift */,
+				FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */,
 				FB22A7BC2AB7D49E00F63D42 /* Assets.xcassets */,
 				FB22A7BE2AB7D49E00F63D42 /* LaunchScreen.storyboard */,
 				FB22A7C12AB7D49E00F63D42 /* Info.plist */,
@@ -281,14 +282,14 @@
 			path = Calendar;
 			sourceTree = "<group>";
 		};
-		FB22A7D32AB7DD7E00F63D42 /* Record */ = {
+		FB22A7D32AB7DD7E00F63D42 /* Object Detection */ = {
 			isa = PBXGroup;
 			children = (
 				FB34FCC72AD9C1310032872E /* Camera */,
 				FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */,
 				FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */,
 			);
-			path = Record;
+			path = "Object Detection";
 			sourceTree = "<group>";
 		};
 		FB22A7D42AB7DD8B00F63D42 /* Log-In */ = {
@@ -385,6 +386,7 @@
 			isa = PBXGroup;
 			children = (
 				FB0E0E6A2B7FB140003177AF /* AccountabilityViewController.swift */,
+				FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */,
 				FB2A2B322C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift */,
 			);
 			path = Accountability;
@@ -394,9 +396,7 @@
 			isa = PBXGroup;
 			children = (
 				FB34FCBD2AD8369D0032872E /* CameraModel.swift */,
-				FB34FCBF2AD836EC0032872E /* CameraModelDelegate.swift */,
 				FB34FCC32AD837BE0032872E /* CameraView.swift */,
-				FB34FCC12AD837870032872E /* CameraViewDelegate.swift */,
 				FB22A7D12AB7DCD300F63D42 /* CameraController.swift */,
 			);
 			path = Camera;
@@ -594,6 +594,7 @@
 				FB6E527B2AE201F500499E1C /* HabitListView.swift in Sources */,
 				FB22A7F92AB7E80D00F63D42 /* WelcomeViewController.swift in Sources */,
 				FB22A7EC2AB7E58200F63D42 /* StatusViewModel.swift in Sources */,
+				FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */,
 				FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */,
 				FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */,
 				FB0E0E752B828B57003177AF /* HabitGoalLevelView.swift in Sources */,
@@ -612,6 +613,7 @@
 				FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */,
 				FB0E0E6B2B7FB140003177AF /* AccountabilityViewController.swift in Sources */,
 				FB22A7DD2AB7E3F800F63D42 /* AuthAPI.swift in Sources */,
+				FBC7BD292D6BB27800F94E04 /* ObjectDetectionViewController.swift in Sources */,
 				FB22A7DF2AB7E40E00F63D42 /* AuthService.swift in Sources */,
 				FB8E9CCF2AF8823A0055DADC /* HabitData.swift in Sources */,
 				FB22A7E82AB7E52E00F63D42 /* SignInViewModel.swift in Sources */,
@@ -628,7 +630,6 @@
 				FB8E9CCA2AF87EB20055DADC /* SingleHabitController.swift in Sources */,
 				FB2A2B402CA60102003F31B2 /* GeofenceData.swift in Sources */,
 				FB0E0E6F2B814143003177AF /* HabitProgressViewController.swift in Sources */,
-				FB34FCC22AD837870032872E /* CameraViewDelegate.swift in Sources */,
 				FB23F3F32D51698F006A4A16 /* MaowViewController.swift in Sources */,
 				FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */,
 				FB6E52822AE3296500499E1C /* HabitEditingViewController.swift in Sources */,
@@ -641,7 +642,6 @@
 				FB2A2B352C8CAB0F003F31B2 /* LocationManager.swift in Sources */,
 				FB8E9CD12AF8987A0055DADC /* UIConfiguration.swift in Sources */,
 				FB22A7D72AB7E3A000F63D42 /* AppState.swift in Sources */,
-				FB34FCC02AD836EC0032872E /* CameraModelDelegate.swift in Sources */,
 				FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */,
 				FB22A7C82AB7D67700F63D42 /* CalendarViewController.swift in Sources */,
 				FB6E52752AE1FC4D00499E1C /* Habit.swift in Sources */,
