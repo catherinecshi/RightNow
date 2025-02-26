@@ -164,6 +164,7 @@
 		FBC7BD262D69427100F94E04 /* ShopViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopViewController.swift; sourceTree = "<group>"; };
 		FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetectionViewController.swift; sourceTree = "<group>"; };
 		FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = yolov8s.mlmodel; sourceTree = "<group>"; };
+		FBC7BD2F2D6E823B00F94E04 /* RightNow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RightNow.entitlements; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
@@ -247,6 +248,7 @@
 		FB22A7B22AB7D49C00F63D42 /* RightNow */ = {
 			isa = PBXGroup;
 			children = (
+				FBC7BD2F2D6E823B00F94E04 /* RightNow.entitlements */,
 				FB23F3E12D343683006A4A16 /* AuxillaryObjects */,
 				FB2665B52CF55C800025353D /* AppDelegates */,
 				FB8E9CCB2AF87FD80055DADC /* HabitCreation */,
@@ -254,7 +256,7 @@
 				FB6E52802AE2E7DD00499E1C /* Habit Modification */,
 				FB6E52732AE1FC3500499E1C /* HabitList */,
 				FB22A7D42AB7DD8B00F63D42 /* Log-In */,
-				FB22A7D32AB7DD7E00F63D42 /* Object Detection */,
+				FB22A7D32AB7DD7E00F63D42 /* Photos */,
 				FB22A7CE2AB7DA9600F63D42 /* Calendar */,
 				FBA7213E2AD6356400E3EC4F /* Maow */,
 				FB22A7B32AB7D49C00F63D42 /* AppDelegate.swift */,
@@ -282,14 +284,14 @@
 			path = Calendar;
 			sourceTree = "<group>";
 		};
-		FB22A7D32AB7DD7E00F63D42 /* Object Detection */ = {
+		FB22A7D32AB7DD7E00F63D42 /* Photos */ = {
 			isa = PBXGroup;
 			children = (
 				FB34FCC72AD9C1310032872E /* Camera */,
 				FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */,
 				FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */,
 			);
-			path = "Object Detection";
+			path = Photos;
 			sourceTree = "<group>";
 		};
 		FB22A7D42AB7DD8B00F63D42 /* Log-In */ = {
@@ -796,6 +798,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = RightNow/RightNow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 969BFJ8RVF;
@@ -805,9 +808,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -832,6 +835,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = RightNow/RightNow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 969BFJ8RVF;
@@ -841,9 +845,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

@@ -16,6 +16,7 @@ struct HabitData {
     // accountability
     var accountabilityMetric: AccountabilityMetric?
     var location: Location?
+    var stayOffPhoneDuration: TimeInterval?
     
     // incentive
     var incentive: Incentive?

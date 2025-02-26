@@ -12,7 +12,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     
     // accountability metric variables
     var metricButtons: [UIButton] = []
-    let predefinedMetrics: [AccountabilityMetric] = [.locationTracking, .objectDetection, .stepCount, .selfTracking]
+    let predefinedMetrics: [AccountabilityMetric] = [.locationTracking, .photoEvidence, .stayOffPhone, .selfTracking]
     let metricCount = 4
     
     private var selectedButton: UIButton?
@@ -61,6 +61,27 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         return stackView
     }()
     
+    // for the accountability metrics that require a time
+    let accountabilityLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIConfiguration.subtitleFont
+        label.textColor = .white
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let accountabilityTime: UIDatePicker = {
+        let datePicker = UIDatePicker()
+        datePicker.datePickerMode = .countDownTimer
+        datePicker.minuteInterval = 1
+        datePicker.preferredDatePickerStyle = .wheels
+        datePicker.tintColor = .white
+        datePicker.setValue(UIColor.white, forKey: "textColor")
+        datePicker.isHidden = true
+        datePicker.translatesAutoresizingMaskIntoConstraints = false
+        return datePicker
+    }()
+    
     // MARK: Initialisation
     
     override func viewDidLoad() {
@@ -72,6 +93,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         setupWhatSubtitle()
         setupNextButton()
         setupMetricButtons()
+        setupAdditionalAccountability()
     }
     
     // MARK: Setup UI
@@ -182,6 +204,25 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
+    private func setupAdditionalAccountability() {
+        view.addSubview(accountabilityLabel)
+        view.addSubview(accountabilityTime)
+        
+        accountabilityLabel.text = "How long do you want to stay off your phone?"
+        accountabilityLabel.isHidden = true
+        
+        NSLayoutConstraint.activate([
+            accountabilityLabel.topAnchor.constraint(equalTo: metricScrollView.bottomAnchor, constant: 20),
+            accountabilityLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            accountabilityLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            accountabilityTime.topAnchor.constraint(equalTo: accountabilityLabel.bottomAnchor, constant: 10),
+            accountabilityTime.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            accountabilityTime.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            accountabilityTime.heightAnchor.constraint(equalToConstant: 150)
+        ])
+    }
+    
     private func setupNextButton() {
         //add to view
         view.addSubview(nextButton)
@@ -266,20 +307,31 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         
         let selectedMetric = predefinedMetrics[sender.tag]
         delegate?.metricSelected(selectedMetric)
+        
+        // show or hide time picker based on selection
+        let shouldShowTimePicker = sender.isSelected && selectedMetric == .stayOffPhone
+        accountabilityLabel.isHidden = !shouldShowTimePicker
+        accountabilityTime.isHidden = !shouldShowTimePicker
     }
     
     @objc private func nextButtonTapped() {
         //create and push the next view controller
         var nextVC: UIViewController
         
+        // store time duration if relevant
+        if habitData.accountabilityMetric == .stayOffPhone {
+            let timeInterval = accountabilityTime.countDownDuration
+            habitData.stayOffPhoneDuration = timeInterval
+        }
+        
         if habitData.accountabilityMetric == .locationTracking {
             let locationVC = LocationAccountabilityViewController()
             locationVC.habitData = habitData
             nextVC = locationVC
-        } else if habitData.accountabilityMetric == .objectDetection {
-            let objectDetectionVC = ObjectDetectionViewController()
-            objectDetectionVC.habitData = habitData
-            nextVC = objectDetectionVC
+            //} else if habitData.accountabilityMetric == .objectDetection {
+            //let objectDetectionVC = ObjectDetectionViewController()
+            //objectDetectionVC.habitData = habitData
+            //nextVC = objectDetectionVC
         } else {
             //let defaultVC = IncentivesViewController()
             let defaultVC = MurphyjitsuViewController()
@@ -299,7 +351,6 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         self.navigationController?.popViewController(animated: true)
     }
     
-    
     // MARK: Auxillary Methods
     
     private func iconForMetric(name: String?, color: UIColor) -> UIImage? {
@@ -308,9 +359,13 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             return UIImage(systemName: "location")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Stay Still":
             return UIImage(systemName: "hourglass.circle")?.withTintColor(color, renderingMode: .alwaysOriginal)
+        case "Stay Off your Phone":
+            return UIImage(systemName: "hourglass.circle")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Track your Steps":
             return UIImage(systemName: "shoeprints.fill")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Object Detection":
+            return UIImage(systemName: "photo.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
+        case "Take a Photo":
             return UIImage(systemName: "photo.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
         case "Self Tracking":
             return UIImage(systemName: "person.crop.circle.badge.checkmark")?.withTintColor(color, renderingMode: .alwaysOriginal)
@@ -325,10 +380,14 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             return "Complete habit by being at a specific place during the time for your habit"
         case "Stay Still":
             return "Stay still in front of something, like your laptop for work"
+        case "Stay Off your Phone":
+            return "Stay off your phone for a pre-determined amount of time"
         case "Track your Steps":
             return "Track your activity levels by a certain time, like 1000 steps after waking up"
         case "Object Detection":
             return "Complete your habit by taking a photo of something proving you've finished your habit"
+        case "Take a Photo":
+            return "Take a photo before or after you do your habit"
         case "Self Tracking":
             return "Check off your habit yourself, no automatic tracking!"
         default:
@@ -342,10 +401,14 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             return "Track your Location"
         case "Complete your habit by using or blocking an app for a specific time":
             return "Track your Screen Time Usage"
+        case "Stay off your phone for a pre-determined amount of time":
+            return "Stay Off your Phone"
         case "Complete your habit by taking a photo of something during your habit":
             return "Object Detection"
         case "Track your activity levels by a certain time, like 1000 steps after waking up":
             return "Track your Steps"
+        case "Take a photo before or after you do your habit":
+            return "Take a Photo"
         case "Check off your habit yourself, no automatic tracking!":
             return "Self Tracking"
         default:
