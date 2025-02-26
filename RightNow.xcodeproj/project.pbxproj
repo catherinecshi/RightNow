@@ -81,12 +81,23 @@
 		FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD262D69427100F94E04 /* ShopViewController.swift */; };
 		FBC7BD292D6BB27800F94E04 /* ObjectDetectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */; };
 		FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */; };
+		FBC7BD382D6F84CE00F94E04 /* RightNowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */; };
 		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
 		FBD591D82AE0A36800B9EA8F /* CalendarKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBD591D72AE0A36800B9EA8F /* CalendarKit */; };
 		FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBDE05182D29BD1D00C46EBB /* Level.swift */; };
 		FBE946712ACF5D1100CA11ED /* PhotoTakenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */; };
 		FBE946732ACF5DE000CA11ED /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = FBE946722ACF5DE000CA11ED /* FirebaseStorage */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FBC7BD392D6F84CE00F94E04 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FB22A7A82AB7D49C00F63D42 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB22A7AF2AB7D49C00F63D42;
+			remoteInfo = RightNow;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		08BE05A064B2947D62938EC8 /* Pods-RightNow.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RightNow.debug.xcconfig"; path = "Target Support Files/Pods-RightNow/Pods-RightNow.debug.xcconfig"; sourceTree = "<group>"; };
@@ -165,6 +176,8 @@
 		FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetectionViewController.swift; sourceTree = "<group>"; };
 		FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = yolov8s.mlmodel; sourceTree = "<group>"; };
 		FBC7BD2F2D6E823B00F94E04 /* RightNow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RightNow.entitlements; sourceTree = "<group>"; };
+		FBC7BD352D6F84CE00F94E04 /* RightNowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RightNowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightNowTests.swift; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
@@ -182,6 +195,13 @@
 				FBE946732ACF5DE000CA11ED /* FirebaseStorage in Frameworks */,
 				FB22A7E62AB7E4CD00F63D42 /* FirebaseAuth in Frameworks */,
 				FBA721422AD636D400E3EC4F /* FirebaseFirestoreSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBC7BD322D6F84CE00F94E04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -231,6 +251,7 @@
 			children = (
 				FB6F03BF2AE0BE3300033C9F /* Packages */,
 				FB22A7B22AB7D49C00F63D42 /* RightNow */,
+				FBC7BD362D6F84CE00F94E04 /* RightNowTests */,
 				FB22A7B12AB7D49C00F63D42 /* Products */,
 				C3DC80F02DA447253DD2A3D1 /* Pods */,
 				16B8DC385582138DBBD7BD54 /* Frameworks */,
@@ -241,6 +262,7 @@
 			isa = PBXGroup;
 			children = (
 				FB22A7B02AB7D49C00F63D42 /* RightNow.app */,
+				FBC7BD352D6F84CE00F94E04 /* RightNowTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -259,9 +281,9 @@
 				FB22A7D32AB7DD7E00F63D42 /* Photos */,
 				FB22A7CE2AB7DA9600F63D42 /* Calendar */,
 				FBA7213E2AD6356400E3EC4F /* Maow */,
+				FBC7BD302D6F753400F94E04 /* Shop */,
 				FB22A7B32AB7D49C00F63D42 /* AppDelegate.swift */,
 				FB22A7B52AB7D49C00F63D42 /* SceneDelegate.swift */,
-				FBC7BD262D69427100F94E04 /* ShopViewController.swift */,
 				FB6E52742AE1FC4D00499E1C /* Habit.swift */,
 				FB23F3F02D516889006A4A16 /* TabBarController.swift */,
 				FB2665BC2D0A0CB80025353D /* CheckInController.swift */,
@@ -465,6 +487,22 @@
 			path = Maow;
 			sourceTree = "<group>";
 		};
+		FBC7BD302D6F753400F94E04 /* Shop */ = {
+			isa = PBXGroup;
+			children = (
+				FBC7BD262D69427100F94E04 /* ShopViewController.swift */,
+			);
+			path = Shop;
+			sourceTree = "<group>";
+		};
+		FBC7BD362D6F84CE00F94E04 /* RightNowTests */ = {
+			isa = PBXGroup;
+			children = (
+				FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */,
+			);
+			path = RightNowTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -495,6 +533,24 @@
 			productReference = FB22A7B02AB7D49C00F63D42 /* RightNow.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FBC7BD342D6F84CE00F94E04 /* RightNowTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FBC7BD3B2D6F84CE00F94E04 /* Build configuration list for PBXNativeTarget "RightNowTests" */;
+			buildPhases = (
+				FBC7BD312D6F84CE00F94E04 /* Sources */,
+				FBC7BD322D6F84CE00F94E04 /* Frameworks */,
+				FBC7BD332D6F84CE00F94E04 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FBC7BD3A2D6F84CE00F94E04 /* PBXTargetDependency */,
+			);
+			name = RightNowTests;
+			productName = RightNowTests;
+			productReference = FBC7BD352D6F84CE00F94E04 /* RightNowTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -502,11 +558,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1430;
+				LastSwiftUpdateCheck = 1520;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					FB22A7AF2AB7D49C00F63D42 = {
 						CreatedOnToolsVersion = 14.3.1;
+					};
+					FBC7BD342D6F84CE00F94E04 = {
+						CreatedOnToolsVersion = 15.2;
+						TestTargetID = FB22A7AF2AB7D49C00F63D42;
 					};
 				};
 			};
@@ -528,6 +588,7 @@
 			projectRoot = "";
 			targets = (
 				FB22A7AF2AB7D49C00F63D42 /* RightNow */,
+				FBC7BD342D6F84CE00F94E04 /* RightNowTests */,
 			);
 		};
 /* End PBXProject section */
@@ -541,6 +602,13 @@
 				FB2665BB2D00EECC0025353D /* test notifications.apns in Resources */,
 				FB22A7E12AB7E48400F63D42 /* GoogleService-Info.plist in Resources */,
 				FB22A7BD2AB7D49E00F63D42 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBC7BD332D6F84CE00F94E04 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -664,7 +732,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FBC7BD312D6F84CE00F94E04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FBC7BD382D6F84CE00F94E04 /* RightNowTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FBC7BD3A2D6F84CE00F94E04 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB22A7AF2AB7D49C00F63D42 /* RightNow */;
+			targetProxy = FBC7BD392D6F84CE00F94E04 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		FB22A7BE2AB7D49E00F63D42 /* LaunchScreen.storyboard */ = {
@@ -866,6 +950,53 @@
 			};
 			name = Release;
 		};
+		FBC7BD3C2D6F84CE00F94E04 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 969BFJ8RVF;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.catherinecshi.RightNowTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RightNow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RightNow";
+			};
+			name = Debug;
+		};
+		FBC7BD3D2D6F84CE00F94E04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 969BFJ8RVF;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.catherinecshi.RightNowTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RightNow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RightNow";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -883,6 +1014,15 @@
 			buildConfigurations = (
 				FB22A7C52AB7D49E00F63D42 /* Debug */,
 				FB22A7C62AB7D49E00F63D42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FBC7BD3B2D6F84CE00F94E04 /* Build configuration list for PBXNativeTarget "RightNowTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBC7BD3C2D6F84CE00F94E04 /* Debug */,
+				FBC7BD3D2D6F84CE00F94E04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -34,14 +34,17 @@ struct Habit: Codable {
         let calendar = Calendar.current
         let today = Date()
         
+        print("last update \(lastUpdateDate)")
+        print("today \(today)")
+        print("same day check \(TimeFormatter.isSameDay(today, lastUpdateDate))")
+        
         // no need to update if last update is today
         if TimeFormatter.isSameDay(lastUpdateDate, today) {
+            print("checkign for the same day")
             return
         }
         
         var currentDate = lastUpdateDate
-        var tempStreak = streaks
-        var tempFailed = totalFailed
         
         // check if there's any missed days between last update and today
         while !TimeFormatter.isSameDay(currentDate, today) {
@@ -53,20 +56,21 @@ struct Habit: Codable {
             let dateString = TimeFormatter.dateToString(currentDate)
             let weekdayString = TimeFormatter.weekdayToString(currentDate)
             
+            print("day is now \(dateString)")
+            
             if daysOfTheWeek[weekdayString, default: false] {
+                print("\(weekdayString) found in days of the week")
                 let completionsForDay = dailyCompletion[dateString, default: 0]
                 
-                if completionsForDay == numberOfRepetitions {
-                    tempStreak += 1
-                } else {
-                    tempStreak = 0
-                    tempFailed += 1
+                if !TimeFormatter.isSameDay(currentDate, today) && completionsForDay < numberOfRepetitions {
+                    print("streak is broken")
+                    streaks = 0
+                    totalFailed += 1
+                    break
                 }
             }
         }
         
-        streaks = tempStreak
-        totalFailed = tempFailed
         totalDone = dailyCompletion.values.reduce(0, +)
         lastUpdateDate = today
     }
@@ -83,7 +87,7 @@ struct Habit: Codable {
     }
     
     // if habit is made from habit creation or editing
-    init(id: UUID = UUID(), name: String, description: String, time: Date, daysOfTheWeek: [String: Bool], accountabilityMetric: AccountabilityMetric, location: Location? = nil, incentive: Incentive, notificationEnabled: Bool, totalDone: Int = 0, totalFailed: Int = 0, streaks: Int = 0, currentLevel: Level = .beginner, numberOfRepetitions: Int = 1, dailyCompletion: [String: Int] = [:], lastUpdateDate: Date) {
+    init(id: UUID = UUID(), name: String, description: String, time: Date, daysOfTheWeek: [String: Bool], accountabilityMetric: AccountabilityMetric, location: Location? = nil, incentive: Incentive, notificationEnabled: Bool, totalDone: Int = 0, totalFailed: Int = 0, streaks: Int = 0, currentLevel: Level = .beginner, numberOfRepetitions: Int = 1, dailyCompletion: [String: Int] = [:], lastUpdateDate: Date = Date()) {
             self.id = id
             self.name = name
             self.description = description
@@ -98,7 +102,7 @@ struct Habit: Codable {
             self.streaks = streaks
             self.numberOfRepetitions = numberOfRepetitions
             self.dailyCompletion = dailyCompletion
-            self.lastUpdateDate = Date()
+            self.lastUpdateDate = lastUpdateDate
         }
     
     // if loaded in from firestore - incase new variables are added, this adds default values

@@ -92,7 +92,8 @@ class HabitListViewModel {
                     self.habits.removeAll()
                     for document in querySnapshot!.documents {
                         let jsonData = try! JSONSerialization.data(withJSONObject: document.data(), options: [])
-                        let habit = try! JSONDecoder().decode(Habit.self, from: jsonData)
+                        var habit = try! JSONDecoder().decode(Habit.self, from: jsonData)
+                        habit.updateStats() // check if streak was broken
                         self.habits.append(habit)
                     }
                     
@@ -103,9 +104,6 @@ class HabitListViewModel {
                     // make sure notifications and geofences match up with habits
                     PushNotificationDelegate.shared.auditNotifications()
                     LocationManager.shared.synchronizeGeofencesWithHabits()
-                    
-                    // check if any streaks have been broken since last update
-                    self.habits = self.habits.map { var habit = $0; habit.updateStats(); return habit }
                 }
             }
         }
