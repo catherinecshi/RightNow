@@ -27,7 +27,7 @@ struct Habit: Codable {
     var dailyCompletion: [String: Int] // keys are date strings and values are counts
     
     // speeds up computation
-    private var lastUpdateDate: Date
+    var lastUpdateDate: Date
     
     // update stats when habit is completed/failed
     mutating func updateStats() {

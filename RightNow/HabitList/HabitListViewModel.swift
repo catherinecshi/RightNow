@@ -1,4 +1,5 @@
 import UIKit
+import Network
 import FirebaseAuth
 import FirebaseFirestore
 
@@ -8,14 +9,22 @@ class HabitListViewModel {
     var habits: [Habit] = [] // current list of habits available
     var currentDay: Date = Date() //default to day the view is on
     let db = Firestore.firestore() // firestore instance
+    private var isNetworkAvailable = true // track network status
+    private var isSyncing = false
+    private var needsSync = false
     
-    // MARK: Initialisation
+    // MARK: - Initialisation
     
     init() {
+        if let localHabits = loadHabitsLocally() {
+            habits = localHabits
+            notifyObservers(of: .habitCRUD)
+        }
+        
         loadHabitsFirestore()
     }
     
-    // MARK: Centralisation Methods
+    // MARK: - Centralisation Methods
     
     enum HabitChangeType {
         case levelChanged(habitId: UUID, oldLevel: Level, newLevel: Level)
@@ -38,7 +47,32 @@ class HabitListViewModel {
         }
     }
     
-    // MARK: CRUD - Firebase Methods
+    // MARK: - Network Connectivity
+    func setupNetworkMonitoring() {
+        let monitor = NWPathMonitor()
+        // this is called every time the connection status changes
+        monitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                self?.isNetworkAvailable = path.status == .satisfied
+                
+                if path.status == .satisfied {
+                    self?.syncPendingChanges()
+                    print("network connected")
+                } else {
+                    print("network currently available")
+                }
+            }
+        }
+        
+        let queue = DispatchQueue(label: "NetworkMonitor")
+        monitor.start(queue: queue)
+    }
+    
+    private func syncPendingChanges() { // sync pending changes when network becomes vailable
+        
+    }
+    
+    // MARK: - CRUD Firebase Methods
     
     func addHabit(_ habit: Habit) {
         print("------------------")
@@ -46,8 +80,9 @@ class HabitListViewModel {
         print(habit)
         print("------------------")
         
-        // add to local array
-        habits.append(habit)
+        // add to local storage
+        habits.append(habit) // temporary storage
+        saveHabitsLocally() // persistent storage
         
         // add notifications for habit
         PushNotificationDelegate.shared.scheduleNotificationsForHabit(habit)
@@ -85,26 +120,46 @@ class HabitListViewModel {
     func loadHabitsFirestore() {
         print("loading all habits from firestore")
         if let userId = Auth.auth().currentUser?.uid {
-            db.collection("habits").document(userId).collection("userHabits").getDocuments { (querySnapshot, err) in
+            db.collection("habits").document(userId).collection("userHabits").getDocuments { [weak self] (querySnapshot, err) in
+                guard let self = self else { return }
+                self.isSyncing = false
+                
                 if let err = err {
                     print("Error getting documents: \(err)")
-                } else {
-                    self.habits.removeAll()
-                    for document in querySnapshot!.documents {
-                        let jsonData = try! JSONSerialization.data(withJSONObject: document.data(), options: [])
-                        var habit = try! JSONDecoder().decode(Habit.self, from: jsonData)
-                        habit.updateStats() // check if streak was broken
-                        self.habits.append(habit)
+                    return
+                }
+                
+                let existingHabits = Dictionary(uniqueKeysWithValues: self.habits.map { ($0.id.uuidString, $0) })
+                var updatedHabits: [Habit] = []
+                
+                for document in querySnapshot!.documents {
+                    let jsonData = try! JSONSerialization.data(withJSONObject: document.data(), options: [])
+                    var habit = try! JSONDecoder().decode(Habit.self, from: jsonData)
+                    
+                    if let existingHabit = existingHabits[habit.id.uuidString] {
+                        if existingHabit.lastUpdateDate >= habit.lastUpdateDate {
+                            habit = existingHabit // local storage is more recent
+                        } else {
+                            print("firestore habits are more recent")
+                        }
+                        
                     }
                     
-                    //notify that data is loaded
-                    self.notifyObservers(of: .habitCRUD)
-                    print(self.habits)
-                    
-                    // make sure notifications and geofences match up with habits
-                    PushNotificationDelegate.shared.auditNotifications()
-                    LocationManager.shared.synchronizeGeofencesWithHabits()
+                    habit.updateStats() // check if streak was broken since last update
+                    updatedHabits.append(habit)
                 }
+                
+                // update locally if loaded habits are more recent
+                self.habits = updatedHabits
+                self.saveHabitsLocally()
+                
+                //notify that data is loaded
+                self.notifyObservers(of: .habitCRUD)
+                print(self.habits)
+                
+                // make sure notifications and geofences match up with habits
+                PushNotificationDelegate.shared.auditNotifications()
+                LocationManager.shared.synchronizeGeofencesWithHabits()
             }
         }
     }
@@ -149,17 +204,15 @@ class HabitListViewModel {
     }
     
     func deleteHabit(habit: Habit) {
+        //delete locally from array
+        deleteHabitLocally(habitId: habit.id)
+        
         guard let userId = Auth.auth().currentUser?.uid else {
             return
         }
         
         //use habit's UUID as the document ID
         let habitId = habit.id.uuidString
-        
-        //delete locally from array
-        if let indexInHabits = habits.firstIndex(where: { $0.id == habit.id}) {
-            habits.remove(at: indexInHabits)
-        }
         
         // delete the pending notification
         let center = UNUserNotificationCenter.current()
@@ -189,12 +242,9 @@ class HabitListViewModel {
         GeofenceLogger.shared.log("Location status: \(updatedHabit.location == nil ? "nil" : "has location")")
         GeofenceLogger.shared.log("Accountability: \(updatedHabit.accountabilityMetric)")
         
+        updateHabitLocally(updatedHabit) // update locally first
+        
         if let userId = Auth.auth().currentUser?.uid {
-            //update local array
-            if let index = habits.firstIndex(where: { $0.id == updatedHabit.id}) {
-                habits[index] = updatedHabit
-            }
-            
             // update firestore habit
             let habitData = try! JSONEncoder().encode(updatedHabit)
             var habitDict = try! JSONSerialization.jsonObject(with: habitData, options: []) as! [String: Any]
@@ -212,6 +262,60 @@ class HabitListViewModel {
         notifyObservers(of: .habitCRUD)
     }
     
+    // MARK: - CRUD Local Storage Methods
+    
+    private func getHabitsFileURL() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0].appendingPathComponent("habits.json")
+    }
+    
+    private func saveHabitsLocally() {
+        let fileURL = getHabitsFileURL()
+        
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(habits)
+            try data.write(to: fileURL)
+            print("Successfully saved habits locally")
+        } catch {
+            print("Error saving habits locally \(error.localizedDescription)")
+        }
+    }
+    
+    func loadHabitsLocally() -> [Habit]? {
+        let fileURL = getHabitsFileURL()
+        
+        do {
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                let data = try Data(contentsOf: fileURL)
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let localHabits = try decoder.decode([Habit].self, from: data)
+                print("Successfully loaded \(localHabits.count) habits locally")
+                return localHabits
+            }
+        } catch {
+            print("Error loading habits locally: \(error)")
+        }
+        
+        return nil
+    }
+    
+    func updateHabitLocally(_ updatedHabit: Habit) {
+        if let index = habits.firstIndex(where: { $0.id == updatedHabit.id }) {
+            habits[index] = updatedHabit
+        }
+        
+        saveHabitsLocally() // save the updated array to the local storage
+    }
+    
+    func deleteHabitLocally(habitId: UUID) {
+        habits.removeAll(where: { $0.id == habitId })
+        
+        saveHabitsLocally() // save the updated array to the local storage
+    }
+        
     // MARK: Updating Habits
     
     func habitCompleted(_ completedHabit: inout Habit) {

@@ -1,10 +1,3 @@
-//
-//  RightNowTests.swift
-//  RightNowTests
-//
-//  Created by Shi Catherine on 2/26/25.
-//
-
 import XCTest
 @testable import RightNow
 
