@@ -193,7 +193,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func synchronizeGeofencesWithHabits() {
-        let currentHabits = HabitListViewModel.shared.habits.filter { $0.location != nil }
+        let currentHabits = HabitListViewModel.shared.getHabits().filter { $0.location != nil }
         
         // set of habit names that should have geofences
         let validHabitNames = Set(currentHabits.map { $0.name })

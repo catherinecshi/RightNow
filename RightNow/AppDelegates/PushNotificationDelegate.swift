@@ -59,7 +59,7 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         completionHandler([.banner, .list, .sound])
     }
     
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) async {
         // called when user interacts with notification
         let actionIdentifier = response.actionIdentifier
         print("Notification response received with action identifier: \(actionIdentifier)")
@@ -67,7 +67,7 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         if let _ = Auth.auth().currentUser {
             switch actionIdentifier {
             case "Snooze_5":
-                handleSnooze5Minutes(notification: response.notification)
+                await handleSnooze5Minutes(notification: response.notification)
                 completionHandler()
             case "Snooze_Next_Cue":
                 setDefaultRootViewController()
@@ -88,10 +88,8 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
     }
     
-    private func handleSnooze5Minutes(notification: UNNotification) {
-        retrieveHabit(from: notification) { habit in
-            guard let habit = habit else { return }
-            
+    private func handleSnooze5Minutes(notification: UNNotification) async {
+        if let habit = try? await retrieveHabit(from: notification) {
             let content = notification.request.content.mutableCopy() as! UNMutableNotificationContent
             content.categoryIdentifier = "HabitReminder"
             
@@ -102,11 +100,18 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
                 trigger: trigger
             )
             
-            self.notificationCenter.add(request) { error in
-                if let error = error {
-                    print("Error scheduling snoozed notification: \(error)")
+            try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                self.notificationCenter.add(request) { error in
+                    if let error = error {
+                        print("Error scheduling snoozed notification \(error)")
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(returning: ())
+                    }
                 }
             }
+        } else {
+            print("could not retrieve habit from notification \(notification.description)")
         }
     }
     
@@ -162,19 +167,17 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
     }
     
-    func retrieveHabit(from notification: UNNotification, completion: @escaping (Habit?) -> Void) {
-        if let habitID = notification.request.content.userInfo["habitID"] as? String {
-            HabitListViewModel.shared.fetchHabitFromFirestore(habitID: habitID) { habit in
-                if let habit = habit {
-                    completion(habit)
-                } else {
-                    print("Failed to fetch habit with ID: \(habitID)")
-                    completion(nil)
-                }
-            }
-        } else {
-            print("No habit id found in notification")
-            completion(nil)
+    func retrieveHabit(from notification: UNNotification) async -> Habit? {
+        guard let habitID = notification.request.content.userInfo["habitID"] as? String else {
+            print("no habit id found in notification")
+            return nil
+        }
+        
+        do {
+            return try await HabitListViewModel.shared.fetchHabit(habitID)
+        } catch {
+            print("Failed to fetch habit with ID: \(habitID)")
+            return nil
         }
     }
 }
@@ -543,7 +546,7 @@ extension PushNotificationDelegate {
             
             // set of expected notification IDs based on local habits
             var expectedNotificationIds = Set<String>()
-            for habit in HabitListViewModel.shared.habits {
+            for habit in HabitListViewModel.shared.getHabits() {
                 let habitId = habit.id.uuidString
                 
                 for (day, isEnabled) in habit.daysOfTheWeek where isEnabled {
@@ -587,10 +590,10 @@ extension PushNotificationDelegate {
         if notificationId.contains("_") {
             let components = notificationId.split(separator: "_")
             if let habitId = components.first {
-                return HabitListViewModel.shared.habits.first { $0.id.uuidString == String(habitId) }
+                return HabitListViewModel.shared.getHabits().first { $0.id.uuidString == String(habitId) }
             }
         }
         // Check if it's a basic habit notification
-        return HabitListViewModel.shared.habits.first { $0.id.uuidString == notificationId }
+        return HabitListViewModel.shared.getHabits().first { $0.id.uuidString == notificationId }
     }
 }

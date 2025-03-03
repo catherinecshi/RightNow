@@ -25,7 +25,7 @@ class HabitListViewModel {
         repository.habitPublisher
             .sink { [weak self] _ in
                 // trigger view updates when data changes
-                self?.objectWillChange.send()
+                self?.habitWillChange.send()
             }
             .store(in: &cancellables)
     }
@@ -33,7 +33,7 @@ class HabitListViewModel {
     // MARK: - Observer Pattern
     
     private var observers: [((HabitRepository.HabitChangeType) -> Void)] = []
-    let objectWillChange = PassthroughSubject<Void, Never>()
+    let habitWillChange = PassthroughSubject<Void, Never>()
     
     func addObserver(_ callback: @escaping (HabitRepository.HabitChangeType) -> Void) {
         observers.append(callback)
@@ -62,7 +62,7 @@ class HabitListViewModel {
             currentDay = currentDay.addingTimeInterval(-dayInterval)
         }
         
-        objectWillChange.send()
+        habitWillChange.send()
         notifyObservers(of: .habitCRUD)
     }
     
@@ -95,6 +95,14 @@ class HabitListViewModel {
     
     func updateHabit(_ habit: Habit) {
         repository.updateHabit(habit)
+    }
+    
+    func getHabits() -> [Habit] {
+        return repository.habits
+    }
+    
+    func fetchHabit(_ habitId: String) async throws -> Habit? {
+        return try await repository.fetchSingleHabit(habitID: habitId)
     }
     
     func deleteHabit(_ habit: Habit) {

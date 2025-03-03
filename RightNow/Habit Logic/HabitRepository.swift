@@ -46,13 +46,15 @@ class HabitRepository {
         monitor.pathUpdateHandler = { [weak self] path in
             let isConnected = path.status == .satisfied
             
-            DispatchQueue.main.async {
-                let wasDisconnected = !(self?.isNetworkAvailable ?? true)
-                self?.isNetworkAvailable = isConnected
+            guard let self = self else { return }
+            
+            Task { @MainActor in
+                let wasDisconnected = !(self.isNetworkAvailable)
+                self.isNetworkAvailable = isConnected
                 
                 if isConnected && wasDisconnected {
                     Task {
-                        await self?.syncWithFirestore()
+                        await self.syncWithFirestore()
                     }
                 }
             }
@@ -89,16 +91,18 @@ class HabitRepository {
             }
             
             // update repos and local storage
-            DispatchQueue.main.async {
-                self.habits = updatedHabits
-                try? self.dataService.saveHabitsLocally(updatedHabits)
+            let finalUpdatedHabits = updatedHabits
+            
+            await MainActor.run {
+                self.habits = finalUpdatedHabits
+                try? self.dataService.saveHabitsLocally(finalUpdatedHabits)
                 self.notifyChange(.habitCRUD)
                 
                 // update notification and geofences
                 PushNotificationDelegate.shared.auditNotifications()
                 LocationManager.shared.synchronizeGeofencesWithHabits()
                 
-                self.isSyncing = false
+                self.isSyncing = false // done syncing
             }
         } catch {
             print("Error syncing with Firestore: \(error)")
@@ -133,26 +137,27 @@ class HabitRepository {
     }
     
     func updateHabit(_ habit: Habit) {
+        var levelChanged = false
+        var oldLevel: Level?
+        var streakChanged = false
+        
         // update locally
         if let index = habits.firstIndex(where: { $0.id == habit.id }) {
-            let oldHabit = habits[index]
-            habits[index] = habit
+            let oldHabit = habits[index] // used to check if anything changed
+            oldLevel = oldHabit.currentLevel
+            levelChanged = oldHabit.currentLevel != habit.currentLevel
+            streakChanged = oldHabit.streaks != habit.streaks
+            
+            habits[index] = habit // update list
             
             // save locally
             try? dataService.saveHabitsLocally(habits)
-            
-            // check for level change
-            if oldHabit.currentLevel != habit.currentLevel {
-                notifyChange(.levelChanged(habitId: habit.id,
-                                           oldLevel: oldHabit.currentLevel,
-                                           newLevel: habit.currentLevel))
-            }
-            
-            // check for streak change
-            if oldHabit.streaks != habit.streaks {
-                notifyChange(.streakChanged(habitId: habit.id, newStreak: habit.streaks))
-            }
         }
+        
+        // stupid fucking concurrency domain issues
+        let newLevelChanged = levelChanged
+        let newOldLevel = oldLevel
+        let newStreakChanged = streakChanged
         
         // update firestore
         Task {
@@ -162,9 +167,28 @@ class HabitRepository {
                 print("Error updating habit in firestore: \(error)")
                 needsSync = true
             }
+            
+            // notify after local and remote updates
+            await MainActor.run {
+                // check for level change
+                if newLevelChanged, let oldLevel = newOldLevel {
+                    self.notifyChange(.levelChanged(habitId: habit.id,
+                                               oldLevel: oldLevel,
+                                               newLevel: habit.currentLevel))
+                }
+                
+                // check for streak change
+                if newStreakChanged {
+                    self.notifyChange(.streakChanged(habitId: habit.id, newStreak: habit.streaks))
+                }
+            }
         }
         
         notifyChange(.habitCRUD)
+    }
+    
+    func fetchSingleHabit(habitID: String) async throws -> Habit? {
+        return try await dataService.fetchHabitFromFirestore(habitID: habitID)
     }
     
     func deleteHabit(_ habit: Habit) {

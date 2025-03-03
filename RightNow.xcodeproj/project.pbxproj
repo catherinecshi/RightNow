@@ -82,7 +82,6 @@
 		FBC7BD292D6BB27800F94E04 /* ObjectDetectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */; };
 		FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */; };
 		FBC7BD382D6F84CE00F94E04 /* RightNowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */; };
-		FBC7BD4B2D752A4700F94E04 /* HabitListModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD442D6FC7F000F94E04 /* HabitListModelTests.swift */; };
 		FBC7BD4F2D752B3000F94E04 /* TestableHabitListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD4E2D752B3000F94E04 /* TestableHabitListViewModel.swift */; };
 		FBC7BD512D752BD200F94E04 /* MockFirestore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD502D752BD200F94E04 /* MockFirestore.swift */; };
 		FBC7BD532D752DF300F94E04 /* HabitDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD522D752DF300F94E04 /* HabitDataService.swift */; };
@@ -191,8 +190,6 @@
 		FBC7BD352D6F84CE00F94E04 /* RightNowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RightNowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightNowTests.swift; sourceTree = "<group>"; };
 		FBC7BD422D6FC7F000F94E04 /* HabitListModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HabitListModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FBC7BD442D6FC7F000F94E04 /* HabitListModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListModelTests.swift; sourceTree = "<group>"; };
-		FBC7BD4D2D752B3000F94E04 /* HabitListModelTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HabitListModelTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		FBC7BD4E2D752B3000F94E04 /* TestableHabitListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestableHabitListViewModel.swift; sourceTree = "<group>"; };
 		FBC7BD502D752BD200F94E04 /* MockFirestore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFirestore.swift; sourceTree = "<group>"; };
 		FBC7BD522D752DF300F94E04 /* HabitDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDataService.swift; sourceTree = "<group>"; };
@@ -534,10 +531,8 @@
 		FBC7BD4C2D752B0000F94E04 /* HabitListModelTests */ = {
 			isa = PBXGroup;
 			children = (
-				FBC7BD442D6FC7F000F94E04 /* HabitListModelTests.swift */,
 				FBC7BD4E2D752B3000F94E04 /* TestableHabitListViewModel.swift */,
 				FBC7BD502D752BD200F94E04 /* MockFirestore.swift */,
-				FBC7BD4D2D752B3000F94E04 /* HabitListModelTests-Bridging-Header.h */,
 			);
 			path = HabitListModelTests;
 			sourceTree = "<group>";
@@ -818,7 +813,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FBC7BD4B2D752A4700F94E04 /* HabitListModelTests.swift in Sources */,
 				FBC7BD382D6F84CE00F94E04 /* RightNowTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
