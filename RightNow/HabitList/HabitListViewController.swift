@@ -1,4 +1,5 @@
 import UIKit
+import Combine
 import UserNotifications
 import LocalAuthentication
 
@@ -11,6 +12,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     let habitListView = HabitListView(frame: UIScreen.main.bounds)
     let viewModel = HabitListViewModel.shared
+    private var cancellables = Set<AnyCancellable>()
     var sections = [LevelSection]()
     
     private lazy var focusView: FocusView = {
@@ -46,6 +48,8 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        setupSubscriptions() // setup combine subscriptions
         
         print("viewDidLoad - Direct check of habits:")
             viewModel.habitsForCurrentDay.forEach { habit in
@@ -151,6 +155,40 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         if let existingConstraint = addButton.constraints.first(where: { $0.firstAttribute == .bottom }) {
             existingConstraint.constant = -(view.safeAreaInsets.bottom + 20)
         }
+    }
+    
+    private func setupSubscriptions() {
+        // subscribe to habit changes
+        viewModel.habitChangePublisher
+            .receive(on: RunLoop.main)
+            .sink { [weak self] changeType in
+                guard let self = self else { return }
+                
+                switch changeType {
+                case .levelChanged(let habitId, let oldLevel, let newLevel):
+                    // find habit
+                    for section in self.sections {
+                        if let habit = section.rows.first(where: { $0.id == habitId }) {
+                            let alert = CustomAlertViewController(
+                                title: "Congratulations!",
+                                message: "Your habit to \(habit.name) has just leveled up from \(oldLevel) to \(newLevel)"
+                            )
+                            
+                            self.present(alert, animated: true)
+                            break
+                        }
+                    }
+                case .streakChanged:
+                    // handle streak changes
+                    break
+                case .habitCRUD:
+                    self.updateSections()
+                    self.habitListView.tableView.reloadData()
+                    self.habitsPresent()
+                    self.updateTitle()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func habitsPresent() {
@@ -462,7 +500,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             let habitToDelete = self.sections[indexPath.section].rows[indexPath.row]
             
             //delete habit from firestore + locally, also delete notification
-            self.viewModel.deleteHabit(habit: habitToDelete)
+            self.viewModel.deleteHabit(habitToDelete)
             
             // remove from local sections data
             var updatedSectionRows = self.sections[indexPath.section].rows

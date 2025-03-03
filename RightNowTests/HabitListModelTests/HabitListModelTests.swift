@@ -1,20 +1,26 @@
-//
-//  HabitListModelTests.swift
-//  HabitListModelTests
-//
-//  Created by Shi Catherine on 2/26/25.
-//
-
 import XCTest
+@testable import RightNow
 
 final class HabitListModelTests: XCTestCase {
+    var viewModel: HabitListViewModel!
+    var mockFirestore: MockFirestore!
+    var mockFileManager: MockFileManager!
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    override func setUp() throws {
+        super.setUp()
+        mockFirestore = MockFirestore()
+        mockFileManager = MockFileManager()
+        viewModel = TestableHabitListViewModel(
+            firestore: mockFirestore,
+            fileManager: mockFileManager
+        )
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    override func tearDown() throws {
+        viewModel = nil
+        mockFirestore = nil
+        mockFileManager = nil
+        super.tearDown()
     }
 
     func testExample() throws {
