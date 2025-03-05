@@ -11,7 +11,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     let habitListView = HabitListView(frame: UIScreen.main.bounds)
-    let viewModel = HabitListViewModel.shared
+    let viewModel = HabitListViewModel()
     private var cancellables = Set<AnyCancellable>()
     var sections = [LevelSection]()
     

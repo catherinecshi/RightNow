@@ -75,6 +75,11 @@
 		FBA721392AD3293000E3EC4F /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = FBA721382AD3293000E3EC4F /* FirebaseDatabase */; };
 		FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */; };
 		FBA721422AD636D400E3EC4F /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FBA721412AD636D400E3EC4F /* FirebaseFirestoreSwift */; };
+		FBC573D32D77BED80063E90C /* HabitListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D22D77BED80063E90C /* HabitListViewModelTests.swift */; };
+		FBC573D52D789B490063E90C /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D42D789B490063E90C /* FirebaseManager.swift */; };
+		FBC573D82D789E9B0063E90C /* MockFirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D72D789E9B0063E90C /* MockFirebaseManager.swift */; };
+		FBC573DA2D789EDA0063E90C /* FirebaseInitializationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D92D789EDA0063E90C /* FirebaseInitializationTests.swift */; };
+		FBC573DC2D78A3020063E90C /* FatalErrorUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573DB2D78A3020063E90C /* FatalErrorUtil.swift */; };
 		FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */; };
 		FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */; };
 		FBC7BD252D5E9A2300F94E04 /* MaowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD242D5E9A2300F94E04 /* MaowView.swift */; };
@@ -82,8 +87,6 @@
 		FBC7BD292D6BB27800F94E04 /* ObjectDetectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD282D6BB27800F94E04 /* ObjectDetectionViewController.swift */; };
 		FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */; };
 		FBC7BD382D6F84CE00F94E04 /* RightNowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */; };
-		FBC7BD4F2D752B3000F94E04 /* TestableHabitListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD4E2D752B3000F94E04 /* TestableHabitListViewModel.swift */; };
-		FBC7BD512D752BD200F94E04 /* MockFirestore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD502D752BD200F94E04 /* MockFirestore.swift */; };
 		FBC7BD532D752DF300F94E04 /* HabitDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD522D752DF300F94E04 /* HabitDataService.swift */; };
 		FBC7BD552D7533F300F94E04 /* HabitRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD542D7533F300F94E04 /* HabitRepository.swift */; };
 		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
@@ -180,6 +183,11 @@
 		FB8E9CCE2AF8823A0055DADC /* HabitData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitData.swift; sourceTree = "<group>"; };
 		FB8E9CD02AF8987A0055DADC /* UIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIConfiguration.swift; sourceTree = "<group>"; };
 		FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewImageViewConstraints.swift; sourceTree = "<group>"; };
+		FBC573D22D77BED80063E90C /* HabitListViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListViewModelTests.swift; sourceTree = "<group>"; };
+		FBC573D42D789B490063E90C /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
+		FBC573D72D789E9B0063E90C /* MockFirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFirebaseManager.swift; sourceTree = "<group>"; };
+		FBC573D92D789EDA0063E90C /* FirebaseInitializationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseInitializationTests.swift; sourceTree = "<group>"; };
+		FBC573DB2D78A3020063E90C /* FatalErrorUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatalErrorUtil.swift; sourceTree = "<group>"; };
 		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
 		FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidenceViewController.swift; sourceTree = "<group>"; };
 		FBC7BD242D5E9A2300F94E04 /* MaowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowView.swift; sourceTree = "<group>"; };
@@ -190,8 +198,6 @@
 		FBC7BD352D6F84CE00F94E04 /* RightNowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RightNowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightNowTests.swift; sourceTree = "<group>"; };
 		FBC7BD422D6FC7F000F94E04 /* HabitListModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HabitListModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FBC7BD4E2D752B3000F94E04 /* TestableHabitListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestableHabitListViewModel.swift; sourceTree = "<group>"; };
-		FBC7BD502D752BD200F94E04 /* MockFirestore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFirestore.swift; sourceTree = "<group>"; };
 		FBC7BD522D752DF300F94E04 /* HabitDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDataService.swift; sourceTree = "<group>"; };
 		FBC7BD542D7533F300F94E04 /* HabitRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitRepository.swift; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
@@ -426,6 +432,7 @@
 				FB2665B12CF535C80025353D /* PushNotificationDelegate.swift */,
 				FB2665B32CF5466E0025353D /* CompositeAppDelegate.swift */,
 				FB2665B82CF55CE30025353D /* AppDelegateFactory.swift */,
+				FBC573D42D789B490063E90C /* FirebaseManager.swift */,
 			);
 			path = AppDelegates;
 			sourceTree = "<group>";
@@ -511,6 +518,15 @@
 			path = Maow;
 			sourceTree = "<group>";
 		};
+		FBC573D62D789E880063E90C /* FirebaseTests */ = {
+			isa = PBXGroup;
+			children = (
+				FBC573D72D789E9B0063E90C /* MockFirebaseManager.swift */,
+				FBC573D92D789EDA0063E90C /* FirebaseInitializationTests.swift */,
+			);
+			path = FirebaseTests;
+			sourceTree = "<group>";
+		};
 		FBC7BD302D6F753400F94E04 /* Shop */ = {
 			isa = PBXGroup;
 			children = (
@@ -522,8 +538,10 @@
 		FBC7BD362D6F84CE00F94E04 /* RightNowTests */ = {
 			isa = PBXGroup;
 			children = (
+				FBC573D62D789E880063E90C /* FirebaseTests */,
 				FBC7BD4C2D752B0000F94E04 /* HabitListModelTests */,
 				FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */,
+				FBC573DB2D78A3020063E90C /* FatalErrorUtil.swift */,
 			);
 			path = RightNowTests;
 			sourceTree = "<group>";
@@ -531,8 +549,7 @@
 		FBC7BD4C2D752B0000F94E04 /* HabitListModelTests */ = {
 			isa = PBXGroup;
 			children = (
-				FBC7BD4E2D752B3000F94E04 /* TestableHabitListViewModel.swift */,
-				FBC7BD502D752BD200F94E04 /* MockFirestore.swift */,
+				FBC573D22D77BED80063E90C /* HabitListViewModelTests.swift */,
 			);
 			path = HabitListModelTests;
 			sourceTree = "<group>";
@@ -756,6 +773,7 @@
 				FB2665B42CF5466E0025353D /* CompositeAppDelegate.swift in Sources */,
 				FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */,
 				FB23F3E42D343798006A4A16 /* TimeFormatter.swift in Sources */,
+				FBC573D52D789B490063E90C /* FirebaseManager.swift in Sources */,
 				FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */,
 				FB0E0E6B2B7FB140003177AF /* AccountabilityViewController.swift in Sources */,
 				FB22A7DD2AB7E3F800F63D42 /* AuthAPI.swift in Sources */,
@@ -813,7 +831,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBC573DA2D789EDA0063E90C /* FirebaseInitializationTests.swift in Sources */,
 				FBC7BD382D6F84CE00F94E04 /* RightNowTests.swift in Sources */,
+				FBC573D82D789E9B0063E90C /* MockFirebaseManager.swift in Sources */,
+				FBC573D32D77BED80063E90C /* HabitListViewModelTests.swift in Sources */,
+				FBC573DC2D78A3020063E90C /* FatalErrorUtil.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -821,8 +843,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FBC7BD4F2D752B3000F94E04 /* TestableHabitListViewModel.swift in Sources */,
-				FBC7BD512D752BD200F94E04 /* MockFirestore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

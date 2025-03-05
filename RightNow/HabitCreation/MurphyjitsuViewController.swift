@@ -3,7 +3,7 @@ import UIKit
 
 class MurphyjitsuViewController: UIViewController {
     // MARK: - Declaration
-    var viewModel = HabitListViewModel.shared
+    var repo = HabitRepository.shared
     var habitData = HabitData()
     
     let daysOfWeek = TimeFormatter.allDays
@@ -280,7 +280,7 @@ class MurphyjitsuViewController: UIViewController {
                              streaks: 0,
                              lastUpdateDate: Date())
         
-        viewModel.addHabit(newHabit)
+        repo.addHabit(newHabit)
         
         dismissSelf()
     }

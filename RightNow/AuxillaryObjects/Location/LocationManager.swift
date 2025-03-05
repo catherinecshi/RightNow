@@ -8,7 +8,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var locationManager = CLLocationManager()
     @Published var userLocation: CLLocationCoordinate2D? // broadcasts user location updates
     var onLocationUpdate: ((CLLocationCoordinate2D) -> Void)?
-    let habitListModel = HabitListViewModel.shared
+    let habitListModel = HabitListViewModel()
+    let repo = HabitRepository.shared
     
     var monitoredGeofences: [String: GeofenceData] = [:]
     
@@ -122,7 +123,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     // send notification and count habit if both add up
                     if correctDay && abs(timeDifference) <= 30 {
                         var habit = geofenceData.habit
-                        habitListModel.habitCompleted(&habit)
+                        repo.completeHabit(&habit)
                         sendProximityNotification(for: circularRegion.identifier)
                     } else {
                         print("Notification skipped - not the time yet")
@@ -131,7 +132,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     }
                 } else {
                     var habit = geofenceData.habit
-                    habitListModel.habitCompleted(&habit)
+                    repo.completeHabit(&habit)
                     sendProximityNotification(for: circularRegion.identifier)
                 }
             }
@@ -193,7 +194,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func synchronizeGeofencesWithHabits() {
-        let currentHabits = HabitListViewModel.shared.getHabits().filter { $0.location != nil }
+        let currentHabits = repo.getHabits().filter { $0.location != nil }
         
         // set of habit names that should have geofences
         let validHabitNames = Set(currentHabits.map { $0.name })
@@ -283,7 +284,7 @@ extension LocationManager {
 // MARK: - Observe Habits
 extension LocationManager {
     func setupHabitObserver() {
-        HabitListViewModel.shared.addObserver { [weak self] changeType in
+        habitListModel.addObserver { [weak self] changeType in
             guard let self = self else { return }
             
             switch changeType {

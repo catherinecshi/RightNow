@@ -4,6 +4,7 @@ import FirebaseAuth
 
 final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterDelegate {
     static let shared = PushNotificationDelegate()
+    let repo = HabitRepository.shared
     
     // avoid unnecessary initialisation
     private override init() { }
@@ -174,7 +175,7 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
         
         do {
-            return try await HabitListViewModel.shared.fetchHabit(habitID)
+            return try await repo.fetchSingleHabit(habitID: habitID)
         } catch {
             print("Failed to fetch habit with ID: \(habitID)")
             return nil
@@ -546,7 +547,7 @@ extension PushNotificationDelegate {
             
             // set of expected notification IDs based on local habits
             var expectedNotificationIds = Set<String>()
-            for habit in HabitListViewModel.shared.getHabits() {
+            for habit in repo.getHabits() {
                 let habitId = habit.id.uuidString
                 
                 for (day, isEnabled) in habit.daysOfTheWeek where isEnabled {
@@ -590,10 +591,10 @@ extension PushNotificationDelegate {
         if notificationId.contains("_") {
             let components = notificationId.split(separator: "_")
             if let habitId = components.first {
-                return HabitListViewModel.shared.getHabits().first { $0.id.uuidString == String(habitId) }
+                return repo.getHabits().first { $0.id.uuidString == String(habitId) }
             }
         }
         // Check if it's a basic habit notification
-        return HabitListViewModel.shared.getHabits().first { $0.id.uuidString == notificationId }
+        return repo.getHabits().first { $0.id.uuidString == notificationId }
     }
 }

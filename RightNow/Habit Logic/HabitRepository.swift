@@ -4,11 +4,23 @@ import UIKit
 import Network
 import Combine
 
-class HabitRepository {
+protocol HabitRepositoryProtocol {
+    var habits: [Habit] { get }
+    var habitPublisher: AnyPublisher<HabitRepository.HabitChangeType, Never> { get }
+    
+    func addHabit(_ habit: Habit)
+    func updateHabit(_ habit: Habit)
+    func getHabits() -> [Habit]
+    func fetchSingleHabit(habitID: String) async throws -> Habit?
+    func deleteHabit(_ habit: Habit)
+    func completeHabit(_ habit: inout Habit)
+}
+
+class HabitRepository: HabitRepositoryProtocol {
     static let shared = HabitRepository()
     
     // MARK: - Properties
-    private let dataService = HabitDataService.shared
+    private let dataService: HabitDataServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
     private(set) var habits: [Habit] = []
@@ -22,7 +34,9 @@ class HabitRepository {
     }
     
     // MARK: - Initialization
-    private init() {
+    private init(dataService: HabitDataServiceProtocol = HabitDataService.shared) {
+        self.dataService = dataService
+        
         loadInitialHabits()
         setupNetworkMonitoring()
     }
@@ -187,8 +201,12 @@ class HabitRepository {
         notifyChange(.habitCRUD)
     }
     
+    func getHabits() -> [Habit] {
+        return habits
+    }
+    
     func fetchSingleHabit(habitID: String) async throws -> Habit? {
-        return try await dataService.fetchHabitFromFirestore(habitID: habitID)
+        return try await dataService.fetchHabitFromFirestore(habitID: habitID, maxRetries: 3)
     }
     
     func deleteHabit(_ habit: Habit) {

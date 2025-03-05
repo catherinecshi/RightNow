@@ -10,11 +10,32 @@ enum HabitServiceError: Error {
     case loadFailed
 }
 
-class HabitDataService {
+protocol HabitDataServiceProtocol {
+    func saveHabitsToFirestore(habits: [Habit]) async throws
+    func updateHabitInFirestore(_ habit: Habit) async throws
+    func loadHabitsFromFirestore() async throws -> [Habit]
+    func fetchHabitFromFirestore(habitID: String, maxRetries: Int) async throws -> Habit?
+    func deleteHabitFromFirestore(habitId: UUID) async throws
+    func saveHabitsLocally(_ habits: [Habit]) throws
+    func loadHabitsLocally() -> [Habit]?
+}
+
+class HabitDataService: HabitDataServiceProtocol {
     static let shared = HabitDataService()
-    private let db = Firestore.firestore()
     
     // MARK: - Firestore Operations
+    // reference to the firebase manager
+    static var firebaseManager: FirebaseConfigurable = FirebaseManager.shared
+    
+    private lazy var db: Firestore = {
+        // verify that firebase is configured
+        guard Self.firebaseManager.isConfigured else {
+            fatalError("Firebase must be configured before accessing Firestore")
+        }
+        
+        return Firestore.firestore()
+    }()
+    
     func saveHabitsToFirestore(habits: [Habit]) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw HabitServiceError.userNotLoggedIn
@@ -165,4 +186,11 @@ class HabitDataService {
         
         return nil
     }
+    
+    // MARK: - Debugging
+    #if DEBUG
+    func forceDatabaseAccess() -> Firestore {
+        return db
+    }
+    #endif
 }

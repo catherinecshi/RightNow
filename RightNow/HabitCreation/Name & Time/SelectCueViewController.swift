@@ -17,7 +17,7 @@ class SelectCueView: UIView, UITextFieldDelegate {
     // some generic habit variables
     var cueButtons: [UIButton] = []
     let cueTextField = UITextField()
-    let cueCount = HabitListViewModel.shared.getHabits().count
+    let cueCount = HabitRepository.shared.getHabits().count
     
     let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     var selectedDays = [String: Bool]()
@@ -210,7 +210,7 @@ class SelectCueView: UIView, UITextFieldDelegate {
             cuesStackView.widthAnchor.constraint(equalTo: cuesScrollView.widthAnchor),
         ])
         
-        for existingHabit in HabitListViewModel.shared.getHabits() {
+        for existingHabit in HabitRepository.shared.getHabits() {
             let button = UIButton(type: .system)
             button.setTitle(existingHabit.name, for: .normal)
             button.setTitleColor(.white, for: .normal)

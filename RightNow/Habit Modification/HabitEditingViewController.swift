@@ -2,7 +2,7 @@ import UIKit
 
 class HabitEditingViewController: UIViewController {
     
-    let viewModel = HabitListViewModel.shared
+    let repo = HabitRepository.shared
     let oldHabit: Habit // the habit being modified
     var tempHabit = HabitData()
     
@@ -314,7 +314,7 @@ class HabitEditingViewController: UIViewController {
         }
         
         // update local and firestore databases with new habit
-        viewModel.updateHabit(newHabit)
+        repo.updateHabit(newHabit)
         
         dismiss(animated: true, completion: nil)
     }

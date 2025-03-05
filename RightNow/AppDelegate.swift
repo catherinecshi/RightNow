@@ -1,21 +1,16 @@
 import UIKit
-import UserNotifications
-import Firebase
-import FirebaseCore
-import FirebaseFirestoreSwift
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
-    private let appDelegate = AppDelegateFactory.fetchDelegates
+    private lazy var appDelegate = AppDelegateFactory.fetchDelegates
+    
+    var firebaseManager: FirebaseConfigurable = FirebaseManager.shared
     
     //called when app is opened from a state of not running at all
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         //firebase
-        FirebaseApp.configure()
-        
-        // enable offline functioning bc firebase
-        Database.database().isPersistenceEnabled = true
+        firebaseManager.configure()
         
         // initialise LocationManager
         let _ = LocationManager.shared

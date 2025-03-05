@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "calendarkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/catherinecshi/CalendarKit.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "2154298df8a31a82309b7369d34bf805201879d3"
+      }
+    },
+    {
       "identity" : "firebase-ios-sdk",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk",

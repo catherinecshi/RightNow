@@ -3,7 +3,6 @@ import UIKit
 
 class ConfidenceViewController: UIViewController {
     // MARK: - Declaration
-    var viewModel = HabitListViewModel.shared
     var habitData = HabitData()
     var confidenceValue: Int = 0
     

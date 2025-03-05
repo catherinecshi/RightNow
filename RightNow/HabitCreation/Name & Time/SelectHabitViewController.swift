@@ -287,7 +287,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc private func nextButtonTapped() {
-        if HabitListViewModel.shared.getHabits().contains(where: { $0.name == habitData.name }) {
+        if HabitRepository.shared.getHabits().contains(where: { $0.name == habitData.name }) {
             if let habitName = habitData.name {
                 let alert = CustomAlertViewController(title: "That habit already exists!",
                                                       message: "You already have \(habitName) as a habit!")

@@ -2,8 +2,6 @@ import UIKit
 import Combine
 
 class HabitListViewModel {
-    static let shared = HabitListViewModel()
-    
     // MARK: - Properties
     private let repository = HabitRepository.shared
     private var cancellables = Set<AnyCancellable>()
