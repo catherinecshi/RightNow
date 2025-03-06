@@ -132,22 +132,6 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
     }
     
-    private func presentTimerController(habit: Habit) {
-        DispatchQueue.main.async {
-            if let window = self.window {
-                let rootVC = HabitListViewController()
-                window.rootViewController = rootVC
-                window.makeKeyAndVisible()
-                
-                let timerVC = TimerController(habit: habit)
-                timerVC.modalPresentationStyle = .fullScreen
-                rootVC.present(timerVC, animated: true, completion: nil)
-            } else {
-                print("Window is nil")
-            }
-        }
-    }
-    
     func setDefaultRootViewController() {
         DispatchQueue.main.async {
             if let window = self.window {

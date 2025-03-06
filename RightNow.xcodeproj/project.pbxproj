@@ -58,10 +58,8 @@
 		FB2A2B392C8D1708003F31B2 /* IncentivesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B382C8D1708003F31B2 /* IncentivesViewController.swift */; };
 		FB2A2B402CA60102003F31B2 /* GeofenceData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A2B3F2CA60102003F31B2 /* GeofenceData.swift */; };
 		FB34FCB82AD824070032872E /* TimerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCB72AD824070032872E /* TimerModel.swift */; };
-		FB34FCBA2AD825A20032872E /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCB92AD825A20032872E /* TimerView.swift */; };
 		FB34FCBE2AD8369D0032872E /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCBD2AD8369D0032872E /* CameraModel.swift */; };
 		FB34FCC42AD837BE0032872E /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB34FCC32AD837BE0032872E /* CameraView.swift */; };
-		FB3E30B32ABC7CD6005B5E88 /* TimerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3E30B22ABC7CD6005B5E88 /* TimerController.swift */; };
 		FB6E52752AE1FC4D00499E1C /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52742AE1FC4D00499E1C /* Habit.swift */; };
 		FB6E52772AE1FC9700499E1C /* HabitTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52762AE1FC9700499E1C /* HabitTableViewCell.swift */; };
 		FB6E52792AE1FCED00499E1C /* HabitListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52782AE1FCED00499E1C /* HabitListViewModel.swift */; };
@@ -80,6 +78,7 @@
 		FBC573D82D789E9B0063E90C /* MockFirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D72D789E9B0063E90C /* MockFirebaseManager.swift */; };
 		FBC573DA2D789EDA0063E90C /* FirebaseInitializationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D92D789EDA0063E90C /* FirebaseInitializationTests.swift */; };
 		FBC573DC2D78A3020063E90C /* FatalErrorUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573DB2D78A3020063E90C /* FatalErrorUtil.swift */; };
+		FBC573DE2D78D68F0063E90C /* MockHabitRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573DD2D78D68F0063E90C /* MockHabitRepository.swift */; };
 		FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */; };
 		FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */; };
 		FBC7BD252D5E9A2300F94E04 /* MaowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD242D5E9A2300F94E04 /* MaowView.swift */; };
@@ -167,10 +166,8 @@
 		FB2A2B382C8D1708003F31B2 /* IncentivesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncentivesViewController.swift; sourceTree = "<group>"; };
 		FB2A2B3F2CA60102003F31B2 /* GeofenceData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofenceData.swift; sourceTree = "<group>"; };
 		FB34FCB72AD824070032872E /* TimerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModel.swift; sourceTree = "<group>"; };
-		FB34FCB92AD825A20032872E /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		FB34FCBD2AD8369D0032872E /* CameraModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraModel.swift; sourceTree = "<group>"; };
 		FB34FCC32AD837BE0032872E /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
-		FB3E30B22ABC7CD6005B5E88 /* TimerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerController.swift; sourceTree = "<group>"; };
 		FB6E52742AE1FC4D00499E1C /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
 		FB6E52762AE1FC9700499E1C /* HabitTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTableViewCell.swift; sourceTree = "<group>"; };
 		FB6E52782AE1FCED00499E1C /* HabitListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListViewModel.swift; sourceTree = "<group>"; };
@@ -188,6 +185,7 @@
 		FBC573D72D789E9B0063E90C /* MockFirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFirebaseManager.swift; sourceTree = "<group>"; };
 		FBC573D92D789EDA0063E90C /* FirebaseInitializationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseInitializationTests.swift; sourceTree = "<group>"; };
 		FBC573DB2D78A3020063E90C /* FatalErrorUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatalErrorUtil.swift; sourceTree = "<group>"; };
+		FBC573DD2D78D68F0063E90C /* MockHabitRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHabitRepository.swift; sourceTree = "<group>"; };
 		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
 		FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidenceViewController.swift; sourceTree = "<group>"; };
 		FBC7BD242D5E9A2300F94E04 /* MaowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowView.swift; sourceTree = "<group>"; };
@@ -512,8 +510,6 @@
 				FB23F3F22D51698F006A4A16 /* MaowViewController.swift */,
 				FBC7BD242D5E9A2300F94E04 /* MaowView.swift */,
 				FB34FCB72AD824070032872E /* TimerModel.swift */,
-				FB34FCB92AD825A20032872E /* TimerView.swift */,
-				FB3E30B22ABC7CD6005B5E88 /* TimerController.swift */,
 			);
 			path = Maow;
 			sourceTree = "<group>";
@@ -550,6 +546,7 @@
 			isa = PBXGroup;
 			children = (
 				FBC573D22D77BED80063E90C /* HabitListViewModelTests.swift */,
+				FBC573DD2D78D68F0063E90C /* MockHabitRepository.swift */,
 			);
 			path = HabitListModelTests;
 			sourceTree = "<group>";
@@ -784,7 +781,6 @@
 				FBE946712ACF5D1100CA11ED /* PhotoTakenViewController.swift in Sources */,
 				FB23F3E02D330D84006A4A16 /* CustomAlertViewController.swift in Sources */,
 				FB22A7B62AB7D49C00F63D42 /* SceneDelegate.swift in Sources */,
-				FB34FCBA2AD825A20032872E /* TimerView.swift in Sources */,
 				FB0E0E712B8142A9003177AF /* HabitCurrentLevelView.swift in Sources */,
 				FB0E0E772B883A53003177AF /* ProgressionViewController.swift in Sources */,
 				FB2A2B332C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift in Sources */,
@@ -797,7 +793,6 @@
 				FB23F3F32D51698F006A4A16 /* MaowViewController.swift in Sources */,
 				FB23F3EF2D4A7548006A4A16 /* FirstLaunchManager.swift in Sources */,
 				FB6E52822AE3296500499E1C /* HabitEditingViewController.swift in Sources */,
-				FB3E30B32ABC7CD6005B5E88 /* TimerController.swift in Sources */,
 				FB22A7F02AB7E64D00F63D42 /* SignInViewController.swift in Sources */,
 				FB0E0E6D2B8117E9003177AF /* MurphyjitsuViewController.swift in Sources */,
 				FB23F3E62D34389D006A4A16 /* AccountabilityMetric.swift in Sources */,
@@ -833,6 +828,7 @@
 			files = (
 				FBC573DA2D789EDA0063E90C /* FirebaseInitializationTests.swift in Sources */,
 				FBC7BD382D6F84CE00F94E04 /* RightNowTests.swift in Sources */,
+				FBC573DE2D78D68F0063E90C /* MockHabitRepository.swift in Sources */,
 				FBC573D82D789E9B0063E90C /* MockFirebaseManager.swift in Sources */,
 				FBC573D32D77BED80063E90C /* HabitListViewModelTests.swift in Sources */,
 				FBC573DC2D78A3020063E90C /* FatalErrorUtil.swift in Sources */,

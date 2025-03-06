@@ -3,7 +3,7 @@ import Combine
 
 class HabitListViewModel {
     // MARK: - Properties
-    private let repository = HabitRepository.shared
+    private let repository: HabitRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
     
     private(set) var currentDay: Date = Date() // current displayed date
@@ -15,7 +15,8 @@ class HabitListViewModel {
     
     // MARK: - Initialisation
     
-    init() {
+    init(repository: HabitRepositoryProtocol = HabitRepository.shared) {
+        self.repository = repository
         setupObservers()
     }
     
@@ -111,6 +112,7 @@ class HabitListViewModel {
         repository.completeHabit(&habit)
     }
     
+    /*
     func locationBasedHabits() -> [Habit] {
         return repository.locationBasedHabits()
     }
@@ -118,6 +120,7 @@ class HabitListViewModel {
     func changeLocationToSelfTrack(habits: [Habit]? = nil) {
         repository.changeLocationToSelfTrack(habits: habits)
     }
+     */
     
     // MARK: - Helper Methods
     

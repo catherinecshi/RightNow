@@ -125,7 +125,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         self.definesPresentationContext = true
         
         // checks through location permissions
-        isLocationPermissionDenied()
+        //isLocationPermissionDenied()
         
         addDebugButton()
     }
@@ -329,6 +329,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         }
     }
     
+    /*
     // for when there is a location habit but the user turned location permissions off
     func isLocationPermissionDenied() {
         switch LocationManager.shared.authorizationStatus {
@@ -457,6 +458,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             break
         }
     }
+    */
     
     // MARK: - TableView
     
@@ -552,15 +554,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         }
         
         actionSheet.addAction(recordAction)
-        
-        //track
-        let trackAction = UIAlertAction(title: "Track Habit", style: .default) { _ in
-            let trackVC = TimerController(habit: selectedHabit)
-            trackVC.modalPresentationStyle = .fullScreen
-            self.present(trackVC, animated: true, completion: nil)
-        }
-        
-        actionSheet.addAction(trackAction)
         
         // check off habit
         let checkAction = UIAlertAction(title: "Check Off Habit", style: .default) { _ in

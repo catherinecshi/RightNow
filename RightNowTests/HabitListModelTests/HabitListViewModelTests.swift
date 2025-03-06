@@ -5,6 +5,7 @@ import Firebase
 
 class HabitListViewModelTests: XCTestCase {
     var viewModel: HabitListViewModel!
+    var mockRepository: MockHabitRepository!
     var cancellables: Set<AnyCancellable>!
     
     override func setUp() {
@@ -16,12 +17,22 @@ class HabitListViewModelTests: XCTestCase {
             print("configuring firebase")
         }
         
-        viewModel = HabitListViewModel()
+        mockRepository = MockHabitRepository()
+        viewModel = HabitListViewModel(repository: mockRepository)
         cancellables = Set<AnyCancellable>()
     }
     
     override func tearDown() {
+        // clean up all habits to ensure test isolation
+        let habitsToRemove = mockRepository.habits
+        for habit in habitsToRemove {
+            mockRepository.deleteHabit(habit)
+        }
+        
         cancellables = nil
+        mockRepository = nil
+        viewModel = nil
+        
         super.tearDown()
     }
     
@@ -104,7 +115,6 @@ class HabitListViewModelTests: XCTestCase {
         
     func testHabitsForCurrentDay() {
         // Setup test habits that we'll check for
-        let repository = HabitRepository.shared
         let mondayHabit = Habit(name: "Monday Habit",
                                 description: "",
                                 time: Date(),
@@ -128,9 +138,9 @@ class HabitListViewModelTests: XCTestCase {
                                   notificationEnabled: true)
         
         // Add test habits to repository
-        repository.addHabit(mondayHabit)
-        repository.addHabit(tuesdayHabit)
-        repository.addHabit(everydayHabit)
+        mockRepository.addHabit(mondayHabit)
+        mockRepository.addHabit(tuesdayHabit)
+        mockRepository.addHabit(everydayHabit)
         
         // Get the current day of week (1 = Sunday, 2 = Monday, etc.)
         let calendar = Calendar.current
@@ -182,9 +192,9 @@ class HabitListViewModelTests: XCTestCase {
                 XCTAssertFalse(tuesdayHabits.contains(where: { $0.name == "Monday Habit" }), "Monday habit should not be visible")
                 
                 // Clean up - remove the test habits after test completes
-                repository.deleteHabit(mondayHabit)
-                repository.deleteHabit(tuesdayHabit)
-                repository.deleteHabit(everydayHabit)
+                self.mockRepository.deleteHabit(mondayHabit)
+                self.mockRepository.deleteHabit(tuesdayHabit)
+                self.mockRepository.deleteHabit(everydayHabit)
                 
                 tuesdayExpectation.fulfill()
             }
@@ -259,6 +269,8 @@ class HabitListViewModelTests: XCTestCase {
     // MARK: - Tests for Observer Patterns
     
     func testObserverPatternTriggersUpdate() {
+        // convert
+        
         // Create expectation
         let expectation = XCTestExpectation(description: "Observer callback should be triggered")
         
@@ -284,8 +296,8 @@ class HabitListViewModelTests: XCTestCase {
             dailyCompletion: [:],
             lastUpdateDate: Date()
         )
-        let repository = HabitRepository.shared
-        repository.addHabit(habit)
+
+        mockRepository.addHabit(habit)
         
         // Wait for expectation
         wait(for: [expectation], timeout: 2.0)
@@ -319,8 +331,8 @@ class HabitListViewModelTests: XCTestCase {
             dailyCompletion: [:],
             lastUpdateDate: Date()
         )
-        let repository = HabitRepository.shared
-        repository.addHabit(habit)
+        
+        mockRepository.addHabit(habit)
         
         // Wait for expectation
         wait(for: [expectation], timeout: 2.0)

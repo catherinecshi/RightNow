@@ -12,6 +12,27 @@ class MaowView: UIView {
     
     let imageView = UIImageView()
     
+    private lazy var focusView: FocusView = {
+       let view = FocusView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        view.alpha = 0.0
+        return view
+    }()
+    
+    private lazy var focusInstructionLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "Tap Maow to make it happy!"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
+    
     let timerLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 48, weight: .bold)
@@ -59,14 +80,15 @@ class MaowView: UIView {
         setupSlider()
         setupButton()
         setupTapGesture()
+        setupFocusView()
     }
     
     private func setupImageView() {
-        if let frontImage = UIImage(named: "patamon_front") {
-            print("Successfully loaded patamon front")
+        if let frontImage = UIImage(named: "Maow_Normal") {
+            print("Successfully loaded maow normal")
             imageView.image = frontImage
         } else {
-            print("Failed to load patamon front")
+            print("Failed to load maow normal")
         }
         
         imageView.contentMode = .scaleAspectFit
@@ -78,6 +100,23 @@ class MaowView: UIView {
             imageView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             imageView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.3),
             imageView.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 0.3)
+        ])
+    }
+    
+    private func setupFocusView() {
+        addSubview(focusView)
+        addSubview(focusInstructionLabel)
+        
+        NSLayoutConstraint.activate([
+            focusView.topAnchor.constraint(equalTo: topAnchor),
+            focusView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            focusView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            focusView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            
+            focusInstructionLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 20),
+            focusInstructionLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            focusInstructionLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
+            focusInstructionLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40)
         ])
     }
     
@@ -127,6 +166,7 @@ class MaowView: UIView {
     // MARK: - Actions
     @objc private func handleTap() {
         delegate?.maowViewDidTapCharacter()
+        hideFocusView()
     }
     
     @objc private func sliderValueChanged() {
@@ -152,7 +192,7 @@ class MaowView: UIView {
     }
     
     func updateCharacterState(isAsleep: Bool) {
-        guard let newImage = UIImage(named: isAsleep ? "patamon_asleep" : "patamon_front") else {
+        guard let newImage = UIImage(named: isAsleep ? "Maow_Happy_Jump" : "Maow_Normal") else {
             return
         }
         
@@ -166,5 +206,41 @@ class MaowView: UIView {
     
     func updateCoinCount(_ count: Int) {
         
+    }
+    
+    // MARK: - Focus View Methods
+    func showFocusView(withInstructions text: String? = nil) {
+        // make sure the view has been laid out
+        layoutIfNeeded()
+        
+        focusView.ovalRect = imageView.frame.insetBy(dx: -10, dy: -10)
+        
+        // update instruction text
+        if let text = text {
+            focusInstructionLabel.text = text
+        }
+        
+        // bring to the front
+        bringSubviewToFront(focusView)
+        bringSubviewToFront(focusInstructionLabel)
+        bringSubviewToFront(imageView) // to keep it interactive
+        
+        focusView.isHidden = false
+        focusInstructionLabel.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.focusView.alpha = 1.0
+            self.focusInstructionLabel.alpha = 1.0
+        }
+    }
+    
+    func hideFocusView() {
+        UIView.animate(withDuration: 0.3, animations: {
+            self.focusView.alpha = 0.0
+            self.focusInstructionLabel.alpha = 0.0
+        }, completion: { _ in
+            self.focusView.isHidden = true
+            self.focusInstructionLabel.isHidden = true
+        })
     }
 }
