@@ -49,13 +49,6 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         setupView()
         initialViewSetup() // since timemodel stores the user preferences for how long
         TimerModel.shared.setupObservers()
-        
-        if UserDefaults.standard.bool(forKey: "hasSeenMaowFocus") == false {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.maowView.showFocusView(withInstructions: "Tap Maow to make it happy")
-                UserDefaults.standard.set(true, forKey: "hasSeenMaowFocus")
-            }
-        }
     }
     
     private func setupNavigationBar() {

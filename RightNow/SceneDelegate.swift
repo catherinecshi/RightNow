@@ -20,10 +20,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         PushNotificationDelegate.shared.window = window
         
         if Auth.auth().currentUser != nil {
-            // show habitlistvc if the user is signed in
-            let tabBarController = TabBarController()
-            window?.rootViewController = tabBarController
+            let onboardingVC = OnboardingViewController()
+            window?.rootViewController = onboardingVC
             window?.makeKeyAndVisible()
+            
+            // show habitlistvc if the user is signed in
+            //let tabBarController = TabBarController()
+            //window?.rootViewController = tabBarController
+            //window?.makeKeyAndVisible()
         } else {
             // user is not signed in
             print("User is not signed in")
@@ -31,25 +35,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             window?.rootViewController = UINavigationController(rootViewController: welcomeVC)
             window?.makeKeyAndVisible()
         }
-        
-        //check if timer was running
-        /*
-        if UserDefaults.standard.bool(forKey: "timerIsRunning") {
-            let habitListVC = HabitListViewController()
-            let navigationController = UINavigationController(rootViewController: habitListVC)
-            window?.rootViewController = navigationController
-            window?.makeKeyAndVisible()
-            
-            let elapsedTime = UserDefaults.standard.object(forKey: "timerElapsedTime") as! TimeInterval
-            presentTimerViewController(withElapsedTime: elapsedTime)
-        } else {
-            let splashVC = SplashViewController(state: AppState())
-            let navigationController = UINavigationController(rootViewController: splashVC)
-            window?.rootViewController = navigationController
-            window?.makeKeyAndVisible()
-        }
-         */
-        
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -79,26 +64,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-    
-    /*
-    func presentTimerViewController(withElapsedTime elapsedTime: TimeInterval) {
-        //instantiate timer view controller
-        let timerVC = TimerController()
-        
-        // present timer vc
-        timerVC.modalPresentationStyle = .popover
-        if let popOverController = timerVC.popoverPresentationController {
-            popOverController.permittedArrowDirections = []
-            popOverController.sourceView = self.window?.rootViewController?.view //anchor to root view
-            popOverController.sourceRect = CGRect(x: self.window!.bounds.midX, y: self.window!.bounds.midY, width: 0, height: 0)
-            popOverController.canOverlapSourceViewRect = true
-        }
-        
-        //present timer vc
-        self.window?.rootViewController?.present(timerVC, animated: true, completion: {
-            timerVC.showTimeAlert(elapsedTime: elapsedTime)
-        })
-    }
-     */
 }
         

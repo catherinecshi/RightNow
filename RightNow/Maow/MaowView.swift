@@ -11,12 +11,14 @@ class MaowView: UIView {
     var delegate: MaowViewDelegate?
     
     let imageView = UIImageView()
+    private var imageViewObserver: NSKeyValueObservation?
     
     private lazy var focusView: FocusView = {
        let view = FocusView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isHidden = true
         view.alpha = 0.0
+        view.shapeType = .circle
         return view
     }()
     
@@ -48,6 +50,7 @@ class MaowView: UIView {
         slider.minimumValue = 10 // 10 minute minimum
         slider.maximumValue = 120
         slider.value = 25
+        slider.minimumTrackTintColor = UIConfiguration.tintColor
         slider.translatesAutoresizingMaskIntoConstraints = false
         return slider
     }()
@@ -66,10 +69,22 @@ class MaowView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
+        setupObservers()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        imageViewObserver?.invalidate()
+    }
+    
+    private func setupObservers() {
+        imageViewObserver = imageView.observe(\.bounds, options: [.new]) { [weak self] _, _ in
+            guard let self = self, !self.focusView.isHidden else { return }
+            self.updateFocusView()
+        }
     }
     
     private func setupUI() {
@@ -91,7 +106,7 @@ class MaowView: UIView {
             print("Failed to load maow normal")
         }
         
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(imageView)
         
@@ -130,8 +145,8 @@ class MaowView: UIView {
         self.addSubview(timerLabel)
         
         NSLayoutConstraint.activate([
-            timerLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            timerLabel.bottomAnchor.constraint(equalTo: imageView.topAnchor, constant: -40)
+            timerLabel.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor, constant: 40),
+            timerLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor)
         ])
         
         // check if the focusTime is supposed to be something different
@@ -155,7 +170,7 @@ class MaowView: UIView {
         
         NSLayoutConstraint.activate([
             startStopButton.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            startStopButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 40),
+            startStopButton.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor, constant: -40),
             startStopButton.widthAnchor.constraint(equalToConstant: 200),
             startStopButton.heightAnchor.constraint(equalToConstant: 50)
         ])
@@ -213,7 +228,7 @@ class MaowView: UIView {
         // make sure the view has been laid out
         layoutIfNeeded()
         
-        focusView.ovalRect = imageView.frame.insetBy(dx: -10, dy: -10)
+        focusView.ovalRect = imageView.frame.insetBy(dx: -20, dy: -20)
         
         // update instruction text
         if let text = text {
@@ -232,6 +247,13 @@ class MaowView: UIView {
             self.focusView.alpha = 1.0
             self.focusInstructionLabel.alpha = 1.0
         }
+    }
+    
+    func updateFocusView() {
+        // get actual frame of image view
+        let actualFrame = convert(imageView.frame, from: imageView.superview)
+        
+        focusView.ovalRect = actualFrame.insetBy(dx: -20, dy: -20)
     }
     
     func hideFocusView() {

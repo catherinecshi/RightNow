@@ -40,7 +40,7 @@ struct Habit: Codable {
         
         // no need to update if last update is today
         if TimeFormatter.isSameDay(lastUpdateDate, today) {
-            print("checkign for the same day")
+            print("checking for the same day")
             return
         }
         
