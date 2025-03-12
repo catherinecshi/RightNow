@@ -80,6 +80,9 @@
 		FBC573E12D7A6BD50063E90C /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E02D7A6BD50063E90C /* OnboardingViewController.swift */; };
 		FBC573E32D7A77A00063E90C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E22D7A77A00063E90C /* OnboardingView.swift */; };
 		FBC573E52D7BA04B0063E90C /* OnboardingTaskBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E42D7BA04B0063E90C /* OnboardingTaskBarController.swift */; };
+		FBC573E82D7CA52D0063E90C /* TowerDefenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E72D7CA52D0063E90C /* TowerDefenseViewController.swift */; };
+		FBC573EA2D7CAC3E0063E90C /* ClosureGestureHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E92D7CAC3E0063E90C /* ClosureGestureHandler.swift */; };
+		FBC573EC2D80810D0063E90C /* InteractionBlocker.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573EB2D80810D0063E90C /* InteractionBlocker.swift */; };
 		FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */; };
 		FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */; };
 		FBC7BD252D5E9A2300F94E04 /* MaowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD242D5E9A2300F94E04 /* MaowView.swift */; };
@@ -188,6 +191,9 @@
 		FBC573E02D7A6BD50063E90C /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
 		FBC573E22D7A77A00063E90C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FBC573E42D7BA04B0063E90C /* OnboardingTaskBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTaskBarController.swift; sourceTree = "<group>"; };
+		FBC573E72D7CA52D0063E90C /* TowerDefenseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TowerDefenseViewController.swift; sourceTree = "<group>"; };
+		FBC573E92D7CAC3E0063E90C /* ClosureGestureHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureGestureHandler.swift; sourceTree = "<group>"; };
+		FBC573EB2D80810D0063E90C /* InteractionBlocker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionBlocker.swift; sourceTree = "<group>"; };
 		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
 		FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidenceViewController.swift; sourceTree = "<group>"; };
 		FBC7BD242D5E9A2300F94E04 /* MaowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowView.swift; sourceTree = "<group>"; };
@@ -310,6 +316,7 @@
 				FB6E52732AE1FC3500499E1C /* HabitList */,
 				FBA7213E2AD6356400E3EC4F /* Maow */,
 				FBC7BD302D6F753400F94E04 /* Shop */,
+				FBC573E62D7CA50B0063E90C /* TowerDefense */,
 				FB22A7D42AB7DD8B00F63D42 /* Log-In */,
 				FB22A7D32AB7DD7E00F63D42 /* Photos */,
 				FBC573DF2D7A6B460063E90C /* Onboarding */,
@@ -392,6 +399,7 @@
 				FB23F3EC2D3F0217006A4A16 /* FocusView.swift */,
 				FB23F3EE2D4A7548006A4A16 /* FirstLaunchManager.swift */,
 				FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */,
+				FBC573E92D7CAC3E0063E90C /* ClosureGestureHandler.swift */,
 			);
 			path = AuxillaryObjects;
 			sourceTree = "<group>";
@@ -522,8 +530,17 @@
 				FBC573E02D7A6BD50063E90C /* OnboardingViewController.swift */,
 				FBC573E22D7A77A00063E90C /* OnboardingView.swift */,
 				FBC573E42D7BA04B0063E90C /* OnboardingTaskBarController.swift */,
+				FBC573EB2D80810D0063E90C /* InteractionBlocker.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		FBC573E62D7CA50B0063E90C /* TowerDefense */ = {
+			isa = PBXGroup;
+			children = (
+				FBC573E72D7CA52D0063E90C /* TowerDefenseViewController.swift */,
+			);
+			path = TowerDefense;
 			sourceTree = "<group>";
 		};
 		FBC7BD302D6F753400F94E04 /* Shop */ = {
@@ -801,6 +818,7 @@
 				FB6E52822AE3296500499E1C /* HabitEditingViewController.swift in Sources */,
 				FB22A7F02AB7E64D00F63D42 /* SignInViewController.swift in Sources */,
 				FB0E0E6D2B8117E9003177AF /* MurphyjitsuViewController.swift in Sources */,
+				FBC573EA2D7CAC3E0063E90C /* ClosureGestureHandler.swift in Sources */,
 				FB23F3E62D34389D006A4A16 /* AccountabilityMetric.swift in Sources */,
 				FB22A7F32AB7E69E00F63D42 /* CustomTextField.swift in Sources */,
 				FB22A7EA2AB7E56100F63D42 /* SignUpViewModel.swift in Sources */,
@@ -809,6 +827,7 @@
 				FB22A7D72AB7E3A000F63D42 /* AppState.swift in Sources */,
 				FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */,
 				FBC7BD552D7533F300F94E04 /* HabitRepository.swift in Sources */,
+				FBC573EC2D80810D0063E90C /* InteractionBlocker.swift in Sources */,
 				FB6E52752AE1FC4D00499E1C /* Habit.swift in Sources */,
 				FB22A7EE2AB7E5F700F63D42 /* SignUpViewController.swift in Sources */,
 				FB22A7D22AB7DCD300F63D42 /* CameraController.swift in Sources */,
@@ -821,6 +840,7 @@
 				FB2665B22CF535C80025353D /* PushNotificationDelegate.swift in Sources */,
 				FB8E9CCD2AF87FE10055DADC /* SelectHabitViewController.swift in Sources */,
 				FB2A2B392C8D1708003F31B2 /* IncentivesViewController.swift in Sources */,
+				FBC573E82D7CA52D0063E90C /* TowerDefenseViewController.swift in Sources */,
 				FB22A7DB2AB7E3D400F63D42 /* User.swift in Sources */,
 				FB34FCBE2AD8369D0032872E /* CameraModel.swift in Sources */,
 			);

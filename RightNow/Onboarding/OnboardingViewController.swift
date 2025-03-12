@@ -31,6 +31,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         // don't execute following code if in tab bar controller already - avoid infinite loop
         guard tabBarController == nil else { return }
         
+        #if DEBUG
         if UserDefaults.standard.bool(forKey: "hasSeenMaowFocus") == false {
             Task {
                 await startOnboardingSequence()
@@ -40,6 +41,11 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
                 await showHabitsScreen()
             }
         }
+        #else
+        Task {
+            await startOnboardingSequence()
+        }
+        #endif
     }
     
     private func setupView() {
@@ -115,7 +121,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         
         // show button
         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 second delay
-        onboardingView.showResponseButton(title: "Oh...")
+        onboardingView.showResponseButton(title: "What happened?")
     }
     
     func thirdOnboardingSequence() async {
@@ -173,9 +179,12 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
            let window = windowScene.windows.first {
             await MainActor.run {
                 window.rootViewController = tabBarController
-                tabBarController.selectedIndex = 0
+                tabBarController.selectedIndex = 1
                 window.makeKeyAndVisible()
             }
+            
+            // block all interactions during transition from onboarding to habitlist
+            await InteractionBlocker.shared.blockInteractions(on: tabBarController.view)
             
             // animate
             tabBarController.view.alpha = 0
@@ -195,31 +204,25 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
     // calculates position of second tab based on tab bar width and number of items
     @MainActor
     private func focusOnHabitsTabBarItem(in tabBarController: OnboardingTabBarController) async {
-        // Make sure we have at least 2 tab items
-        guard tabBarController.tabBar.items?.count ?? 0 >= 2 else {
-            print("Not enough tab items")
-            return
-        }
-        
         // Calculate the frame of the second tab item based on the tab bar's width
         let tabBarWidth = tabBarController.tabBar.bounds.width
         let numberOfItems = CGFloat(tabBarController.tabBar.items?.count ?? 0)
         let tabWidth = tabBarWidth / numberOfItems
         
-        // The second tab should be at index 1, so its x position starts at 1 * tabWidth
-        let secondTabX = tabWidth
+        // The rhid tab should be at index 2, so its x position starts at 2 * tabWidth
+        let thirdTabX = 2 * tabWidth
         let tabBarHeight = tabBarController.tabBar.bounds.height
         
-        // Create a frame for the second tab item
-        let secondTabFrame = CGRect(
-            x: secondTabX,
+        // Create a frame for the third tab item
+        let thirdTabFrame = CGRect(
+            x: thirdTabX,
             y: 0,
             width: tabWidth,
             height: tabBarHeight
         )
         
         // Convert this frame to the tab bar controller's view coordinates
-        let buttonFrame = tabBarController.tabBar.convert(secondTabFrame, to: tabBarController.view)
+        let buttonFrame = tabBarController.tabBar.convert(thirdTabFrame, to: tabBarController.view)
         
         // Create and configure the focus view
         let focusView = FocusView()
@@ -233,7 +236,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         instructionLabel.textColor = .white
         instructionLabel.textAlignment = .center
         instructionLabel.numberOfLines = 0
-        instructionLabel.text = "Tap here to manage your habits!"
+        instructionLabel.text = "Maow's health is linked with your habits"
         instructionLabel.translatesAutoresizingMaskIntoConstraints = false
         instructionLabel.alpha = 0
         
@@ -261,9 +264,6 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
             focusView.alpha = 1.0
             instructionLabel.alpha = 1.0
         }
-        
-        // Save flag that user has seen this
-        UserDefaults.standard.set(true, forKey: "hasSeenMaowFocus")
         
         // Add tap gesture recognizer to the focus view
         let tapGesture = UITapGestureRecognizer(target: nil, action: nil)
@@ -307,7 +307,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
             // If tap is in the highlighted area, select the second tab
             if isInHighlightedArea {
                 // Switch to the habits tab
-                tabBarController.selectedIndex = 1
+                tabBarController.selectedIndex = 2
                 
                 // Animate out the focus view and instruction label
                 UIView.animate(withDuration: 0.3, animations: {
@@ -349,36 +349,5 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
                 await showHabitsScreen()
             }
         }
-    }
-}
-
-// Extension to make it easier to use closures with gesture recognizers
-extension UIGestureRecognizer {
-    func addTarget(closure: @escaping (UIGestureRecognizer) -> Void) {
-        self.addTarget(ClosureGestureHandler.shared, action: #selector(ClosureGestureHandler.handle(gesture:)))
-        ClosureGestureHandler.shared.add(closure, for: self)
-    }
-}
-
-// Singleton to handle gesture recognizer closures
-class ClosureGestureHandler: NSObject {
-    static let shared = ClosureGestureHandler()
-    private var closures = [ObjectIdentifier: (UIGestureRecognizer) -> Void]()
-    
-    func add(_ closure: @escaping (UIGestureRecognizer) -> Void, for gesture: UIGestureRecognizer) {
-        let id = ObjectIdentifier(gesture)
-        closures[id] = closure
-    }
-    
-    @objc func handle(gesture: UIGestureRecognizer) {
-        let id = ObjectIdentifier(gesture)
-        if let closure = closures[id] {
-            closure(gesture)
-        }
-    }
-    
-    func remove(for gesture: UIGestureRecognizer) {
-        let id = ObjectIdentifier(gesture)
-        closures.removeValue(forKey: id)
     }
 }

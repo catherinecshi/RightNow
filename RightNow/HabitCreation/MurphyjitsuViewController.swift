@@ -55,6 +55,7 @@ class MurphyjitsuViewController: UIViewController {
         label.numberOfLines = 0
         label.text = "How confident are you that you'll keep up the habit for a month?"
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
         return label
     }()
     
@@ -66,6 +67,7 @@ class MurphyjitsuViewController: UIViewController {
         slider.isContinuous = true
         slider.tintColor = .white
         slider.translatesAutoresizingMaskIntoConstraints = false
+        slider.isHidden = true
         return slider
     }()
     
@@ -76,6 +78,7 @@ class MurphyjitsuViewController: UIViewController {
         label.textAlignment = .center
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
         return label
     }()
     
@@ -164,9 +167,9 @@ class MurphyjitsuViewController: UIViewController {
             detailsText += " on \(days.isEmpty ? "None" : days)"
         }
         
-        if let accountabilityMetric = habitData.accountabilityMetric {
-            detailsText += " and you'll track your habit by \(accountabilityMetric.displayName)"
-        }
+        //if let accountabilityMetric = habitData.accountabilityMetric {
+            //detailsText += " and you'll track your habit by \(accountabilityMetric.displayName)"
+        //}
         
         habitDetails.text = detailsText
         
@@ -271,7 +274,7 @@ class MurphyjitsuViewController: UIViewController {
                              description: "",
                              time: habitDate!,
                              daysOfTheWeek: habitData.selectedDays!,
-                             accountabilityMetric: habitData.accountabilityMetric!,
+                             accountabilityMetric: habitData.accountabilityMetric ?? .selfTracking,
                              location: habitData.location,
                              incentive: habitData.incentive ?? .none,
                              notificationEnabled: notificationSwitch.isOn,

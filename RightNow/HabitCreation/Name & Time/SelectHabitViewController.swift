@@ -6,8 +6,13 @@ It supports users putting in their own habits via the textfield or a list of pre
 import Foundation
 import UIKit
 
+protocol SelectHabitViewControllerDelegate: AnyObject {
+    func selectHabitViewControllerDidDismiss(_ viewController: SelectHabitViewController)
+}
+
 class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Declaration
+    weak var delegate: SelectHabitViewControllerDelegate?
     var habitData = HabitData()
     var habitButtons: [UIButton] = []
     let predefinedHabits = ["Read", "Meditate", "Skincare Routine", "Learn a New Language", "Journal", "Exercise", "Walk", "Drink More Water", "Wake Up on Time", "Bedtime Routine", "Stretching", "Brush Teeth", "Gym", "Cold Showers", "Yoga", "Quality Time", "Gratitude Journal", "Floss", "Spend Time in Nature", "Pray", "Random Act of Kindness", "Save", "Draw", "Play the Guitar", "Martial Arts", "Take a Break", "Write", "Clean Room", "Water Plants", "Take off Makeup", "Shave", "Feed Pets"]
@@ -105,6 +110,45 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         return button
     }()
     
+    // for the onboarding process
+    var isOnboarding = false
+    private var useDeviceButton: UIButton?
+    var selectTimeVC: SelectTimeViewController? = nil
+    
+    private lazy var focusView: FocusView = {
+        let view = FocusView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        view.alpha = 0.0
+        return view
+    }()
+    
+    private lazy var onboardingLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "For your first habit, let's check in on Maow everyday!"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
+    
+    private lazy var nextLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "Let's go to the next page"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -123,7 +167,9 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        //showUseDeviceFocus()
+        if isOnboarding {
+            showFocusOnUseDevice()
+        }
     }
     
     // MARK: - Setup UI
@@ -177,6 +223,13 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     private func setupHabitButtons() {
+        if isOnboarding {
+            let button = createHabitButton(with: "Check in on Maow")
+            habitsStackView.addArrangedSubview(button)
+            habitButtons.append(button)
+            useDeviceButton = button
+        }
+        
         for habit in predefinedHabits {
             let button = createHabitButton(with: habit)
             habitsStackView.addArrangedSubview(button)
@@ -284,6 +337,8 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         
         habitData.name = habitName
         nextButton.isEnabled = true
+        
+        removeFocus()
     }
     
     @objc private func nextButtonTapped() {
@@ -295,16 +350,35 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
             }
         } else {
             //create and push the next view controller
-            let timeVC = SelectTimeViewController()
-            
-            // back button
-            let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
-            navigationItem.backBarButtonItem = backButton
-            self.navigationController?.navigationBar.tintColor = .white
-            
-            // send info forward
-            timeVC.habitData = habitData
-            navigationController?.pushViewController(timeVC, animated: true)
+            if let timeVC = selectTimeVC {
+                if isOnboarding {
+                    timeVC.isOnboarding = true
+                } else {
+                    print("something weird - timevc but not onboarding")
+                }
+                
+                let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
+                navigationItem.backBarButtonItem = backButton
+                self.navigationController?.navigationBar.tintColor = .white
+                
+                // send info forward
+                timeVC.habitData = habitData
+                navigationController?.pushViewController(timeVC, animated: true)
+            } else {
+                if isOnboarding {
+                    print("something weird - no timevc but onboarding")
+                } else {
+                    let timeVC = SelectTimeViewController()
+                    
+                    let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
+                    navigationItem.backBarButtonItem = backButton
+                    self.navigationController?.navigationBar.tintColor = .white
+                    
+                    // send info forward
+                    timeVC.habitData = habitData
+                    navigationController?.pushViewController(timeVC, animated: true)
+                }
+            }
         }
     }
     
@@ -313,6 +387,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc private func dismissSelf() {
+        delegate?.selectHabitViewControllerDidDismiss(self)
         self.dismiss(animated: true, completion: nil)
     }
     
@@ -332,6 +407,161 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     @objc private func keyboardWillHide(notification: NSNotification) {
         scrollView.contentInset.bottom = 0
         scrollView.verticalScrollIndicatorInsets.bottom = 0
+    }
+    
+    // MARK: - Onboarding
+    private func showFocusOnUseDevice() {
+        guard let useDeviceButton = useDeviceButton else { return }
+        guard let window = view.window else { return }
+        
+        window.addSubview(focusView)
+        focusView.shapeType = .roundedRect(cornerRadius: 12)
+        focusView.frame = window.bounds
+        focusView.isUserInteractionEnabled = true
+        
+        // convert frame to coords
+        let buttonFrame = useDeviceButton.convert(useDeviceButton.bounds, to: window)
+        focusView.ovalRect = buttonFrame.insetBy(dx: -4, dy: -4)
+        
+        // add label to window
+        window.addSubview(onboardingLabel)
+        onboardingLabel.isUserInteractionEnabled = false
+        
+        // position label
+        NSLayoutConstraint.activate([
+            onboardingLabel.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor, constant: buttonFrame.maxY + 20),
+            onboardingLabel.centerXAnchor.constraint(equalTo: window.centerXAnchor),
+            onboardingLabel.leadingAnchor.constraint(equalTo: window.leadingAnchor, constant: 20),
+            onboardingLabel.trailingAnchor.constraint(equalTo: window.trailingAnchor, constant: -20)
+        ])
+        
+        // animate appearance
+        onboardingLabel.alpha = 0.0
+        onboardingLabel.isHidden = false
+        focusView.alpha = 0.0
+        focusView.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.onboardingLabel.alpha = 1.0
+            self.focusView.alpha = 1.0
+        }
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(focusViewTapped(_:)))
+        focusView.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc private func focusViewTapped(_ gesture: UITapGestureRecognizer) {
+        let location = gesture.location(in: focusView)
+        
+        let isInHighlightedArea: Bool
+        
+        if let useDeviceButton = useDeviceButton, let window = view.window {
+            let buttonFrame = useDeviceButton.convert(useDeviceButton.bounds, to: window)
+            let paddedFrame = buttonFrame.insetBy(dx: -4, dy: -4)
+            
+            switch focusView.shapeType {
+            case .roundedRect(let cornerRadius):
+                isInHighlightedArea = paddedFrame.contains(location)
+            default:
+                isInHighlightedArea = false
+            }
+        } else {
+            isInHighlightedArea = false
+        }
+        
+        // only trigger if tap is within highlighted area
+        if isInHighlightedArea {
+            if let useDeviceButton = useDeviceButton {
+                habitButtonTapped(useDeviceButton)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.showFocusViewOnNext()
+                }
+            }
+        }
+    }
+    
+    private func showFocusViewOnNext() {
+        guard let window = view.window else { return }
+        
+        window.addSubview(focusView)
+        focusView.shapeType = .roundedRect(cornerRadius: 12)
+        focusView.frame = window.bounds
+        focusView.isUserInteractionEnabled = true
+        
+        // convert frame to coords
+        let buttonFrame = nextButton.convert(nextButton.bounds, to: window)
+        focusView.ovalRect = buttonFrame.insetBy(dx: -4, dy: -4)
+        
+        // add label to window
+        window.addSubview(nextLabel)
+        nextLabel.isUserInteractionEnabled = false
+        
+        // position label
+        NSLayoutConstraint.activate([
+            nextLabel.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor, constant: buttonFrame.minY - 100),
+            nextLabel.centerXAnchor.constraint(equalTo: window.centerXAnchor),
+            nextLabel.leadingAnchor.constraint(equalTo: window.leadingAnchor, constant: 20),
+            nextLabel.trailingAnchor.constraint(equalTo: window.trailingAnchor, constant: -20)
+        ])
+        
+        // animate appearance
+        nextLabel.alpha = 0.0
+        nextLabel.isHidden = false
+        focusView.alpha = 0.0
+        focusView.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.nextLabel.alpha = 1.0
+            self.focusView.alpha = 1.0
+        }
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(focusViewNextTapped(_:)))
+        focusView.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc private func focusViewNextTapped(_ gesture: UITapGestureRecognizer) {
+        let location = gesture.location(in: focusView)
+        
+        let isInHighlightedArea: Bool
+        
+        if let window = view.window {
+            let buttonFrame = nextButton.convert(nextButton.bounds, to: window)
+            let paddedFrame = buttonFrame.insetBy(dx: -4, dy: -4)
+            
+            switch focusView.shapeType {
+            case .roundedRect(let cornerRadius):
+                isInHighlightedArea = paddedFrame.contains(location)
+            default:
+                isInHighlightedArea = false
+            }
+        } else {
+            isInHighlightedArea = false
+        }
+        
+        // only trigger if tap is within highlighted area
+        if isInHighlightedArea {
+            nextButtonTapped()
+            DispatchQueue.main.asyncAfter(deadline: .now()) { [weak self] in
+                self?.removeFocus()
+            }
+        }
+    }
+    
+    private func removeFocus() {
+        guard let window = view.window else { return }
+        
+        UIView.animate(withDuration: 0.3, animations: {
+            self.onboardingLabel.alpha = 0.0
+            self.nextLabel.alpha = 0.0
+            self.focusView.alpha = 0.0
+        }, completion: { _ in
+            // clean up window level views
+            for subview in window.subviews {
+                if subview is FocusView || subview == self.onboardingLabel || subview == self.nextLabel {
+                    subview.removeFromSuperview()
+                }
+            }
+        })
     }
     
     // MARK: - Auxillary Methods

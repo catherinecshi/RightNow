@@ -172,7 +172,7 @@ public struct HabitIconUtility {
                  image: "trash.fill"),
         HabitIcon(keywords: ["medication", "pill", "birth control", "vitamin", "supplement"],
                  image: "pills.fill"),
-        HabitIcon(keywords: ["pet"],
+        HabitIcon(keywords: ["pet", "maow"],
                  image: "pawprint.fill"),
         HabitIcon(keywords: ["dog"],
                  image: "dog.fill"),

@@ -109,7 +109,8 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.numberOfLines = 0
-        label.text = "Maow doesn't have any arms or legs, so her life is in your hands"
+        //label.text = "Maow doesn't have any arms or legs, so her life is in your hands"
+        label.text = "It's a good thing you're adopting her, she's been abandonded for a while"
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -121,7 +122,8 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 20, weight: .thin)
         label.numberOfLines = 0
-        label.text = "(she doesn't have those either)"
+        //label.text = "(she doesn't have those either)"
+        label.text = "ever since her last owner..."
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -133,7 +135,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 22, weight: .medium)
         label.numberOfLines = 0
-        label.text = "That's why her last owner abandoned her. She's too high maintenance."
+        label.text = "Well, her last owner abandoned her because she's too high maintenance."
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -157,7 +159,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.numberOfLines = 0
-        label.text = "Oh, aren't you such a good person?"
+        label.text = "Yea, yea, you say that now"
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -181,7 +183,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 24, weight: .medium)
         label.numberOfLines = 0
-        label.text = "Anyways, as Maow's new owner, you two will be soul-linked and you'll now have to take care of Maow."
+        label.text = "Anyways, as Maow's new owner, you two will be soul-linked and you'll now have to take care of her."
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
