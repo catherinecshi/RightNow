@@ -54,13 +54,21 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         print("Failed to register for remote notifications: \(error)")
     }
     
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions
+    ) -> Void) {
         // called when app is in foreground for notification
         print("Notification will present: \(notification.request.identifier)")
         completionHandler([.banner, .list, .sound])
     }
     
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) async {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) async {
         // called when user interacts with notification
         let actionIdentifier = response.actionIdentifier
         print("Notification response received with action identifier: \(actionIdentifier)")
@@ -90,29 +98,34 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     }
     
     private func handleSnooze5Minutes(notification: UNNotification) async {
-        if let habit = try? await retrieveHabit(from: notification) {
-            let content = notification.request.content.mutableCopy() as! UNMutableNotificationContent
-            content.categoryIdentifier = "HabitReminder"
-            
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5 * 60, repeats: false)
-            let request = UNNotificationRequest(
-                identifier: "\(habit.id.uuidString)_snoozed",
-                content: content,
-                trigger: trigger
-            )
-            
-            try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                self.notificationCenter.add(request) { error in
-                    if let error = error {
-                        print("Error scheduling snoozed notification \(error)")
-                        continuation.resume(throwing: error)
-                    } else {
-                        continuation.resume(returning: ())
-                    }
+        guard let habit = await retrieveHabit(from: notification) else {
+            print("Could not retrieve habit from notification \(notification.description)")
+            return
+        }
+        
+        guard let content = notification.request.content.mutableCopy() as? UNMutableNotificationContent else {
+            print("Failed to create mutable notification content")
+            return
+        }
+        
+        content.categoryIdentifier = "HabitReminder"
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5 * 60, repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "\(habit.id.uuidString)_snoozed",
+            content: content,
+            trigger: trigger
+        )
+        
+        try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            self.notificationCenter.add(request) { error in
+                if let error = error {
+                    print("Error scheduling snoozed notification \(error)")
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
                 }
             }
-        } else {
-            print("could not retrieve habit from notification \(notification.description)")
         }
     }
     

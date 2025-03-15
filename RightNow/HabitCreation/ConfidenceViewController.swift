@@ -27,11 +27,10 @@ class ConfidenceViewController: UIViewController {
         return label
     }()
     
-    //button to go to the next step
     private let nextButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Save", for: .normal)
-        button.isEnabled = true //button is disabled until a habit is selected
+        button.isEnabled = true
         return button
     }()
     
@@ -52,15 +51,13 @@ class ConfidenceViewController: UIViewController {
         view.addSubview(viewTitle)
         viewTitle.translatesAutoresizingMaskIntoConstraints = false
         
-        //make sure it can go to multiple lines if squished
-        viewTitle.numberOfLines = 0 //allows line breaks
-        viewTitle.lineBreakMode = .byWordWrapping //breaks lines by words, not characters
+        viewTitle.numberOfLines = 0
+        viewTitle.lineBreakMode = .byWordWrapping // breaks lines by words, not characters
         
         self.navigationItem.titleView = viewTitle
     }
     
     private func setupNextButton() {
-        //add to view
         view.addSubview(nextButton)
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         
@@ -71,7 +68,7 @@ class ConfidenceViewController: UIViewController {
             nextButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -30)
         ])
         
-        //appearance
+        // appearance
         nextButton.backgroundColor = .white
         nextButton.setTitleColor(UIConfiguration.tintColor, for: .normal)
         nextButton.setTitleColor(UIColor.gray, for: .disabled)
@@ -79,7 +76,7 @@ class ConfidenceViewController: UIViewController {
         nextButton.layer.cornerRadius = 20
         nextButton.clipsToBounds = true
         
-        //add action
+        // add action
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
@@ -102,7 +99,6 @@ class ConfidenceViewController: UIViewController {
         dismissSelf()
     }
      
-    
     @objc private func dismissSelf() {
         self.dismiss(animated: true, completion: nil)
     }

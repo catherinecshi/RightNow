@@ -57,18 +57,3 @@ extension CompositeAppDelegate {
         appDelegates.forEach { $0.applicationWillTerminate?(application) }
     }
 }
-
-/*
-extension CompositeAppDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        print("Notification will present: \(notification.request.identifier)")
-        completionHandler([.banner, .list, .sound])
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        print("Notification did receive response: \(response.actionIdentifier)")
-        // Handle the notification response
-        completionHandler()
-    }
-}
-*/

@@ -215,7 +215,9 @@ public struct HabitIconUtility {
                  image: "music.mic"),
         HabitIcon(keywords: ["music"],
                   image: "headphones.circle.fill"),
-        HabitIcon(keywords: ["play", "guitar", "piano", "flute", "oboe", "piccolo", "trombone", "trumpet", "tuba", "french horn", "bassoon", "clarinet", "saxophone", "violin", "viola", "cello", "bass", "drum", "harp"],
+        HabitIcon(keywords: ["play", "guitar", "piano", "flute", "oboe", "piccolo", "trombone", 
+                             "trumpet", "tuba", "french horn", "bassoon", "clarinet", "saxophone",
+                             "violin", "viola", "cello", "bass", "drum", "harp"],
                   image: "music.quarternote.3")
     ]
     

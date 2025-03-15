@@ -17,7 +17,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     
     private var selectedButton: UIButton?
     
-    //initiate labels
+    // initiate labels
     let viewTitle: UILabel = {
         let label = UILabel()
         label.text = "Create Habit"
@@ -32,26 +32,26 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         label.text = "How do you want to track your habit?"
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
-        //label.textAlignment = .center
+        // label.textAlignment = .center
         return label
     }()
     
-    //button to go to the next step
+    // button to go to the next step
     private let nextButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Next", for: .normal)
-        button.isEnabled = false //button is disabled until a habit is selected
+        button.isEnabled = false // button is disabled until a habit is selected
         return button
     }()
     
-    //for the stack to be able to scroll inside this view
+    // for the stack to be able to scroll inside this view
     let metricScrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
     
-    //stack to hold habit buttons
+    // stack to hold habit buttons
     let metricStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -102,9 +102,9 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         view.addSubview(viewTitle)
         viewTitle.translatesAutoresizingMaskIntoConstraints = false
         
-        //make sure it can go to multiple lines if squished
-        viewTitle.numberOfLines = 0 //allows line breaks
-        viewTitle.lineBreakMode = .byWordWrapping //breaks lines by words, not characters
+        // make sure it can go to multiple lines if squished
+        viewTitle.numberOfLines = 0 // allows line breaks
+        viewTitle.lineBreakMode = .byWordWrapping // breaks lines by words, not characters
         
         self.navigationItem.titleView = viewTitle
     }
@@ -177,16 +177,16 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             button.setTitleColor(.white, for: .normal)
             button.tintColor = UIConfiguration.tintColor
             button.layer.cornerRadius = 10
-            button.clipsToBounds = true //for rounded radius
+            button.clipsToBounds = true // for rounded radius
             button.layer.borderWidth = 2
             button.layer.borderColor = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
             
-            //set up image
+            // set up image
             let icon = iconForMetric(name: metric.displayName, color: .white)
             button.setImage(icon, for: .normal)
             button.imageView?.contentMode = .scaleAspectFit
             
-            //adjust image and title positions
+            // adjust image and title positions
             button.contentHorizontalAlignment = .left
             var configuration = UIButton.Configuration.filled()
             configuration.imagePlacement = .leading
@@ -194,7 +194,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             configuration.titleAlignment = .center
             configuration.titlePadding = 10
             
-            //apply configuration
+            // apply configuration
             button.configuration = configuration
             button.tag = predefinedMetrics.firstIndex(of: metric) ?? 0
             
@@ -224,7 +224,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     }
     
     private func setupNextButton() {
-        //add to view
+        // add to view
         view.addSubview(nextButton)
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         
@@ -235,7 +235,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
             nextButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -30)
         ])
         
-        //appearance
+        // appearance
         nextButton.backgroundColor = .white
         nextButton.setTitleColor(UIConfiguration.tintColor, for: .normal)
         nextButton.setTitleColor(UIColor.gray, for: .disabled)
@@ -243,7 +243,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
         nextButton.layer.cornerRadius = 20
         nextButton.clipsToBounds = true
         
-        //add action
+        // add action
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
@@ -315,7 +315,7 @@ class AccountabilityViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc private func nextButtonTapped() {
-        //create and push the next view controller
+        // create and push the next view controller
         var nextVC: UIViewController
         
         // store time duration if relevant

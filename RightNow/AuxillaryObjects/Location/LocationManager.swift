@@ -107,33 +107,35 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 dateFormatter.dateFormat = "EEE"
                 let weekdayString = dateFormatter.string(from: currentTime)
                 
-                var correctDay = false
-                for (day, isActive) in geofenceData.daysOfWeek {
-                    if day == weekdayString && isActive {
-                        correctDay = true
-                    } else {
-                        print("entered location on wrong day - \(day)")
+                Task {
+                    var correctDay = false
+                    for (day, isActive) in geofenceData.daysOfWeek {
+                        if day == weekdayString && isActive {
+                            correctDay = true
+                        } else {
+                            print("entered location on wrong day - \(day)")
+                        }
                     }
-                }
                 
-                // check if the time is within the margin of error
-                if let time = geofenceData.time {
-                    let timeDifference = calendar.dateComponents([.minute], from: currentTime, to: time).minute ?? 0
-                    
-                    // send notification and count habit if both add up
-                    if correctDay && abs(timeDifference) <= 30 {
-                        var habit = geofenceData.habit
-                        repo.completeHabit(&habit)
-                        sendProximityNotification(for: circularRegion.identifier)
+                    // check if the time is within the margin of error
+                    if let time = geofenceData.time {
+                        let timeDifference = calendar.dateComponents([.minute], from: currentTime, to: time).minute ?? 0
+                        
+                        // send notification and count habit if both add up
+                        if correctDay && abs(timeDifference) <= 30 {
+                            var habit = geofenceData.habit
+                            await repo.completeHabit(&habit)
+                            sendProximityNotification(for: circularRegion.identifier)
+                        } else {
+                            print("Notification skipped - not the time yet")
+                            print("\(correctDay) expected, but today is \(weekdayString)")
+                            print("geofence time \(geofenceData.time) and time difference is \(timeDifference)")
+                        }
                     } else {
-                        print("Notification skipped - not the time yet")
-                        print("\(correctDay) expected, but today is \(weekdayString)")
-                        print("geofence time \(geofenceData.time) and time difference is \(timeDifference)")
+                        var habit = geofenceData.habit
+                        await repo.completeHabit(&habit)
+                        sendProximityNotification(for: circularRegion.identifier)
                     }
-                } else {
-                    var habit = geofenceData.habit
-                    repo.completeHabit(&habit)
-                    sendProximityNotification(for: circularRegion.identifier)
                 }
             }
         }

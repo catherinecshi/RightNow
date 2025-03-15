@@ -87,7 +87,21 @@ struct Habit: Codable {
     }
     
     // if habit is made from habit creation or editing
-    init(id: UUID = UUID(), name: String, description: String, time: Date, daysOfTheWeek: [String: Bool], accountabilityMetric: AccountabilityMetric, location: Location? = nil, incentive: Incentive, notificationEnabled: Bool, totalDone: Int = 0, totalFailed: Int = 0, streaks: Int = 0, currentLevel: Level = .beginner, numberOfRepetitions: Int = 1, dailyCompletion: [String: Int] = [:], lastUpdateDate: Date = Date()) {
+    init(id: UUID = UUID(), 
+         name: String,
+         description: String,
+         time: Date, daysOfTheWeek: [String: Bool],
+         accountabilityMetric: AccountabilityMetric,
+         location: Location? = nil,
+         incentive: Incentive,
+         notificationEnabled: Bool,
+         totalDone: Int = 0,
+         totalFailed: Int = 0,
+         streaks: Int = 0,
+         currentLevel: Level = .beginner,
+         numberOfRepetitions: Int = 1,
+         dailyCompletion: [String: Int] = [:],
+         lastUpdateDate: Date = Date()) {
             self.id = id
             self.name = name
             self.description = description

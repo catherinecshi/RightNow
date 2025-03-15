@@ -20,14 +20,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         PushNotificationDelegate.shared.window = window
         
         if Auth.auth().currentUser != nil {
-            let onboardingVC = OnboardingViewController()
-            window?.rootViewController = onboardingVC
-            window?.makeKeyAndVisible()
-            
-            // show habitlistvc if the user is signed in
-            //let tabBarController = TabBarController()
-            //window?.rootViewController = tabBarController
+            //let onboardingVC = OnboardingViewController()
+            //window?.rootViewController = onboardingVC
             //window?.makeKeyAndVisible()
+            
+            // show tabs if the user is signed in
+            let tabBarController = TabBarController()
+            tabBarController.selectedIndex = 1
+            window?.rootViewController = tabBarController
+            window?.makeKeyAndVisible()
         } else {
             // user is not signed in
             print("User is not signed in")

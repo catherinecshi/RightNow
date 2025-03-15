@@ -7,9 +7,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var firebaseManager: FirebaseConfigurable = FirebaseManager.shared
     
-    //called when app is opened from a state of not running at all
+    // called when app is opened from a state of not running at all
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        //firebase
+        // firebase
         firebaseManager.configure()
         
         // initialise LocationManager
@@ -46,20 +46,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         print("Notification received with userInfo: \(userInfo)")
 
-        
-        //call completion handler
+        // call completion handler
         completionHandler(.newData)
     }
     
-    //for notification tokens
+    // for notification tokens
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        //this is for storing specific tokens for specific users, incase i would want to send notifications to specific users
+        // this is for storing specific tokens for specific users, incase i would want to send notifications to specific users
         
         appDelegate.application?(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
     }
     
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        //handle error
+        // handle error
         appDelegate.application?(application, didFailToRegisterForRemoteNotificationsWithError: error)
     }
 }
@@ -96,7 +95,7 @@ extension AppDelegate {
 
 extension AppDelegate {
     func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        //fetch data in background
+        // fetch data in background
         appDelegate.application?(application, performFetchWithCompletionHandler: completionHandler)
     }
 }

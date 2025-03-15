@@ -14,6 +14,7 @@ PODS:
   - SDWebImage (5.18.2):
     - SDWebImage/Core (= 5.18.2)
   - SDWebImage/Core (5.18.2)
+  - SwiftLint (0.58.2)
 
 DEPENDENCIES:
   - CameraManager (~> 5.1)
@@ -21,6 +22,7 @@ DEPENDENCIES:
   - RxDataSources (~> 5.0)
   - RxSwift (= 6.6.0)
   - SDWebImage
+  - SwiftLint
 
 SPEC REPOS:
   trunk:
@@ -31,6 +33,7 @@ SPEC REPOS:
     - RxRelay
     - RxSwift
     - SDWebImage
+    - SwiftLint
 
 SPEC CHECKSUMS:
   CameraManager: 73936a52093081ba5e44914e8120ab511360f5d4
@@ -40,7 +43,8 @@ SPEC CHECKSUMS:
   RxRelay: 45eaa5db8ee4fb50e5ebd57deec0159e97fa51e6
   RxSwift: a4b44f7d24599f674deebd1818eab82e58410632
   SDWebImage: c0de394d7cf7f9838aed1fd6bb6037654a4572e4
+  SwiftLint: 365bcd9ffc83d0deb874e833556d82549919d6cd
 
-PODFILE CHECKSUM: 1754347e477a2e4b7f6d8848010214f4153da683
+PODFILE CHECKSUM: 112672d244984194550a08a517df5e185baf7293
 
 COCOAPODS: 1.13.0

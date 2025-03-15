@@ -287,8 +287,8 @@ class HabitEditingViewController: UIViewController {
         accountabilityMetric.selectedSegmentIndex = UISegmentedControl.noSegment
     }
     
-    @objc private func saveButtonTapped() { // FUTURE CAT REMEMBER TO UPDATE LOCATION TO NIL AS WELL IF METRIC CHANGE
-        // also remember if notifications change to 
+    @objc private func saveButtonTapped() async { // FUTURE CAT REMEMBER TO UPDATE LOCATION TO NIL AS WELL IF METRIC CHANGE
+        // also remember if notifications change to
         // make new habit instance
         let newHabit = Habit(
             id: oldHabit.id,
@@ -314,7 +314,7 @@ class HabitEditingViewController: UIViewController {
         }
         
         // update local and firestore databases with new habit
-        repo.updateHabit(newHabit)
+        await repo.updateHabit(newHabit)
         
         dismiss(animated: true, completion: nil)
     }

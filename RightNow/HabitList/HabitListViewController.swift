@@ -57,7 +57,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     override func loadView() {
         self.view = habitListView
         
-        //setup delegates
+        // setup delegates
         habitListView.tableView.delegate = self
         habitListView.tableView.dataSource = self
     }
@@ -74,7 +74,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
                 print("Habit: \(habit.name), Level: \(habit.currentLevel.displayName)")
             }
         
-        //receives callback
+        // receives callback
         viewModel.addObserver { [weak self] changedType in
             switch changedType {
             case .levelChanged(let habitId, let oldLevel, let newLevel):
@@ -228,11 +228,11 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     @objc func handleSwipes(_ sender: UISwipeGestureRecognizer) {
-        //handle swipe
+        // handle swipe
         applyPushAnimation(from: sender.direction)
         viewModel.handleSwipe(direction: sender.direction)
         
-        //update
+        // update
         updateSections()
         habitListView.tableView.reloadData()
         habitsPresent()
@@ -260,15 +260,15 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         addButton.layer.cornerRadius = size / 2
         addButton.translatesAutoresizingMaskIntoConstraints = false
         
-        //add a plus sign
+        // add a plus sign
         addButton.setTitle("+", for: .normal)
         addButton.setTitleColor(.white, for: .normal)
         addButton.titleLabel?.font = UIFont.systemFont(ofSize: (size / 2), weight: .bold)
         
-        //add action for button
+        // add action for button
         addButton.addTarget(self, action: #selector(addHabitTapped), for: .touchUpInside)
         
-        //add to view
+        // add to view
         view.addSubview(addButton)
         
         NSLayoutConstraint.activate([
@@ -302,12 +302,12 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     // in the future makes sure this only fires in cases where it makes sense - like if someone frequents a location, don't fire it everytime they go to a place
     // checks if the habit has already been done for the appropriate number of times that day
-    func isHabitDone(for habit: inout Habit) {
+    func isHabitDone(for habit: inout Habit) async {
         if viewModel.isHabitForToday(habit) {
             print("habit is for today")
             
             #if DEBUG
-            viewModel.habitCompleted(&habit)
+            await viewModel.habitCompleted(&habit)
             #else
             // normal user interface
             if viewModel.isHabitCompletedForDay(habit) {
@@ -470,39 +470,47 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         return sections[section].header
     }
     
-    //this is for making the right number of rows
+    // this is for making the right number of rows
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return sections[section].rows.count
         //return viewModel.habitsForCurrentDay.count
     }
     
-    //this is for calling cell view
+    // this is for calling cell view
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "HabitCell", for: indexPath) as! HabitTableViewCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "HabitCell", for: indexPath) as? HabitTableViewCell else {
+            print("Failed to dequeue HabitTableViewCell - check cell registration")
+            
+            // return a basic cell as fallback to avoid crashes
+            return UITableViewCell(style: .default, reuseIdentifier: "FallbackCell")
+        }
+        
         let habit = sections[indexPath.section].rows[indexPath.row]
         cell.configure(with: habit)
         
         return cell
     }
     
-    //indicates that all rows are editable
+    // indicates that all rows are editable
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return true
     }
     
-    //specify editing style for a particular row
+    // specify editing style for a particular row
     func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
         return .delete
     }
     
-    //for swipe from right to left -> deletion
+    // for swipe from right to left -> deletion
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
-            //fetch habit to delete
+            // fetch habit to delete
             let habitToDelete = self.sections[indexPath.section].rows[indexPath.row]
             
-            //delete habit from firestore + locally, also delete notification
-            self.viewModel.deleteHabit(habitToDelete)
+            // delete habit from firestore + locally, also delete notification
+            Task {
+                await self.viewModel.deleteHabit(habitToDelete)
+            }
             
             // remove from local sections data
             var updatedSectionRows = self.sections[indexPath.section].rows
@@ -517,7 +525,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
                 tableView.deleteRows(at: [indexPath], with: .automatic)
             }
             
-            //check if there are still habits
+            // check if there are still habits
             self.habitsPresent()
             
             // check if onboarding
@@ -528,20 +536,20 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             completionHandler(true)
         }
         
-        //create swipe action config
+        // create swipe action config
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
         return configuration
     }
     
-    //for tapping on the container
+    // for tapping on the container
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true) // for visual feedback
         let selectedHabit = sections[indexPath.section].rows[indexPath.row]
         
-        //action sheet
+        // action sheet
         let actionSheet = UIAlertController(title: nil, message: "Choose an action", preferredStyle: .actionSheet)
         
-        //edit action
+        // edit action
         let editAction = UIAlertAction(title: "Edit Habit", style: .default) { _ in
             let editingVC = HabitEditingViewController(habit: selectedHabit)
             let navController = UINavigationController(rootViewController: editingVC)
@@ -551,7 +559,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         actionSheet.addAction(editAction)
         
-        //record
+        // record
         let recordAction = UIAlertAction(title: "Record Habit", style: .default) { _ in
             let recordVC = CameraController(habit: selectedHabit)
             recordVC.modalPresentationStyle = .fullScreen
@@ -570,24 +578,24 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         actionSheet.addAction(checkAction)
         
-        //cancel
+        // cancel
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         actionSheet.addAction(cancelAction)
         
-        //for ipad users
+        // for ipad users
         if let popOverController = actionSheet.popoverPresentationController {
             popOverController.sourceView = tableView.cellForRow(at: indexPath)
             popOverController.sourceRect = tableView.cellForRow(at: indexPath)!.bounds
         }
         
-        //present
+        // present
         present(actionSheet, animated: true, completion: nil)
     }
 }
 
 extension HabitListViewController: HabitCompleteDelegate {
-    func completeHabit(for habit: inout Habit) {
-        isHabitDone(for: &habit)
+    func completeHabit(for habit: inout Habit) async {
+        await isHabitDone(for: &habit)
     }
 }
 

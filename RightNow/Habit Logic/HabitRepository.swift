@@ -9,11 +9,11 @@ protocol HabitRepositoryProtocol {
     var habitPublisher: AnyPublisher<HabitRepository.HabitChangeType, Never> { get }
     
     func addHabit(_ habit: Habit)
-    func updateHabit(_ habit: Habit)
+    func updateHabit(_ habit: Habit) async
     func getHabits() -> [Habit]
     func fetchSingleHabit(habitID: String) async throws -> Habit?
-    func deleteHabit(_ habit: Habit)
-    func completeHabit(_ habit: inout Habit)
+    func deleteHabit(_ habit: Habit) async
+    func completeHabit(_ habit: inout Habit) async
 }
 
 class HabitRepository: HabitRepositoryProtocol {
@@ -37,21 +37,25 @@ class HabitRepository: HabitRepositoryProtocol {
     private init(dataService: HabitDataServiceProtocol = HabitDataService.shared) {
         self.dataService = dataService
         
-        loadInitialHabits()
+        Task {
+            await loadInitialHabits()
+        }
         setupNetworkMonitoring()
     }
     
-    private func loadInitialHabits() {
+    private func loadInitialHabits() async {
         // load from local storage
-        if let localHabits = dataService.loadHabitsLocally() {
+        do {
+            let localHabits = try await dataService.loadHabitsLocally()
             habits = localHabits
-            notifyChange(.habitCRUD)
+        } catch {
+            print("Error loading habits locally: \(error)")
         }
         
         // then try to load from firestore
-        Task {
-            await syncWithFirestore()
-        }
+        await syncWithFirestore()
+        
+        notifyChange(.habitCRUD)
     }
     
     // MARK: - Network Monitoring
@@ -107,17 +111,15 @@ class HabitRepository: HabitRepositoryProtocol {
             // update repos and local storage
             let finalUpdatedHabits = updatedHabits
             
-            await MainActor.run {
-                self.habits = finalUpdatedHabits
-                try? self.dataService.saveHabitsLocally(finalUpdatedHabits)
-                self.notifyChange(.habitCRUD)
-                
-                // update notification and geofences
-                PushNotificationDelegate.shared.auditNotifications()
-                LocationManager.shared.synchronizeGeofencesWithHabits()
-                
-                self.isSyncing = false // done syncing
-            }
+            self.habits = finalUpdatedHabits
+            try? await self.dataService.saveHabitsLocally(finalUpdatedHabits)
+            self.notifyChange(.habitCRUD)
+            
+            // update notification and geofences
+            await PushNotificationDelegate.shared.auditNotifications()
+            LocationManager.shared.synchronizeGeofencesWithHabits()
+            
+            self.isSyncing = false // done syncing
         } catch {
             print("Error syncing with Firestore: \(error)")
             isSyncing = false
@@ -127,7 +129,17 @@ class HabitRepository: HabitRepositoryProtocol {
     // MARK: - CRUD Operations
     func addHabit(_ habit: Habit) {
         habits.append(habit)
-        try? dataService.saveHabitsLocally(habits) // add locally
+        
+        // save to firestore
+        Task {
+            do {
+                try await dataService.saveHabitsLocally(habits)
+                try await dataService.saveHabitsToFirestore(habits: [habit])
+            } catch {
+                print("Error saving habit to firestore: \(error)")
+                needsSync = true
+            }
+        }
         
         // add notificaitons
         PushNotificationDelegate.shared.scheduleNotificationsForHabit(habit)
@@ -137,20 +149,10 @@ class HabitRepository: HabitRepositoryProtocol {
             LocationManager.shared.startMonitoringGeofence(for: habit)
         }
         
-        // save to firestore
-        Task {
-            do {
-                try await dataService.saveHabitsToFirestore(habits: [habit])
-            } catch {
-                print("Error saving habit to firestore: \(error)")
-                needsSync = true
-            }
-        }
-        
         notifyChange(.habitCRUD)
     }
     
-    func updateHabit(_ habit: Habit) {
+    func updateHabit(_ habit: Habit) async {
         var levelChanged = false
         var oldLevel: Level?
         var streakChanged = false
@@ -165,7 +167,7 @@ class HabitRepository: HabitRepositoryProtocol {
             habits[index] = habit // update list
             
             // save locally
-            try? dataService.saveHabitsLocally(habits)
+            try? await dataService.saveHabitsLocally(habits)
         }
         
         // stupid fucking concurrency domain issues
@@ -206,13 +208,13 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     func fetchSingleHabit(habitID: String) async throws -> Habit? {
-        return try await dataService.fetchHabitFromFirestore(habitID: habitID, maxRetries: 3)
+        return try await dataService.fetchHabitFromFirestore(habitID: habitID)
     }
     
-    func deleteHabit(_ habit: Habit) {
+    func deleteHabit(_ habit: Habit) async {
         // delete locally
         habits.removeAll(where: { $0.id == habit.id })
-        try? dataService.saveHabitsLocally(habits)
+        try? await dataService.saveHabitsLocally(habits)
         
         // delete notifications
         let center = UNUserNotificationCenter.current()
@@ -233,7 +235,7 @@ class HabitRepository: HabitRepositoryProtocol {
         }
     }
     
-    func completeHabit(_ habit: inout Habit) {
+    func completeHabit(_ habit: inout Habit) async {
         let currentDayString = TimeFormatter.dateToString(Date())
         let oldLevel = habit.currentLevel
         
@@ -244,7 +246,7 @@ class HabitRepository: HabitRepositoryProtocol {
         // check if level has changed
         let newLevel = habit.currentLevel
         
-        updateHabit(habit)
+        await updateHabit(habit)
         
         if oldLevel != newLevel {
             notifyChange(.levelChanged(habitId: habit.id,
@@ -275,14 +277,14 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     // converts location tracked habits to self tracked
-    func changeLocationToSelfTrack(habits habitsToChange: [Habit]? = nil) {
+    func changeLocationToSelfTrack(habits habitsToChange: [Habit]? = nil) async {
         let habitsToModify = habitsToChange ?? locationBasedHabits()
         
         for var habit in habitsToModify {
             habit.accountabilityMetric = .selfTracking
             habit.location = nil
             
-            updateHabit(habit)
+            await updateHabit(habit)
         }
     }
 }

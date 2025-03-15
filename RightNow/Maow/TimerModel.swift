@@ -134,7 +134,12 @@ class TimerModel {
                 try await PushNotificationDelegate.shared.scheduleNow(title: "Work Stopped", body: "Your work will be forefeited if you don't return to the app in one minute!")
                 
                 // schedule notification for them failing work
-                try await PushNotificationDelegate.shared.scheduleAfterDelay(title: "Work Stopped", body: "You've left the app for too long", delay: TimeInterval(60), identifier: currentNotificationIdentifier)
+                try await PushNotificationDelegate.shared.scheduleAfterDelay(
+                    title: "Work Stopped",
+                    body: "You've left the app for too long",
+                    delay: TimeInterval(60),
+                    identifier: currentNotificationIdentifier
+                )
             } catch {
                 print("Background notification didn't send: \(error)")
             }

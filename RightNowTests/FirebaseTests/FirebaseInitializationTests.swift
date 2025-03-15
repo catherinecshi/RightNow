@@ -3,18 +3,18 @@ import XCTest
 
 class FirebaseInitializationTests: XCTestCase {
     var mockFirebaseManager: MockFirebaseManager!
+    var habitDataService: HabitDataService!
     var appDelegate: AppDelegate!
     
     override func setUp() {
         super.setUp()
         mockFirebaseManager = MockFirebaseManager()
         
+        habitDataService = HabitDataService(firebaseManager: mockFirebaseManager)
+        
         // inject the mock into appdelegate
         appDelegate = AppDelegate()
         appDelegate.firebaseManager = mockFirebaseManager
-        
-        // inject the mock into habit data service
-        HabitDataService.firebaseManager = mockFirebaseManager
     }
     
     override func tearDown() {
@@ -35,6 +35,13 @@ class FirebaseInitializationTests: XCTestCase {
         
         // try to access habit data service to verify it doesn't crash
         let habitService = HabitDataService.shared
-        XCTAssertNoThrow(habitService.loadHabitsLocally(), "Should not throw error from habit service")
+        
+        Task {
+            do {
+                let habits = try await habitService.loadHabitsLocally()
+            } catch {
+                XCTFail("loadHabitsLocally() threw an unexpected error: \(error)")
+            }
+        }
     }
 }

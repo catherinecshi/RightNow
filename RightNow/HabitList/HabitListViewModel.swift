@@ -92,8 +92,8 @@ class HabitListViewModel {
         repository.addHabit(habit)
     }
     
-    func updateHabit(_ habit: Habit) {
-        repository.updateHabit(habit)
+    func updateHabit(_ habit: Habit) async {
+        await repository.updateHabit(habit)
     }
     
     func getHabits() -> [Habit] {
@@ -104,12 +104,12 @@ class HabitListViewModel {
         return try await repository.fetchSingleHabit(habitID: habitId)
     }
     
-    func deleteHabit(_ habit: Habit) {
-        repository.deleteHabit(habit)
+    func deleteHabit(_ habit: Habit) async {
+        await repository.deleteHabit(habit)
     }
     
-    func habitCompleted(_ habit: inout Habit) {
-        repository.completeHabit(&habit)
+    func habitCompleted(_ habit: inout Habit) async {
+        await repository.completeHabit(&habit)
     }
     
     /*

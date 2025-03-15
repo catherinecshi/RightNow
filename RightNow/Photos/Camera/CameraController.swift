@@ -25,7 +25,7 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
         super.viewDidLoad()
         view.backgroundColor = .black
         
-        //title
+        // title
         title = "RightNow"
         navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
         
@@ -34,7 +34,7 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
             if granted {
                 self.cameraModel.startSession()
                 
-                //configure cameraView with session
+                // configure cameraView with session
                 if let session = self.cameraModel.captureSession {
                     self.cameraView.configureCamera(with: session)
                 }
@@ -44,22 +44,22 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
             }
         }
         
-        //delegates
+        // delegates
         cameraModel.delegate = self
         cameraView.delegate = self
         
-        //add view
+        // add view
         view.addSubview(cameraView)
         setupCameraViewConstraints()
     }
     
-    //for resetting the capturesession if the user cancels phototakenvc and renavigates back
+    // for resetting the capturesession if the user cancels phototakenvc and renavigates back
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         cameraModel.startSession()
     }
     
-    //stop capture session when view disappears
+    // stop capture session when view disappears
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         cameraModel.stopSession()
@@ -79,12 +79,12 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
     
     // MARK: Request Access
     
-    //access granted 11/9/2023
+    // access granted 11/9/2023
     func requestAccessToCamera(completion: @escaping (Bool) -> Void) {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
-        case .authorized: //grants access
+        case .authorized:
             completion(true)
-        case .notDetermined: //not yet been asked for access
+        case .notDetermined: // not yet been asked for access
             AVCaptureDevice.requestAccess(for: .video) { granted in
                 DispatchQueue.main.async {
                     completion(granted)
@@ -113,7 +113,7 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
     // MARK: CameraModel Methods
     
     func cameraModel(_ model: CameraModel, didCapturePhotoData photoData: Data?) {
-        //handle captured image data, update UI, navigate to next screen here
+        // handle captured image data, update UI, navigate to next screen here
         
         if let data = photoData, let image = UIImage(data: data) {
             cameraView.previewImageView.image = image
@@ -139,7 +139,7 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
     }
     
     func cameraModel(_ model: CameraModel, didFailToCaptureImageWithError error: Error) {
-        //handle error, update UI, show alerts, etc
+        // handle error, update UI, show alerts, etc
         print("failed to capture image: \(error)")
         
         let alertController = UIAlertController(title: "Error", message: "Failed to capture image", preferredStyle: .alert)
@@ -147,7 +147,7 @@ class CameraController: UIViewController, CameraViewDelegate, CameraModelDelegat
         alertController.addAction(okAction)
         present(alertController, animated: true, completion: nil)
         
-        //additional error handling?
+        // additional error handling?
     }
     
     // MARK: Delegate Methods

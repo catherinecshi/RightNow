@@ -10,8 +10,8 @@ protocol CameraViewDelegate: AnyObject {
 class CameraView: UIView {
     weak var delegate: CameraViewDelegate?
     
-    //MARK: variables
-    //image view
+    // MARK: - variables
+    // image view
     var previewLayer: AVCaptureVideoPreviewLayer?
     
     var previewImageView: UIImageView = {
@@ -22,7 +22,7 @@ class CameraView: UIView {
         return imageView
     }()
     
-    //button to take photo
+    // button to take photo
     lazy var captureButton: UIButton = {
         let button = UIButton(type: .system) // Creates a standard system button
         button.setTitle("Capture", for: .normal)
@@ -33,7 +33,7 @@ class CameraView: UIView {
         return button
     }()
     
-    //switch camera
+    // switch camera
     lazy var switchCameraButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Switch", for: .normal)
@@ -44,7 +44,7 @@ class CameraView: UIView {
         return button
     }()
     
-    //dismiss button
+    // dismiss button
     lazy var dismissButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("x", for: .normal)
@@ -54,7 +54,7 @@ class CameraView: UIView {
         return button
     }()
     
-    //MARK: Initialisation
+    // MARK: - Initialisation
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -69,16 +69,16 @@ class CameraView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    //MARK: setup UI
-    //called when view's bounds changes
+    // MARK: - setup UI
+    // called when view's bounds changes
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        //update frame of preview layer after changes
+        // update frame of preview layer after changes
         previewLayer?.frame = previewImageView.bounds
     }
     
-    //for camera + preview layer
+    // for camera + preview layer
     func configureCamera(with session: AVCaptureSession) {
         previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer?.videoGravity = .resizeAspectFill
@@ -86,7 +86,7 @@ class CameraView: UIView {
         previewImageView.layer.addSublayer(previewLayer!)
     }
     
-    //for handling bound changes
+    // for handling bound changes
     func updatePreviewLayerFrame() {
         previewImageView.layer.layoutIfNeeded()
         previewLayer?.frame = previewImageView.bounds
@@ -98,33 +98,29 @@ class CameraView: UIView {
         previewImageView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            //sets height
             previewImageView.topAnchor.constraint(equalTo: dismissButton.bottomAnchor, constant: 10),
             previewImageView.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor, constant: -120),
-            
-            //align imageview horizontally to center of main view
             previewImageView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             
-            //encompasses whole screen
+            // encompasses whole screen
             previewImageView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             previewImageView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
             
         ])
         
-        //round corners
         let cornerRadius: CGFloat = 15.0
         previewImageView.layer.cornerRadius = cornerRadius
         previewImageView.clipsToBounds = true
     }
     
-    //setting up capture button
+    // setting up capture button
     func setupCaptureButton() {
         addSubview(captureButton)
         
-        //auto layout
+        // auto layout
         captureButton.translatesAutoresizingMaskIntoConstraints = false
         
-        //make button circle
+        // make button circle
         let buttonSize: CGFloat = 70
         
         captureButton.layer.cornerRadius = buttonSize / 2
@@ -132,7 +128,7 @@ class CameraView: UIView {
         captureButton.backgroundColor = UIColor.white
         captureButton.setImage(UIImage(named: "cameraIcon"), for: .normal)
         
-        //constraints
+        // constraints
         NSLayoutConstraint.activate([
             captureButton.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             captureButton.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor, constant: -20),
@@ -141,7 +137,7 @@ class CameraView: UIView {
         ])
     }
     
-    //setting up switch button
+    // setting up switch button
     func setupSwitchCameraButton() {
         addSubview(switchCameraButton)
         
@@ -155,7 +151,7 @@ class CameraView: UIView {
         ])
     }
     
-    //setting up dismissal button
+    // setting up dismissal button
     func setupDismissButton() {
         addSubview(dismissButton)
         
@@ -169,7 +165,7 @@ class CameraView: UIView {
         ])
     }
     
-    //MARK: Delegate Methods
+    // MARK: - Delegate Methods
     @objc private func captureButtonTapped() {
         delegate?.cameraViewDidTapCapture(self)
     }

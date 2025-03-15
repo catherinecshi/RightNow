@@ -12,25 +12,25 @@ class CameraModel: NSObject {
     var captureSession: AVCaptureSession?
     var photoOutput: AVCapturePhotoOutput?
     
-    //initialisation
+    // initialisation
     override init() {
         super.init()
         setupCaptureSession()
     }
     
-    //setup and manage capture session and photo output
+    // setup and manage capture session and photo output
     private func setupCaptureSession() {
         captureSession = AVCaptureSession()
         captureSession?.sessionPreset = .photo
         
-        //add inputs
+        // add inputs
         if let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .unspecified),
            let cameraInput = try? AVCaptureDeviceInput(device: camera),
            captureSession?.canAddInput(cameraInput) == true {
             captureSession?.addInput(cameraInput)
         }
         
-        //add outputs
+        // add outputs
         photoOutput = AVCapturePhotoOutput()
         if let photoOutput = photoOutput, captureSession?.canAddOutput(photoOutput) == true {
             captureSession?.addOutput(photoOutput)
@@ -39,7 +39,7 @@ class CameraModel: NSObject {
     
     func startSession() {
         if captureSession?.isRunning == false {
-            //user initiated is a quality of service
+            // user initiated is a quality of service
             DispatchQueue.global(qos: .userInitiated).async {
                 self.captureSession?.startRunning()
             }
@@ -52,7 +52,7 @@ class CameraModel: NSObject {
         }
     }
     
-    //button methods
+    // button methods
     func capturePhoto() {
         let settings = AVCapturePhotoSettings()
         photoOutput?.capturePhoto(with: settings, delegate: self)
@@ -79,14 +79,14 @@ class CameraModel: NSObject {
             session.removeInput(input)
         }
         
-        //find a new camera
+        // find a new camera
         guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position) else {
             print("Camera not available for position: \(position)")
             session.commitConfiguration()
             return
         }
         
-        //add a new input
+        // add a new input
         do {
             let newInput = try AVCaptureDeviceInput(device: newCamera)
             if session.canAddInput(newInput) {
@@ -98,7 +98,7 @@ class CameraModel: NSObject {
             print("Error adding camera input: \(error)")
         }
         
-        //commit changes
+        // commit changes
         session.commitConfiguration()
     }
 }
@@ -121,4 +121,3 @@ extension CameraModel: AVCapturePhotoCaptureDelegate {
         delegate?.cameraModel(self, didCapturePhotoData: imageData)
     }
 }
-

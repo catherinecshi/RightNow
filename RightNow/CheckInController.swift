@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 protocol HabitCompleteDelegate: AnyObject {
-    func completeHabit(for habit: inout Habit)
+    func completeHabit(for habit: inout Habit) async
 }
 
 class CheckInController: UIViewController {
@@ -10,7 +10,7 @@ class CheckInController: UIViewController {
     var habit: Habit!
     weak var delegate: HabitCompleteDelegate?
     
-    //button to go to the next step
+    // button to go to the next step
     private let checkInButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Done", for: .normal)
@@ -32,7 +32,6 @@ class CheckInController: UIViewController {
         button.setTitle("X", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
         button.setTitleColor(.white, for: .normal)
-        button.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
         return button
     }()
     
@@ -60,7 +59,7 @@ class CheckInController: UIViewController {
     // MARK: Initialisation
     
     private func setupCheckInButton() {
-        //add to view
+        // add to view
         view.addSubview(checkInButton)
         checkInButton.translatesAutoresizingMaskIntoConstraints = false
         
@@ -69,7 +68,7 @@ class CheckInController: UIViewController {
             checkInButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
         
-        //appearance
+        // appearance
         checkInButton.backgroundColor = .white
         checkInButton.setTitleColor(UIConfiguration.tintColor, for: .normal)
         checkInButton.setTitleColor(UIColor.gray, for: .disabled)
@@ -100,13 +99,18 @@ class CheckInController: UIViewController {
             dismissButton.widthAnchor.constraint(equalToConstant: 40),
             dismissButton.heightAnchor.constraint(equalToConstant: 40)
         ])
+        
+        dismissButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
     }
     
     @objc private func habitCompleted() {
         let habitCopy = habit
         dismiss(animated: true) { [weak self] in
             guard var habit = habitCopy else { return }
-            self?.delegate?.completeHabit(for: &habit)
+            
+            Task {
+                await self?.delegate?.completeHabit(for: &habit)
+            }
         }
     }
     
