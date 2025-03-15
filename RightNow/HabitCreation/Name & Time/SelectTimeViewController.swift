@@ -6,7 +6,7 @@ protocol SelectTimeDelegate: AnyObject {
 }
 
 class SelectTimeViewController: UIViewController {
-    //MARK: - Declaration
+    // MARK: - Declaration
     var repo = HabitRepository.shared
     var habitData: HabitData!
     weak var delegate: SelectTimeDelegate?

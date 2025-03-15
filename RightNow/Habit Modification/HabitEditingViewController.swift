@@ -2,15 +2,17 @@ import UIKit
 
 class HabitEditingViewController: UIViewController {
     
+    // MARK: Properties
+    
     let repo = HabitRepository.shared
     let oldHabit: Habit // the habit being modified
     var tempHabit = HabitData()
-    
-    // MARK: UI Components Declaration
-    
     let daysOfWeek = TimeFormatter.allDays
     
-    //initialize labels
+    // for the time picker
+    private let hours = Array(1...12)
+    private let minutes = Array(0...59)
+    private let amPm = ["AM", "PM"]
     
     let viewTitle: UILabel = {
         let label = UILabel()
@@ -28,14 +30,9 @@ class HabitEditingViewController: UIViewController {
         return label
     }()
     
-    let timePicker: UIDatePicker = {
-        let picker = UIDatePicker()
-        picker.datePickerMode = .time
+    let timePicker: UIPickerView = {
+        let picker = UIPickerView()
         picker.translatesAutoresizingMaskIntoConstraints = false
-        picker.tintColor = .white
-        picker.overrideUserInterfaceStyle = .dark
-        picker.setValue(UIColor.white, forKeyPath: "textColor")
-        picker.setValue(false, forKeyPath: "highlightsToday")
         return picker
     }()
     
@@ -70,6 +67,7 @@ class HabitEditingViewController: UIViewController {
         return label
     }()
     
+    /*
     let accountabilityMetric: UISegmentedControl = {
         let segmentedControl = UISegmentedControl(items: ["Location Tracking", "Lock Phone Away", "Take a Photo", "Self Tracking"])
         segmentedControl.backgroundColor = .lightGray
@@ -87,6 +85,7 @@ class HabitEditingViewController: UIViewController {
         
         return segmentedControl
     }()
+     */
     
     //button to go to the next step
     private let saveButton: UIButton = {
@@ -121,13 +120,13 @@ class HabitEditingViewController: UIViewController {
         
         // pre select stuff based on what's true of old habit
         tempHabit.selectedDays = oldHabit.daysOfTheWeek
-        selectSegment(withText: oldHabit.accountabilityMetric.displayName)
+        //selectSegment(withText: oldHabit.accountabilityMetric.displayName)
         
         setupTitle()
         setupWhatLabel()
         setupTimePicker()
         setupDaysStackView()
-        setupAccountability()
+        //setupAccountability()
         setupNotificationToggle()
         setupNextButton()
         setupDismissButton()
@@ -162,12 +161,50 @@ class HabitEditingViewController: UIViewController {
         if let time = oldHabit.time {
             view.addSubview(timePicker)
             
-            timePicker.date = time
+            timePicker.delegate = self
+            timePicker.dataSource = self
+            
+            // change text to white
+            timePicker.setValue(UIColor.white, forKey: "textColor")
             
             NSLayoutConstraint.activate([
-                timePicker.centerYAnchor.constraint(equalTo: whatLabel.centerYAnchor),
-                timePicker.leadingAnchor.constraint(equalTo: whatLabel.trailingAnchor, constant: 20)
+                timePicker.topAnchor.constraint(equalTo: whatLabel.bottomAnchor, constant: 20),
+                timePicker.leadingAnchor.constraint(equalTo: whatLabel.trailingAnchor, constant: 20),
+                timePicker.heightAnchor.constraint(equalToConstant: 216),
+                timePicker.widthAnchor.constraint(equalToConstant: 280)
             ])
+            
+            // initial values based on oldhabit
+            let calendar = Calendar.current
+            let hour = calendar.component(.hour, from: time)
+            let minute = calendar.component(.minute, from: time)
+            
+            let hourFor12Format: Int
+            let amPmIndex: Int
+            
+            if hour == 0 {
+                hourFor12Format = 12
+                amPmIndex = 0 // AM
+            } else if hour < 12 {
+                hourFor12Format = hour
+                amPmIndex = 0 // AM
+            } else if hour == 12 {
+                hourFor12Format = 12
+                amPmIndex = 1 // PM
+            } else {
+                hourFor12Format = hour - 12
+                amPmIndex = 1 // PM
+            }
+            
+            // start midway through
+            let midPoint = 5000
+            let hourRow = midPoint + (hourFor12Format - 1)
+            let minuteRow = midPoint + minute
+            
+            timePicker.selectRow(hourRow, inComponent: 0, animated: false)
+            timePicker.selectRow(minuteRow, inComponent: 1, animated: false)
+            timePicker.selectRow(amPmIndex, inComponent: 2, animated: false)
+            
         }
     }
     
@@ -197,6 +234,7 @@ class HabitEditingViewController: UIViewController {
         ])
     }
     
+    /*
     private func setupAccountability() {
         view.addSubview(accountabilityLabel)
         view.addSubview(accountabilityMetric)
@@ -213,13 +251,14 @@ class HabitEditingViewController: UIViewController {
             accountabilityMetric.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
+     */
     
     func setupNotificationToggle() {
         view.addSubview(notificationLabel)
         view.addSubview(notificationSwitch)
         
         NSLayoutConstraint.activate([
-            notificationLabel.topAnchor.constraint(equalTo: accountabilityMetric.bottomAnchor, constant: 40),
+            notificationLabel.topAnchor.constraint(equalTo: daysStackView.bottomAnchor, constant: 40),
             notificationLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             
             notificationSwitch.centerYAnchor.constraint(equalTo: notificationLabel.centerYAnchor),
@@ -269,6 +308,7 @@ class HabitEditingViewController: UIViewController {
         tempHabit.selectedDays![sender.titleLabel?.text ?? ""] = sender.isSelected
     }
     
+    /*
     @objc private func segmentChanged(_ sender: UISegmentedControl) {
         print("Selected segment: \(sender.selectedSegmentIndex)")
     }
@@ -286,15 +326,14 @@ class HabitEditingViewController: UIViewController {
         print("Segment with text '\(text)' not found.")
         accountabilityMetric.selectedSegmentIndex = UISegmentedControl.noSegment
     }
+     */
     
     @objc private func saveButtonTapped() async { // FUTURE CAT REMEMBER TO UPDATE LOCATION TO NIL AS WELL IF METRIC CHANGE
-        // also remember if notifications change to
-        // make new habit instance
         let newHabit = Habit(
             id: oldHabit.id,
             name: oldHabit.name,
             description: oldHabit.description,
-            time: timePicker.date,
+            time: getSelectedTime(),
             daysOfTheWeek: tempHabit.selectedDays ?? oldHabit.daysOfTheWeek,
             accountabilityMetric: tempHabit.accountabilityMetric ?? oldHabit.accountabilityMetric,
             incentive: tempHabit.incentive ?? oldHabit.incentive,
@@ -321,5 +360,82 @@ class HabitEditingViewController: UIViewController {
     
     @objc private func dismissSelf() {
         dismiss(animated: true, completion: nil)
+    }
+    
+    // MARK: - Helper Methods
+    private func getSelectedTime() -> Date {
+        // Get selected values from picker
+        let selectedHour = hours[timePicker.selectedRow(inComponent: 0) % hours.count]
+        let selectedMinute = minutes[timePicker.selectedRow(inComponent: 1) % minutes.count]
+        let isPM = timePicker.selectedRow(inComponent: 2) % amPm.count == 1
+        
+        // Convert to 24-hour format
+        let hourIn24Format: Int
+        if isPM {
+            hourIn24Format = selectedHour == 12 ? 12 : selectedHour + 12
+        } else {
+            hourIn24Format = selectedHour == 12 ? 0 : selectedHour
+        }
+        
+        // Create a date using the hour and minute
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        components.hour = hourIn24Format
+        components.minute = selectedMinute
+        
+        return Calendar.current.date(from: components) ?? Date()
+    }
+}
+
+// MARK: - UIPickerViewDataSource
+extension HabitEditingViewController: UIPickerViewDataSource {
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 3 // Hour, Minute, AM/PM
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        switch component {
+        case 0, 1:
+            return 10000 // Large number for infinite scrolling effect
+        case 2:
+            return amPm.count
+        default:
+            return 0
+        }
+    }
+}
+
+// MARK: - UIPickerViewDelegate
+extension HabitEditingViewController: UIPickerViewDelegate {
+    func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
+        var title = ""
+        
+        switch component {
+        case 0:
+            let hourValue = hours[row % hours.count]
+            title = "\(hourValue)"
+        case 1:
+            let minuteValue = minutes[row % minutes.count]
+            title = String(format: "%02d", minuteValue) // Show minutes as 00, 01, etc.
+        case 2:
+            title = amPm[row % amPm.count]
+        default:
+            title = "?"
+        }
+        
+        let attributedTitle = NSAttributedString(string: title, attributes: [NSAttributedString.Key.foregroundColor: UIColor.white])
+        return attributedTitle
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, widthForComponent component: Int) -> CGFloat {
+        switch component {
+        case 0:
+            return 60 // Hours
+        case 1:
+            return 60 // Minutes
+        case 2:
+            return 60 // AM/PM
+        default:
+            return 60
+        }
     }
 }
