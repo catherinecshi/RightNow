@@ -4,16 +4,18 @@ import FirebaseAuth
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
+    var appCoordinator: AppCoordinator?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let windowScene = (scene as? UIWindowScene) else { return }
-        window = UIWindow(windowScene: windowScene)
-        window?.backgroundColor = .white
+        let window = UIWindow(windowScene: windowScene)
+        window.backgroundColor = .white
+        self.window = window
         
         if #available(iOS 13.0, *) { // force light mode for UI
-            window?.overrideUserInterfaceStyle = .light
+            window.overrideUserInterfaceStyle = .light
         }
         
         // if from notification, send information to PushNotificationDelegate
@@ -25,16 +27,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             //window?.makeKeyAndVisible()
             
             // show tabs if the user is signed in
-            let tabBarController = TabBarController()
-            tabBarController.selectedIndex = 1
-            window?.rootViewController = tabBarController
-            window?.makeKeyAndVisible()
+            //let tabBarController = TabBarController()
+            //tabBarController.selectedIndex = 1
+            //window?.rootViewController = tabBarController
+            //window?.makeKeyAndVisible()
+            
+            // setup app coordinator
+            let navigationController = UINavigationController()
+            navigationController.isNavigationBarHidden = true
+            
+            appCoordinator = AppCoordinator(navigationController: navigationController, window: window)
+            appCoordinator?.start()
         } else {
             // user is not signed in
             print("User is not signed in")
             let welcomeVC = WelcomeViewController(state: AppState.shared)
-            window?.rootViewController = UINavigationController(rootViewController: welcomeVC)
-            window?.makeKeyAndVisible()
+            window.rootViewController = UINavigationController(rootViewController: welcomeVC)
+            window.makeKeyAndVisible()
         }
     }
 

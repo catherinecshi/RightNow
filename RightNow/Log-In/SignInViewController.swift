@@ -104,8 +104,6 @@ class SignInViewController: UIViewController {
         return button
     }()
 
-
-    
     private func bindViewModel() {
         viewModel.$statusViewModel
             .compactMap { $0 } //filters out nil values

@@ -3,7 +3,7 @@ import Combine
 import UserNotifications
 import LocalAuthentication
 
-class HabitListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, SelectHabitViewControllerDelegate, SelectTimeDelegate {
+class HabitListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     // to section off different levels
     struct LevelSection {
@@ -19,6 +19,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     // for onboarding
     private var isDeletionOnboardingActive = false
     private var interactionBlocker: UIView?
+    weak var coordinator: OnboardingCoordinator?
     
     private lazy var focusView: FocusView = {
         let view = FocusView()
@@ -62,7 +63,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         habitListView.tableView.dataSource = self
     }
     
-    // MARK: Lifecycle Methods
+    // MARK: - Lifecycle Methods
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -76,29 +77,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         // receives callback
         viewModel.addObserver { [weak self] changedType in
-            switch changedType {
-            case .levelChanged(let habitId, let oldLevel, let newLevel):
-                // find the habit
-                for section in self?.sections ?? [] {
-                    if let habit = section.rows.first(where: { $0.id == habitId }) {
-                        let alert = CustomAlertViewController(
-                            title: "Congratulations!",
-                            message: "Your habit to \(habit.name) has just leveled up from a \(oldLevel) to \(newLevel) level!"
-                        )
-                        
-                        self?.present(alert, animated: true)
-                        break
-                    }
-                }
-            case .streakChanged(let habitId, let newStreak):
-                // handle streak changes
-                break
-            case .habitCRUD:
-                self?.updateSections()
-                self?.habitListView.tableView.reloadData()
-                self?.habitsPresent()
-                self?.updateTitle()
-            }
+            self?.handleModelChange(changedType)
         }
         
         habitListView.tableView.reloadData()
@@ -114,10 +93,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         //isLocationPermissionDenied()
         
         //addDebugButton()
-        
-        Task {
-            await determineCurrentTabBarController()
-        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -144,6 +119,32 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         // adjust bottom constraint for add button to account for tab bar
         if let existingConstraint = addButton.constraints.first(where: { $0.firstAttribute == .bottom }) {
             existingConstraint.constant = -(view.safeAreaInsets.bottom + 20)
+        }
+    }
+    
+    private func handleModelChange(_ changedType: HabitRepository.HabitChangeType) {
+        switch changedType {
+        case .levelChanged(let habitId, let oldLevel, let newLevel):
+            // find the habit
+            for section in self.sections {
+                if let habit = section.rows.first(where: { $0.id == habitId }) {
+                    let alert = CustomAlertViewController(
+                        title: "Congratulations!",
+                        message: "Your habit to \(habit.name) has just leveled up from a \(oldLevel) to \(newLevel) level!"
+                    )
+                    
+                    self.present(alert, animated: true)
+                    break
+                }
+            }
+        case .streakChanged(let habitId, let newStreak):
+            // handle streak changes
+            break
+        case .habitCRUD:
+            self.updateSections()
+            self.habitListView.tableView.reloadData()
+            self.habitsPresent()
+            self.updateTitle()
         }
     }
     
@@ -214,7 +215,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         habitListView.titleLabel.text = "\(formattedDate) - \(dayOfWeek)"
     }
     
-    // MARK: Swipe Methods
+    // MARK: - Swipe Methods
     
     func setupSwipes() {
         let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipes(_:)))
@@ -248,7 +249,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         habitListView.tableView.layer.add(transition, forKey: "transition")
     }
     
-    // MARK: Creation Button Methods
+    // MARK: - Creation Button Methods
     
     var addButton: UIButton!
     
@@ -282,20 +283,15 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     @objc func addHabitTapped(isOnboarding: Bool = false) {
         hideOnboardingFocus()
         
-        let creationVC = SelectHabitViewController()
-        creationVC.delegate = self
-        
-        if isOnboarding {
-            creationVC.isOnboarding = true
+        if let coordinator = coordinator { // currently onboarding if there is a coordinator
+            coordinator.showHabitCreation()
+        } else {
+            let creationVC = SelectHabitViewController()
             
-            let timeVC = SelectTimeViewController()
-            timeVC.delegate = self
-            creationVC.selectTimeVC = timeVC
+            let navController = UINavigationController(rootViewController: creationVC)
+            navController.modalPresentationStyle = .pageSheet
+            present(navController, animated: true, completion: nil)
         }
-        
-        let navController = UINavigationController(rootViewController: creationVC)
-        navController.modalPresentationStyle = .pageSheet
-        present(navController, animated: true, completion: nil)
     }
     
     // MARK: - Alert Methods
@@ -559,15 +555,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         actionSheet.addAction(editAction)
         
-        // record
-        let recordAction = UIAlertAction(title: "Record Habit", style: .default) { _ in
-            let recordVC = CameraController(habit: selectedHabit)
-            recordVC.modalPresentationStyle = .fullScreen
-            self.present(recordVC, animated: true, completion: nil)
-        }
-        
-        actionSheet.addAction(recordAction)
-        
         // check off habit
         let checkAction = UIAlertAction(title: "Check Off Habit", style: .default) { _ in
             let checkInVC = CheckInController(habit: selectedHabit)
@@ -726,27 +713,6 @@ extension HabitListViewController {
         })
     }
     
-    func determineCurrentTabBarController() async {
-        if let onboardingTabBar = parentTabBarController(ofType: OnboardingTabBarController.self) {
-            print("onboarding")
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
-            setupOnboarding()
-            showOnboardingFocus()
-        } else if let mainTabBar = parentTabBarController(ofType: TabBarController.self) {
-            // normal - nothing happens
-            print("main")
-        } else {
-            print("Not in any tab bar controller???")
-        }
-    }
-    
-    func selectHabitViewControllerDidDismiss(_ viewController: SelectHabitViewController) {
-        if viewModel.getHabits().isEmpty {
-            setupOnboarding()
-            showOnboardingFocus()
-        }
-    }
-    
     // MARK: - Onboarding Pt 2
     
     class InteractionBlockerView: UIView {
@@ -759,14 +725,7 @@ extension HabitListViewController {
         }
     }
     
-    func didCompleteOnboarding() {
-        Task {
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // wait to make sure everything consolidates
-            await showDeletion()
-        }
-    }
-    
-    private func showDeletion() async {
+    func showDeletion() async {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
@@ -853,7 +812,7 @@ extension HabitListViewController {
             }
         })
         
-        // Optional: You can also animate the deletion label to provide a hint
+        // animate the deletion label to provide a hint
         UIView.animate(withDuration: 0.5, animations: {
             self.deletionLabel.transform = CGAffineTransform(translationX: -30, y: 0)
         }, completion: { _ in
@@ -884,124 +843,8 @@ extension HabitListViewController {
         }
         
         // let's go back to maow!
-        if let tabBarController = parentTabBarController(ofType: OnboardingTabBarController.self) {
-            let tabBarWidth = tabBarController.tabBar.bounds.width
-            let numberOfItems = CGFloat(tabBarController.tabBar.items?.count ?? 0)
-            let tabWidth = tabBarWidth / numberOfItems
-            
-            // The second tab should be at index 1, so its x position starts at 1 * tabWidth
-            let secondTabX = 1 * tabWidth
-            let tabBarHeight = tabBarController.tabBar.bounds.height
-            
-            // Create a frame for the second tab item
-            let secondTabFrame = CGRect(
-                x: secondTabX,
-                y: 0,
-                width: tabWidth,
-                height: tabBarHeight
-            )
-            
-            // Convert this frame to the tab bar controller's view coordinates
-            let buttonFrame = tabBarController.tabBar.convert(secondTabFrame, to: tabBarController.view)
-            
-            // Create and configure the focus view
-            let focusView = FocusView()
-            focusView.translatesAutoresizingMaskIntoConstraints = false
-            focusView.shapeType = .circle
-            focusView.alpha = 0
-            focusView.isUserInteractionEnabled = true
-            
-            let instructionLabel = UILabel()
-            instructionLabel.font = .systemFont(ofSize: 20, weight: .medium)
-            instructionLabel.textColor = .white
-            instructionLabel.textAlignment = .center
-            instructionLabel.numberOfLines = 0
-            instructionLabel.text = "Let's go check back in on Maow"
-            instructionLabel.translatesAutoresizingMaskIntoConstraints = false
-            instructionLabel.alpha = 0
-            
-            tabBarController.view.addSubview(focusView)
-            tabBarController.view.addSubview(instructionLabel)
-            
-            NSLayoutConstraint.activate([
-                focusView.topAnchor.constraint(equalTo: tabBarController.view.topAnchor, constant: -20),
-                focusView.leadingAnchor.constraint(equalTo: tabBarController.view.leadingAnchor),
-                focusView.trailingAnchor.constraint(equalTo: tabBarController.view.trailingAnchor),
-                focusView.bottomAnchor.constraint(equalTo: tabBarController.view.bottomAnchor, constant: -20),
-                
-                instructionLabel.bottomAnchor.constraint(equalTo: tabBarController.tabBar.topAnchor, constant: -40),
-                instructionLabel.centerXAnchor.constraint(equalTo: tabBarController.tabBar.centerXAnchor, constant: tabWidth/2),
-                instructionLabel.leadingAnchor.constraint(greaterThanOrEqualTo: tabBarController.view.leadingAnchor, constant: 40),
-                instructionLabel.trailingAnchor.constraint(lessThanOrEqualTo: tabBarController.view.trailingAnchor, constant: -40)
-            ])
-            
-            // Set the focus area
-            let paddedFrame = buttonFrame.insetBy(dx: -10, dy: -10)
-            focusView.ovalRect = paddedFrame
-            
-            // Animate the focus view appearance
-            UIView.animate(withDuration: 0.3) {
-                focusView.alpha = 1.0
-                instructionLabel.alpha = 1.0
-            }
-            
-            // Add tap gesture recognizer to the focus view
-            let tapGesture = UITapGestureRecognizer(target: nil, action: nil)
-            
-            // Use closure-based handler for the tap gesture
-            tapGesture.addTarget { [weak tabBarController, weak focusView, weak instructionLabel] _ in
-                // Check if we still have the tab bar controller
-                guard let tabBarController = tabBarController else { return }
-                
-                // Get the tap location
-                let location = tapGesture.location(in: focusView)
-                
-                // Check if the tap is within the highlighted area
-                let isInHighlightedArea: Bool
-                switch focusView?.shapeType {
-                case .circle:
-                    // For circle, check if distance from center is less than radius
-                    if let focusView = focusView {
-                        let diameter = min(paddedFrame.width, paddedFrame.height)
-                        let radius = diameter / 2
-                        let centerX = paddedFrame.midX
-                        let centerY = paddedFrame.midY
-                        
-                        let dx = location.x - centerX
-                        let dy = location.y - centerY
-                        let distance = sqrt(dx*dx + dy*dy)
-                        
-                        isInHighlightedArea = distance <= radius
-                    } else {
-                        isInHighlightedArea = false
-                    }
-                    
-                case .roundedRect:
-                    // For rounded rect, check if point is inside the rect
-                    isInHighlightedArea = paddedFrame.contains(location)
-                    
-                default:
-                    isInHighlightedArea = false
-                }
-                
-                // If tap is in the highlighted area, select the second tab
-                if isInHighlightedArea {
-                    // Switch to the maow tab
-                    tabBarController.selectedIndex = 1
-                    
-                    // Animate out the focus view and instruction label
-                    UIView.animate(withDuration: 0.3, animations: {
-                        focusView?.alpha = 0
-                        instructionLabel?.alpha = 0
-                    }, completion: { _ in
-                        focusView?.removeFromSuperview()
-                        instructionLabel?.removeFromSuperview()
-                    })
-                }
-            }
-            
-            focusView.addGestureRecognizer(tapGesture)
-        }
+        guard let coordinator = coordinator else { return }
+        coordinator.switchToMaow()
     }
 }
 
@@ -1024,25 +867,5 @@ extension HabitListViewController {
         })
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
-    }
-}
-
-extension UIViewController {
-    func parentTabBarController<T: UITabBarController>(ofType type: T.Type) -> T? {
-        // check if direct parent is the desired tab bar controller type
-        if let tabBarController = tabBarController as? T {
-            return tabBarController
-        }
-        
-        // walk up the hierarchy
-        var parent = self.parent
-        while parent != nil {
-            if let tabBarController = parent as? T {
-                return tabBarController
-            }
-            parent = parent?.parent
-        }
-        
-        return nil
     }
 }

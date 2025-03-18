@@ -6,13 +6,9 @@ It supports users putting in their own habits via the textfield or a list of pre
 import Foundation
 import UIKit
 
-protocol SelectHabitViewControllerDelegate: AnyObject {
-    func selectHabitViewControllerDidDismiss(_ viewController: SelectHabitViewController)
-}
-
 class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Declaration
-    weak var delegate: SelectHabitViewControllerDelegate?
+    weak var coordinator: OnboardingCoordinator?
     var habitData = HabitData()
     var habitButtons: [UIButton] = []
     let predefinedHabits = ["Read", "Meditate", "Skincare Routine", "Learn a New Language", "Journal", "Exercise", "Walk", "Drink More Water", "Wake Up on Time", "Bedtime Routine", "Stretching", "Brush Teeth", "Gym", "Cold Showers", "Yoga", "Quality Time", "Gratitude Journal", "Floss", "Spend Time in Nature", "Pray", "Random Act of Kindness", "Save", "Draw", "Play the Guitar", "Martial Arts", "Take a Break", "Write", "Clean Room", "Water Plants", "Take off Makeup", "Shave", "Feed Pets"]
@@ -111,9 +107,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }()
     
     // for the onboarding process
-    var isOnboarding = false
     private var useDeviceButton: UIButton?
-    var selectTimeVC: SelectTimeViewController? = nil
     
     private lazy var focusView: FocusView = {
         let view = FocusView()
@@ -167,8 +161,14 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if isOnboarding {
+        
+        if coordinator != nil {
+            print("coordinatinwietnwewt")
+        }
+        
+        if coordinator != nil && useDeviceButton != nil {
             showFocusOnUseDevice()
+            print("presenting focus on use device")
         }
     }
     
@@ -223,11 +223,12 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     private func setupHabitButtons() {
-        if isOnboarding {
+        if coordinator != nil { // onboarding currently
             let button = createHabitButton(with: "Check in on Maow")
             habitsStackView.addArrangedSubview(button)
             habitButtons.append(button)
             useDeviceButton = button
+            print("checkign use device button is here")
         }
         
         for habit in predefinedHabits {
@@ -350,12 +351,10 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
             }
         } else {
             //create and push the next view controller
-            if let timeVC = selectTimeVC {
-                if isOnboarding {
-                    timeVC.isOnboarding = true
-                } else {
-                    print("something weird - timevc but not onboarding")
-                }
+            if let coordinator = coordinator { // currently onboarding
+                coordinator.showHabitTime(habitData: habitData)
+            } else {
+                let timeVC = SelectTimeViewController()
                 
                 let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
                 navigationItem.backBarButtonItem = backButton
@@ -364,20 +363,6 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
                 // send info forward
                 timeVC.habitData = habitData
                 navigationController?.pushViewController(timeVC, animated: true)
-            } else {
-                if isOnboarding {
-                    print("something weird - no timevc but onboarding")
-                } else {
-                    let timeVC = SelectTimeViewController()
-                    
-                    let backButton = UIBarButtonItem(title: "", style: .plain, target: self, action: #selector(backButtonTapped))
-                    navigationItem.backBarButtonItem = backButton
-                    self.navigationController?.navigationBar.tintColor = .white
-                    
-                    // send info forward
-                    timeVC.habitData = habitData
-                    navigationController?.pushViewController(timeVC, animated: true)
-                }
             }
         }
     }
@@ -387,7 +372,10 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc private func dismissSelf() {
-        delegate?.selectHabitViewControllerDidDismiss(self)
+        if let coordinator = coordinator { // only call if somehow user pressed it during onboarding
+            coordinator.dismissHabitCreationFlow(didCompleteHabitCreation: false)
+        }
+        
         self.dismiss(animated: true, completion: nil)
     }
     
@@ -410,9 +398,13 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     // MARK: - Onboarding
-    private func showFocusOnUseDevice() {
+    func showFocusOnUseDevice() {
+        print("focusing")
         guard let useDeviceButton = useDeviceButton else { return }
+        print("button present")
         guard let window = view.window else { return }
+        
+        print("focusing still")
         
         window.addSubview(focusView)
         focusView.shapeType = .roundedRect(cornerRadius: 12)
@@ -442,6 +434,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         focusView.isHidden = false
         
         UIView.animate(withDuration: 0.3) {
+            print("animating")
             self.onboardingLabel.alpha = 1.0
             self.focusView.alpha = 1.0
         }

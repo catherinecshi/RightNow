@@ -4,6 +4,12 @@ import FirebaseAuth
 //import FBSDKCoreKit
 //import FBSDKLoginKit
 
+protocol AuthAPI {
+    func login(email: String, password: String) -> Future<User?, Never>
+    func signUp(email: String, password: String) -> Future<User?, Never>
+    //func loginWithFacebook() -> Future<User?, Never>
+}
+
 class AuthService: AuthAPI {
     /*
     func loginWithFacebook() -> Future<User?, Never> {

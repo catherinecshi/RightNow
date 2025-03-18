@@ -1,15 +1,10 @@
 import Foundation
 import UIKit
 
-protocol SelectTimeDelegate: AnyObject {
-    func didCompleteOnboarding()
-}
-
 class SelectTimeViewController: UIViewController {
     // MARK: - Declaration
-    var repo = HabitRepository.shared
     var habitData: HabitData!
-    weak var delegate: SelectTimeDelegate?
+    weak var coordinator: OnboardingCoordinator?
     
     let daysOfWeek = TimeFormatter.allDays
     var selectedDays = [String: Bool]()
@@ -70,8 +65,6 @@ class SelectTimeViewController: UIViewController {
     }()
     
     // for the onboarding process
-    var isOnboarding = false
-    
     private lazy var focusView: FocusView = {
         let view = FocusView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -119,7 +112,7 @@ class SelectTimeViewController: UIViewController {
         return label
     }()
     
-    //MARK: - Lifecycle Methods
+    // MARK: - Lifecycle Methods
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -136,17 +129,7 @@ class SelectTimeViewController: UIViewController {
         setupTimePicker()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        if isOnboarding {
-            Task {
-                await onboardingSequence()
-            }
-        }
-    }
-    
-    //MARK: - Setup UI
+    // MARK: - Setup UI
     
     private func setupTitle() {
         view.addSubview(viewTitle)
@@ -241,7 +224,7 @@ class SelectTimeViewController: UIViewController {
         view.addSubview(nextButton)
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         
-        if isOnboarding {
+        if let _ = coordinator { // user onboarding
             nextButton.setTitle("Save", for: .normal)
         }
         
@@ -255,7 +238,7 @@ class SelectTimeViewController: UIViewController {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
-    //MARK: - Actions
+    // MARK: - Actions
     
     @objc private func dayButtonTapped(_ sender: UIButton) {
         // toggle selection
@@ -269,26 +252,9 @@ class SelectTimeViewController: UIViewController {
     }
     
     @objc private func nextButtonTapped() {
-        if isOnboarding {
-            // save the habitData
-            let habitDate = TimeFormatter.hourMinuteToDate(hour: habitData.hour ?? 9, minute: habitData.minute ?? 0)
-            let newHabit = Habit(id: UUID(),
-                                 name: habitData.name!,
-                                 description: "",
-                                 time: habitDate!,
-                                 daysOfTheWeek: habitData.selectedDays!,
-                                 accountabilityMetric: habitData.accountabilityMetric ?? .selfTracking,
-                                 location: habitData.location,
-                                 incentive: habitData.incentive ?? .none,
-                                 notificationEnabled: false,
-                                 totalDone: 0,
-                                 totalFailed: 0,
-                                 streaks: 0,
-                                 lastUpdateDate: Date())
-            
-            repo.addHabit(newHabit)
-            
-            finishOnboarding()
+        if let coordinator = coordinator { // user onboarding
+            coordinator.finishHabitCreation(habitData: habitData)
+            dismissSelf()
         } else {
             //create and push the next view controller
             //let accountabilityVC = AccountabilityViewController()
@@ -316,7 +282,7 @@ class SelectTimeViewController: UIViewController {
     }
     
     // MARK: - Onboarding
-    private func onboardingSequence() async {
+    func onboardingSequence() async {
         // make sure the user can't tap on anything while waiting for the animations
         await InteractionBlocker.shared.blockInteractions(on: self.view)
         
@@ -528,14 +494,6 @@ class SelectTimeViewController: UIViewController {
                 }
             }
         })
-    }
-    
-    func finishOnboarding() {
-        // notify delegate before dismissing
-        delegate?.didCompleteOnboarding()
-        
-        // disimiss
-        dismissSelf()
     }
 }
 
