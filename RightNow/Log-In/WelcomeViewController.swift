@@ -2,6 +2,7 @@ import UIKit
 import Combine
 import GoogleSignIn
 
+/// Presents Welcome Screen when the user is not logged in
 class WelcomeViewController: UIViewController {
     var viewModel: WelcomeViewModel
     var state: AppState
@@ -15,7 +16,9 @@ class WelcomeViewController: UIViewController {
     private var signUpButton: UIButton!
     private var googleSignInButton: UIButton!
     private var guestButton: UIButton!
-
+    
+    /// Initializes Screen with application state
+    /// Takes AppState, which contains information about currentUser
     init(state: AppState) {
         self.state = state
         self.viewModel = WelcomeViewModel(state: state)
@@ -29,7 +32,7 @@ class WelcomeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        setupViews()
+        setupUI()
         bindViewModel()
     }
     
@@ -38,9 +41,10 @@ class WelcomeViewController: UIViewController {
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
-    func setupViews() {
+    /// Creates and configures all UI elements
+    /// Arranges elements based on a frame-based layout
+    func setupUI() {
         // Logo ImageView
-        
         let logoImageView = UIImageView(image: UIImage(named: "AppIcon"))
         logoImageView.contentMode = .scaleAspectFit
         logoImageView.tintColor = UIConfiguration.tintColor
@@ -116,6 +120,8 @@ class WelcomeViewController: UIViewController {
         guestButton.frame = CGRect(x: 20, y: googleSignInButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
     }
     
+    /// Establishes Combine bindings to view model
+    /// Observes authentication status changes and handles navigation
     private func bindViewModel() {
         viewModel.$statusViewModel
             .compactMap { $0 } // filters out nil values
@@ -152,6 +158,8 @@ class WelcomeViewController: UIViewController {
         viewModel.continueAsGuest()
     }
     
+    /// Handles navigation to different screens depending on user input
+    /// Takes index - indicator of where to navigate to
     private func navigateToDestination(index: Int) {
         let viewController: UIViewController
         switch index {

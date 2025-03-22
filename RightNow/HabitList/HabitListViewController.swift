@@ -257,7 +257,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         let size: CGFloat = 80
         
         addButton = UIButton(frame: CGRect(x: 0, y: 0, width: size, height: size))
-        addButton.backgroundColor = UIColor(hexString: "#ff5a66")
+        addButton.backgroundColor = UIConfiguration.tintColor
         addButton.layer.cornerRadius = size / 2
         addButton.translatesAutoresizingMaskIntoConstraints = false
         

@@ -1,14 +1,14 @@
-import Foundation
-
+ /// User Object representing authenticated user
 struct User {
+    /// Types of ways the user can be logged in
     enum LoginType {
         case email
         case guest
         case google
     }
     
-    let id: String
-    let email: String?
+    let id: String // UID used when retrieving data from Firestore
+    let email: String? // if the user logged in using email
     let loginType: LoginType
     let isAnonymous: Bool
     

@@ -2,10 +2,20 @@ import Combine
 import UIKit
 import FirebaseAuth
 
+/// View controller for email/password sign up screen
 class SignUpViewController: UIViewController {
-    
     private var viewModel: SignUpViewModel!
     private var cancellableBag: Set<AnyCancellable> = []
+    
+    // in the navigation bar
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Sign Up"
+        label.font = UIConfiguration.titleFont
+        label.textColor = UIConfiguration.tintColor
+        label.textAlignment = .center
+        return label
+    }()
     
     private let emailTextField: UITextField = {
         let tf = UITextField()
@@ -46,22 +56,15 @@ class SignUpViewController: UIViewController {
     lazy private var signUpButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Create Account", for: .normal)
-        button.backgroundColor = UIColor(hexString: "#ff5a66")
+        button.backgroundColor = UIConfiguration.tintColor
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 8
         button.addTarget(self, action: #selector(signUpButtonTapped), for: .touchUpInside)
         return button
     }()
     
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Sign Up"
-        label.font = UIConfiguration.titleFont
-        label.textColor = UIConfiguration.tintColor
-        label.textAlignment = .center
-        return label
-    }()
-    
+    /// Initializes Screen with application state
+    /// Takes AppState, which contains information about currentUser
     init(state: AppState) {
         self.viewModel = SignUpViewModel(state: state)
         super.init(nibName: nil, bundle: nil)
@@ -87,6 +90,7 @@ class SignUpViewController: UIViewController {
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
+    /// Sets up stack of relevant UI elements
     private func setupUI() {
         view.backgroundColor = .white
         let stackView = UIStackView(arrangedSubviews: [
@@ -114,25 +118,33 @@ class SignUpViewController: UIViewController {
         ])
     }
     
+    /// Calls publisher methods and initiates sign up process
     @objc private func signUpButtonTapped() {
         emailChanged()
         passwordChanged()
         confirmPasswordChanged()
+        
         viewModel.signUp()
     }
     
+    /// Updates model with changed email value
     @objc private func emailChanged() {
         viewModel.email = emailTextField.text ?? ""
     }
-
+    
+    /// Updates model with changed password value
     @objc private func passwordChanged() {
         viewModel.password = passwordTextField.text ?? ""
     }
     
+    /// Updates model with changed confirm password value
     @objc private func confirmPasswordChanged() {
         viewModel.passwordConfirmation = confirmPasswordTextField.text ?? ""
     }
     
+    /// Establishes Combine bindings to view model
+    /// Observes authentication status changes and handles navigation
+    /// Checks and make sure the password and confirm password fields have the same values
     private func bindViewModel() {
         viewModel.$statusViewModel
             .compactMap { $0 } // Filters out nil values
@@ -168,9 +180,12 @@ class SignUpViewController: UIViewController {
             .store(in: &cancellableBag)
     }
     
+    /// Handles navigation to the main tab bar for the app
+    /// Uses custom transition to present main tab bar
     func transitionToMainApp() {
         // Create our tab bar controller
         let tabBarController = TabBarController()
+        tabBarController.selectedIndex = 1
         
         // Create a transition animation
         let transition = CATransition()
@@ -187,14 +202,4 @@ class SignUpViewController: UIViewController {
         }
     }
 
-}
-
-extension UIColor {
-    convenience init?(hexString: String) {
-        let chars = Array(hexString.dropFirst())
-        self.init(red: CGFloat(strtoul(String(chars[0...1]), nil, 16)) / 255,
-                  green: CGFloat(strtoul(String(chars[2...3]), nil, 16)) / 255,
-                  blue: CGFloat(strtoul(String(chars[4...5]), nil, 16)) / 255,
-                  alpha: 1.0)
-    }
 }

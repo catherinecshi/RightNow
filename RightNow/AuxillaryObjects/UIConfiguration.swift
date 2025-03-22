@@ -15,3 +15,13 @@ class UIConfiguration {
     static let buttonColor = UIColor(hexString: "#414665")
     static let buttonBorderColor = UIColor(hexString: "#B0B3C6")
 }
+
+extension UIColor {
+    convenience init?(hexString: String) {
+        let chars = Array(hexString.dropFirst())
+        self.init(red: CGFloat(strtoul(String(chars[0...1]), nil, 16)) / 255,
+                  green: CGFloat(strtoul(String(chars[2...3]), nil, 16)) / 255,
+                  blue: CGFloat(strtoul(String(chars[4...5]), nil, 16)) / 255,
+                  alpha: 1.0)
+    }
+}

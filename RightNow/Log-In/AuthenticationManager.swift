@@ -3,6 +3,7 @@ import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
 
+/// Types of Errors Authentication Manager can throw
 enum AuthError: Error {
     case missingClientID
     case signInCancelled
@@ -12,45 +13,98 @@ enum AuthError: Error {
     case notAnonymous
 }
 
+/// Handles all interaction with FirebaseAuth from authentication models
 class AuthenticationManager {
     static let shared = AuthenticationManager()
     
     @Published private(set) var currentUser: User?
-    @Published private(set) var isLoading: Bool = false
+    @Published private(set) var isLoading: Bool = false // flag for when an operation is processing
     private var cancellables = Set<AnyCancellable>()
 
+    /// Returns true when user is logged in
     var isUserAuthenticated: Bool {
         return Auth.auth().currentUser != nil
     }
     
+    /// Returns true when the current user is anonymously logged in
     var isAnonymous: Bool {
         return Auth.auth().currentUser?.isAnonymous ?? false
     }
     
+    /// Initializes Authentication Manager
+    /// - Establishes Firebase authentication state listener for
+    ///     - Sign-ins
+    ///     - Sign-outs
+    ///     - Session expirations
+    ///     - Authentication revocations
+    /// - Updates currentUser accordingly
     private init() {
-        // set up auth state observer
         Auth.auth().addStateDidChangeListener { [weak self] (_, firebaseUser) in
+            guard let self = self else { return }
+            
             if let firebaseUser = firebaseUser {
-                // User signed in
+                let loginType = self.determineLoginType(from: firebaseUser)
+                
                 let user = User(
                     id: firebaseUser.uid,
                     email: firebaseUser.email,
+                    loginType: loginType,
                     isAnonymous: firebaseUser.isAnonymous
                 )
-                self?.currentUser = user
+                self.currentUser = user
             } else {
-                // User signed out
-                self?.currentUser = nil
+                self.currentUser = nil
             }
         }
     }
     
-    // Login with email
+    /// Determines login type using Firebase authentication provider data
+    ///
+    /// Parameter
+    /// - firebaseUser : Firebase user object
+    ///     - contains authentication data
+    ///
+    /// Returns
+    /// - User.LoginType
+    ///     - logintype for user
+    private func determineLoginType(from firebaseUser: FirebaseAuth.User) -> User.LoginType {
+        if firebaseUser.isAnonymous {
+            return .guest
+        }
+        
+        // If user has provider data, check the first provider
+        if !firebaseUser.providerData.isEmpty {
+            let providerId = firebaseUser.providerData[0].providerID
+            
+            switch providerId {
+            case "google.com":
+                return .google
+            case "password":
+                return .email
+            default:
+                return .guest
+            }
+        }
+        
+        return .guest
+    }
+    
+    /// Authenticates user with email and password credentials
+    /// Updates currentUser upon successful authentication
+    ///
+    /// Parameters:
+    /// - email : String
+    ///     - User's email address
+    /// - password : String
+    ///     - User's password
+    ///
+    /// Returns:
+    /// - User object
     func login(email: String, password: String) -> Future<User?, Error> {
         isLoading = true
         return Future { [weak self] promise in
             Auth.auth().signIn(withEmail: email, password: password) { (result, error) in
-                self?.isLoading = false
+                self?.isLoading = false // finished processing
                 
                 if let error = error {
                     promise(.failure(error))
@@ -73,12 +127,22 @@ class AuthenticationManager {
         }
     }
     
-    // Sign up with email
+    /// Creates new user with provided email and password
+    /// Updates currentUser upon successful creation
+    ///
+    /// Parameters:
+    /// - email : String
+    ///     - email address for new account
+    /// - password : String
+    ///     - password for new account
+    ///
+    /// Returns:
+    /// - User object
     func signUp(email: String, password: String) -> Future<User?, Error> {
         isLoading = true
         return Future { [weak self] promise in
             Auth.auth().createUser(withEmail: email, password: password) { (result, error) in
-                self?.isLoading = false
+                self?.isLoading = false // finished processing
                 
                 if let error = error {
                     promise(.failure(error))
@@ -101,7 +165,21 @@ class AuthenticationManager {
         }
     }
     
-    // sign in with google
+    /// Authenticates user with Google Sign-In
+    /// Updates currentUser upon successful authentication
+    ///
+    /// Parameters:
+    /// - presentingViewController : UIViewController
+    ///     - viewcontroller upon which to present google sign in UI
+    ///
+    /// Returns:
+    /// - User Object
+    ///
+    /// Throws:
+    /// - AuthError.missingClientID
+    ///     - if the firebase configuration lacks google client id
+    /// - AuthError.missingCrendentials
+    ///     - if authentication succeeds but required tokens are missing
     func googleSignIn(presentingViewController: UIViewController) -> Future<User?, Error> {
         isLoading = true
         return Future { [weak self] promise in
@@ -173,7 +251,11 @@ class AuthenticationManager {
         }
     }
     
-    // Sign in anonymously
+    /// Anonymous sign in using Firebase
+    /// Updates currentUser upon successful authentication
+    ///
+    /// Returns:
+    /// - User Object
     func signInAnonymously() -> Future<User?, Error> {
         isLoading = true
         return Future { [weak self] promise in
@@ -201,7 +283,17 @@ class AuthenticationManager {
         }
     }
     
-    // Convert anonymous user to permanent account
+    /// Links an anonymous to a permanent email/password account
+    /// Updates currentUser upon successful authentication
+    ///
+    /// Parameters:
+    /// - email : String
+    ///     - email address to be linked
+    /// - password : String
+    ///     - password to be linked
+    ///
+    /// Returns:
+    /// - User Object
     func convertAnonymousUserWithEmail(email: String, password: String) -> Future<User?, Error> {
         isLoading = true
         return Future { [weak self] promise in
@@ -237,7 +329,24 @@ class AuthenticationManager {
         }
     }
     
-    // Convert anonymous user to Google account
+    /// Links an anonymous to a permanent account with Google credentials
+    /// Updates currentUser upon successful authentication
+    ///
+    /// Parameters:
+    /// - presentingViewController : UIViewController
+    ///     - view controller to present the google sign in UI upon
+    ///
+    /// Returns:
+    /// - User Object
+    ///
+    /// Throws:
+    /// - AuthError.notAnonymous
+    ///     - user didn't start as anonymous user
+    /// - AuthError.missingClientID
+    ///     - if firebase configuration lacks a google client ID
+    /// - AuthError.missingCredentials
+    ///     - google authentication succeeds but required tokens are missing
+    @MainActor
     func convertAnonymousUserWithGoogle(presentingViewController: UIViewController) async throws -> User {
         guard let currentUser = Auth.auth().currentUser, currentUser.isAnonymous else {
             throw AuthError.notAnonymous
@@ -289,11 +398,19 @@ class AuthenticationManager {
         }
     }
     
-    // Sign out
+    /// Signs out current user out of firebase and session
+    /// Throws firebase authentication error if sign out fails
     func signOut() -> Future<Void, Error> {
         return Future { promise in
             do {
+                if let uid = Auth.auth().currentUser?.uid {
+                    print("Current user UID \(uid)")
+                }
+                Task { // clear local storage so it won't appear when the log into another account
+                    await HabitRepository.shared.clearLocalData()
+                }
                 try Auth.auth().signOut()
+                AppState.shared.currentUser = nil
                 promise(.success(()))
             } catch let error {
                 promise(.failure(error))

@@ -1,10 +1,6 @@
-import SwiftUI
-
-class AppState: ObservableObject {
-    static let shared = AppState() // make singleton
+/// Stores reference to current user that is maintained through a session
+class AppState {
+    static let shared = AppState()
     
-    @Published var user: User?
     var currentUser: User?
-    var notificationHabitID: String?
-    var actionIdentifier: String?
 }

@@ -2,19 +2,26 @@ import Combine
 import Foundation
 import UIKit
 
+/// Corresponding model for AccountConversionViewController
 class AccountConversionViewModel: ObservableObject {
     @Published var email: String = ""
     @Published var password: String = ""
     @Published var passwordConfirmation: String = ""
     @Published var passwordsMatch: Bool = true
-    @Published var statusViewModel: StatusViewModel?
+    @Published var statusViewModel: AuthenticationStatus?
     
     private var cancellableBag = Set<AnyCancellable>()
     private let authManager: AuthenticationManager
     
+    /// Initializes model with link to central authentication manager
     init(authManager: AuthenticationManager = .shared) {
         self.authManager = authManager
-        
+        setupValidation()
+    }
+    
+    /// Checks if password and confirm password values match
+    /// Take values from publishers in view controller and checks if they match
+    private func setupValidation() {
         // Set up publisher to check if passwords match
         Publishers.CombineLatest($password, $passwordConfirmation)
             .map { password, confirmation in
@@ -25,31 +32,36 @@ class AccountConversionViewModel: ObservableObject {
             .assign(to: &$passwordsMatch)
     }
     
+    /// Initializes account conversion process with email/password credentials
+    /// Prevents account from being created with certain errors
+    /// - if any fields are empty
+    /// - if password is less than 6 characters long
+    /// - if user is somehow not anonymous
     func convertAccount() {
         // Basic validation
         guard !email.isEmpty else {
-            statusViewModel = StatusViewModel(title: "Error", message: "Please enter your email address")
+            statusViewModel = AuthenticationStatus(title: "Error", message: "Please enter your email address")
             return
         }
         
         guard !password.isEmpty else {
-            statusViewModel = StatusViewModel(title: "Error", message: "Please enter a password")
+            statusViewModel = AuthenticationStatus(title: "Error", message: "Please enter a password")
             return
         }
         
         guard passwordsMatch else {
-            statusViewModel = StatusViewModel(title: "Error", message: "Passwords do not match")
+            statusViewModel = AuthenticationStatus(title: "Error", message: "Passwords do not match")
             return
         }
         
         guard password.count >= 6 else {
-            statusViewModel = StatusViewModel(title: "Error", message: "Password must be at least 6 characters")
+            statusViewModel = AuthenticationStatus(title: "Error", message: "Password must be at least 6 characters")
             return
         }
         
         // Check if the user is anonymous
         if !authManager.isAnonymous {
-            statusViewModel = StatusViewModel(title: "Error", message: "You're already signed in with an account")
+            statusViewModel = AuthenticationStatus(title: "Error", message: "You're already signed in with an account")
             return
         }
         
@@ -59,7 +71,7 @@ class AccountConversionViewModel: ObservableObject {
             .sink(
                 receiveCompletion: { [weak self] completion in
                     if case .failure(let error) = completion {
-                        self?.statusViewModel = StatusViewModel(
+                        self?.statusViewModel = AuthenticationStatus(
                             title: "Account Creation Failed",
                             message: error.localizedDescription
                         )
@@ -67,12 +79,12 @@ class AccountConversionViewModel: ObservableObject {
                 },
                 receiveValue: { [weak self] user in
                     if user != nil {
-                        self?.statusViewModel = StatusViewModel(
+                        self?.statusViewModel = AuthenticationStatus(
                             title: "Successful",
                             message: "Your account has been created successfully"
                         )
                     } else {
-                        self?.statusViewModel = StatusViewModel(
+                        self?.statusViewModel = AuthenticationStatus(
                             title: "Error",
                             message: "Failed to create account"
                         )
@@ -82,10 +94,13 @@ class AccountConversionViewModel: ObservableObject {
             .store(in: &cancellableBag)
     }
     
+    
+    /// Converts user with google credentials
+    /// Takes viewController - view controller the google sign in UI will appear upon
     func convertWithGoogle(from viewController: UIViewController) {
         // Check if the user is anonymous
         if !authManager.isAnonymous {
-            statusViewModel = StatusViewModel(title: "Error", message: "You're already signed in with an account")
+            statusViewModel = AuthenticationStatus(title: "Error", message: "You're already signed in with an account")
             return
         }
         
@@ -93,14 +108,14 @@ class AccountConversionViewModel: ObservableObject {
             do {
                 let user = try await authManager.convertAnonymousUserWithGoogle(presentingViewController: viewController)
                 DispatchQueue.main.async { [weak self] in
-                    self?.statusViewModel = StatusViewModel(
+                    self?.statusViewModel = AuthenticationStatus(
                         title: "Successful",
                         message: "Your account has been created successfully"
                     )
                 }
             } catch {
                 DispatchQueue.main.async { [weak self] in
-                    self?.statusViewModel = StatusViewModel(
+                    self?.statusViewModel = AuthenticationStatus(
                         title: "Google Sign-In Failed",
                         message: error.localizedDescription
                     )

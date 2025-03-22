@@ -2,8 +2,8 @@ import Combine
 import UIKit
 import FirebaseAuth
 
+/// View controller for email/password log in screen
 class SignInViewController: UIViewController {
-    
     private let viewModel: SignInViewModel
     private var cancellableBag: Set<AnyCancellable> = []
     
@@ -22,6 +22,7 @@ class SignInViewController: UIViewController {
         return tf
     }()
     
+    // at the top of the view
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Sign In"
@@ -31,6 +32,18 @@ class SignInViewController: UIViewController {
         return label
     }()
     
+    private lazy var loginButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Log In", for: .normal)
+        button.backgroundColor = UIConfiguration.tintColor
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
+    /// Initializes Screen with application state
+    /// Takes AppState, which contains information about currentUser
     init(state: AppState) {
         self.viewModel = SignInViewModel(state: state)
         super.init(nibName: nil, bundle: nil)
@@ -56,9 +69,14 @@ class SignInViewController: UIViewController {
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
+    /// Sets up stack of relevant UI elements
     private func setupUI() {
         view.backgroundColor = .white
-        let stackView = UIStackView(arrangedSubviews: [titleLabel, emailTextField, passwordTextField, loginButton])
+        
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, 
+                                                       emailTextField,
+                                                       passwordTextField,
+                                                       loginButton])
         stackView.axis = .vertical
         stackView.spacing = 20
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -72,6 +90,7 @@ class SignInViewController: UIViewController {
         ])
     }
     
+    /// Calls publisher methods and initiates login process
     @objc func loginButtonTapped() {
         emailChanged()
         passwordChanged()
@@ -79,24 +98,18 @@ class SignInViewController: UIViewController {
         viewModel.login()
     }
     
+    /// Updates model with changed email value
     @objc private func emailChanged() {
         viewModel.email = emailTextField.text ?? ""
     }
     
+    /// Updates model with changed password value
     @objc private func passwordChanged() {
         viewModel.password = passwordTextField.text ?? ""
     }
     
-    lazy private var loginButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Log In", for: .normal)
-        button.backgroundColor = UIColor(hexString: "#ff5a66")
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 8
-        button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
-        return button
-    }()
-    
+    /// Establishes Combine bindings to view model
+    /// Observes authentication status changes and handles navigation
     private func bindViewModel() {
         viewModel.$statusViewModel
             .compactMap { $0 } //filters out nil values
@@ -113,9 +126,11 @@ class SignInViewController: UIViewController {
             .store(in: &cancellableBag)
     }
     
+    /// Handles navigation to main app
+    /// Uses custom transition swiping
     func transitionToMainApp() {
-        // Create our tab bar controller
         let tabBarController = TabBarController()
+        tabBarController.selectedIndex = 1
         
         // Create a transition animation
         let transition = CATransition()

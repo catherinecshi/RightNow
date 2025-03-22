@@ -24,7 +24,7 @@
 		FB22A7E12AB7E48400F63D42 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FB22A7E02AB7E48400F63D42 /* GoogleService-Info.plist */; };
 		FB22A7E82AB7E52E00F63D42 /* SignInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB22A7E72AB7E52E00F63D42 /* SignInViewModel.swift */; };
 		FB22A7EA2AB7E56100F63D42 /* SignUpViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB22A7E92AB7E56100F63D42 /* SignUpViewModel.swift */; };
-		FB22A7EC2AB7E58200F63D42 /* StatusViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB22A7EB2AB7E58200F63D42 /* StatusViewModel.swift */; };
+		FB22A7EC2AB7E58200F63D42 /* AuthenticationStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB22A7EB2AB7E58200F63D42 /* AuthenticationStatus.swift */; };
 		FB22A7EE2AB7E5F700F63D42 /* SignUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB22A7ED2AB7E5F700F63D42 /* SignUpViewController.swift */; };
 		FB22A7F02AB7E64D00F63D42 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB22A7EF2AB7E64D00F63D42 /* SignInViewController.swift */; };
 		FB22A7F62AB7E7B200F63D42 /* SplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB22A7F52AB7E7B200F63D42 /* SplashViewController.swift */; };
@@ -137,7 +137,7 @@
 		FB22A7E02AB7E48400F63D42 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		FB22A7E72AB7E52E00F63D42 /* SignInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInViewModel.swift; sourceTree = "<group>"; };
 		FB22A7E92AB7E56100F63D42 /* SignUpViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpViewModel.swift; sourceTree = "<group>"; };
-		FB22A7EB2AB7E58200F63D42 /* StatusViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusViewModel.swift; sourceTree = "<group>"; };
+		FB22A7EB2AB7E58200F63D42 /* AuthenticationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationStatus.swift; sourceTree = "<group>"; };
 		FB22A7ED2AB7E5F700F63D42 /* SignUpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpViewController.swift; sourceTree = "<group>"; };
 		FB22A7EF2AB7E64D00F63D42 /* SignInViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInViewController.swift; sourceTree = "<group>"; };
 		FB22A7F52AB7E7B200F63D42 /* SplashViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashViewController.swift; sourceTree = "<group>"; };
@@ -365,7 +365,7 @@
 		FB22A7D52AB7E39000F63D42 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				FB22A7EB2AB7E58200F63D42 /* StatusViewModel.swift */,
+				FB22A7EB2AB7E58200F63D42 /* AuthenticationStatus.swift */,
 				FB22A7D62AB7E3A000F63D42 /* AppState.swift */,
 				FB22A7DA2AB7E3D400F63D42 /* User.swift */,
 			);
@@ -771,7 +771,7 @@
 				FB6E527B2AE201F500499E1C /* HabitListView.swift in Sources */,
 				FB22A7F92AB7E80D00F63D42 /* WelcomeViewController.swift in Sources */,
 				FB61E8A82D8AED540012E7F4 /* AuthenticationManager.swift in Sources */,
-				FB22A7EC2AB7E58200F63D42 /* StatusViewModel.swift in Sources */,
+				FB22A7EC2AB7E58200F63D42 /* AuthenticationStatus.swift in Sources */,
 				FBC573E12D7A6BD50063E90C /* OnboardingViewController.swift in Sources */,
 				FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */,
 				FBC573E52D7BA04B0063E90C /* OnboardingTaskBarController.swift in Sources */,

@@ -1,7 +1,15 @@
 import UIKit
 import Combine
 
+/// Informs SettingsVC of account conversion success
+protocol AccountConversionDelegate: AnyObject {
+    func conversionDidComplete(successfully: Bool)
+}
+
+/// View controller for an anonymous user trying to link a permanent account login type
+/// Currently handles linking with email/password logintype and google sign in
 class AccountConversionViewController: UIViewController {
+    weak var delegate: AccountConversionDelegate?
     var viewModel: AccountConversionViewModel
     private var cancellableBag: Set<AnyCancellable> = []
     
@@ -16,8 +24,9 @@ class AccountConversionViewController: UIViewController {
     private var convertButton: UIButton!
     private var googleSignInButton: UIButton!
     
-    init(viewModel: AccountConversionViewModel) {
-        self.viewModel = viewModel
+    /// Initialize controller with corresponding model
+    init() {
+        self.viewModel = AccountConversionViewModel()
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -29,6 +38,7 @@ class AccountConversionViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .white
         setupUI()
+        setupBackButton()
         bindViewModel()
     }
     
@@ -37,6 +47,8 @@ class AccountConversionViewController: UIViewController {
         self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
+    /// Creates and configures all UI elements
+    /// Arranges elements based on a frame-based layout
     private func setupUI() {
         // Logo ImageView
         logoImageView = UIImageView(image: UIImage(named: "AppIcon"))
@@ -52,7 +64,7 @@ class AccountConversionViewController: UIViewController {
         
         // Subtitle Label
         subtitleLabel = UILabel()
-        subtitleLabel.text = "Save your progress and access your data on any device"
+        subtitleLabel.text = "Save your progress"
         subtitleLabel.font = UIConfiguration.subtitleFont
         subtitleLabel.numberOfLines = 0 // to allow wrapping
         subtitleLabel.textAlignment = .center
@@ -98,7 +110,7 @@ class AccountConversionViewController: UIViewController {
         convertButton.layer.cornerRadius = 8
         convertButton.addTarget(self, action: #selector(convertButtonTapped), for: .touchUpInside)
         
-        // Later Button
+        // Google Sign In button
         googleSignInButton = UIButton()
         googleSignInButton.setTitle("Sign In with Google", for: .normal)
         googleSignInButton.titleLabel?.font = UIConfiguration.buttonFont
@@ -129,9 +141,24 @@ class AccountConversionViewController: UIViewController {
         confirmPasswordTextField.frame = CGRect(x: 20, y: passwordTextField.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
         passwordMismatchLabel.frame = CGRect(x: 20, y: confirmPasswordTextField.frame.maxY + 5, width: view.bounds.width - 40, height: 20)
         convertButton.frame = CGRect(x: 20, y: passwordMismatchLabel.frame.maxY + 20, width: view.bounds.width - 40, height: 50)
-        googleSignInButton.frame = CGRect(x: 20, y: convertButton.frame.maxY + 10, width: view.bounds.width - 40, height: 30)
+        googleSignInButton.frame = CGRect(x: 20, y: convertButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
     }
     
+    /// Sets up button to dismiss view
+    private func setupBackButton() {
+        let backButton = UIBarButtonItem(
+            image: UIImage(systemName: "xmark"),
+            style: .plain,
+            target: self,
+            action: #selector(backButtonTapped)
+        )
+        backButton.tintColor = UIColor.lightGray
+        navigationItem.rightBarButtonItem = backButton
+    }
+    
+    /// Establishes Combine bindings to view model
+    /// Observes authentication status changes and handles navigation
+    /// Checks if the password and confirm password values match
     private func bindViewModel() {
         viewModel.$statusViewModel
             .compactMap { $0 }
@@ -148,6 +175,7 @@ class AccountConversionViewController: UIViewController {
             }
             .store(in: &cancellableBag)
         
+        // check if the password and confirm password values match
         viewModel.$passwordsMatch
             .receive(on: DispatchQueue.main)
             .sink { [weak self] match in
@@ -165,19 +193,13 @@ class AccountConversionViewController: UIViewController {
             .store(in: &cancellableBag)
     }
     
+    /// Handles successful linking with a permanent account
     private func showSuccessAndDismiss() {
-        let alert = UIAlertController(
-            title: "Account Created",
-            message: "Your account has been created successfully!",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
-            // Go back to home screen
-            self?.navigationController?.popViewController(animated: true)
-        })
-        present(alert, animated: true)
+        delegate?.conversionDidComplete(successfully: true)
+        self.dismiss(animated: true)
     }
     
+    /// Calls publisher methods and initiates conversion process by linking email/password credentials
     @objc func convertButtonTapped() {
         // vlidate fields first
         emailChanged()
@@ -188,19 +210,32 @@ class AccountConversionViewController: UIViewController {
         viewModel.convertAccount()
     }
     
+    /// Calls publisher methods and initiates conversion process by linking google credentials
     @objc func googleSignInButtonTapped() {
         viewModel.convertWithGoogle(from: self)
     }
     
+    /// Updates model with email value
     @objc private func emailChanged() {
         viewModel.email = emailTextField.text ?? ""
     }
     
+    /// Updates model with password value
     @objc private func passwordChanged() {
         viewModel.password = passwordTextField.text ?? ""
     }
     
+    /// Updates model with confirm password value
     @objc private func confirmPasswordChanged() {
         viewModel.passwordConfirmation = confirmPasswordTextField.text ?? ""
+    }
+    
+    /// Back button tapped and exits out of account conversion and back to settings
+    var customTransitionDelegate: CustomSlideInTransition?
+    @objc private func backButtonTapped() {
+        if let navController = navigationController {
+            navController.transitioningDelegate = customTransitionDelegate
+        }
+        dismiss(animated: true)
     }
 }

@@ -1,9 +1,9 @@
-/// Handles habit data storage. Includes local storage via JSON files and cloud storage with Firestore
+/// Handles habit data storage
+/// Includes local storage via JSON files and cloud storage with Firestore
 import UIKit
 
 enum LocalStorageError: Error {
     case noFileFound
-    
 }
 
 protocol HabitDataServiceProtocol {
@@ -18,6 +18,8 @@ protocol HabitDataServiceProtocol {
     func loadHabitsLocally() async throws -> [Habit]
     func fetchHabitLocally(habitID: String) async throws -> Habit?
     func deleteHabitLocally(habitID: UUID) async throws
+    
+    func clearLocalStorage() async throws
 }
 
 class HabitDataService: HabitDataServiceProtocol {
@@ -134,5 +136,15 @@ class HabitDataService: HabitDataServiceProtocol {
         var habits = try await loadHabitsLocally()
         habits.removeAll(where: {$0.id == habitID })
         try await saveHabitsLocally(habits)
+    }
+    
+    // MARK: - Careful!! Clear Local storage for when the user logs out
+    func clearLocalStorage() async throws {
+        // clear for current user
+        let fileURL = getHabitsFileURL()
+        
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            try FileManager.default.removeItem(at: fileURL)
+        }
     }
 }

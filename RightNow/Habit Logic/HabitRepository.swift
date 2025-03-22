@@ -14,6 +14,8 @@ protocol HabitRepositoryProtocol {
     func fetchSingleHabit(habitID: String) async throws -> Habit?
     func deleteHabit(_ habit: Habit) async
     func completeHabit(_ habit: inout Habit) async
+    
+    func clearLocalData() async
 }
 
 class HabitRepository: HabitRepositoryProtocol {
@@ -268,6 +270,21 @@ class HabitRepository: HabitRepositoryProtocol {
         DispatchQueue.main.async {
             self.habitSubject.send(changeType)
         }
+    }
+    
+    // MARK: - Data Clearing
+    func clearLocalData() async {
+        // clear in memory data
+        habits = []
+        
+        // clear persisted data
+        do {
+            try await dataService.clearLocalStorage()
+        } catch {
+            print("Error clearing local storage: \(error)")
+        }
+        
+        notifyChange(.habitCRUD)
     }
     
     // MARK: - Location Specific Methods

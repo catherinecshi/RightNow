@@ -48,7 +48,7 @@ class HabitTableViewCell: UITableViewCell {
     
     private func setupContainerView() {
         containerView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.backgroundColor = UIColor(hexString: "#ff5a66")
+        containerView.backgroundColor = UIConfiguration.tintColor
         
         //styling
         containerView.layer.cornerRadius = 10

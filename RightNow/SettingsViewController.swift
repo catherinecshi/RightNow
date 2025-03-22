@@ -1,8 +1,18 @@
 import UIKit
+import Combine
 import FirebaseAuth
 
+/// View Controller for Settings
+/// Currently contains buttons for account state management
+/// - Permanent Account
+///     - Sign out button
+/// - Guest Account
+///     - Sign out button
+///     - Conversion button
 class SettingsViewController: UIViewController {
-    private let state: AppState
+    private let state: AppState // persistent storage
+    private let authManager: AuthenticationManager
+    private var cancellableBag: Set<AnyCancellable> = []
     
     private lazy var signOutButton: UIButton = {
         let button = UIButton(type: .system)
@@ -40,8 +50,10 @@ class SettingsViewController: UIViewController {
         return button
     }()
     
-    init(state: AppState = .shared) {
+    /// Initializes settings with current app state
+    init(state: AppState = .shared, authManager: AuthenticationManager = .shared) {
         self.state = state
+        self.authManager = authManager
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -62,6 +74,12 @@ class SettingsViewController: UIViewController {
         updateUIForAuthState()
     }
     
+    /// Changes which buttons are visible depending on whether the user is anonymous or not
+    /// - Permanently logged in
+    ///     - display sign out button
+    /// - Anonymously logged in
+    ///     - display sign out button
+    ///     - display conversion button
     private func updateUIForAuthState() {
         guard let currentUser = Auth.auth().currentUser else {
             // no user logged in (this shouldn't happen??)
@@ -82,6 +100,7 @@ class SettingsViewController: UIViewController {
         }
     }
     
+    /// Sets up UI for all buttons
     private func setupButton() {
         view.backgroundColor = .white
         
@@ -111,6 +130,7 @@ class SettingsViewController: UIViewController {
         ])
     }
     
+    /// Sets up button to dismiss view
     private func setupBackButton() {
         let backButton = UIBarButtonItem(
             image: UIImage(systemName: "xmark"),
@@ -122,16 +142,22 @@ class SettingsViewController: UIViewController {
         navigationItem.rightBarButtonItem = backButton
     }
     
-    // MARK: - switch
+    // MARK: - Actions
+    /// Signed in user tapped sign out button
     @objc func signOutButtonTapped() {
-        guard let currentUser = Auth.auth().currentUser else { return }
         signOut()
     }
     
+    /// Anonymous user tapped conversion button
     @objc func linkAccountButtonTapped() {
-        convertAccountInWelcome()
+        navigateToConversion()
     }
     
+    /// Anonymous user tapped sign out button
+    /// Warns user that they're about to lose all of their progress
+    ///     (since guest users don't have a way of signing back in)
+    /// Sends user to conversion if they ask to link account instead
+    /// Logs user out if asked
     @objc func logIntoAnotherAccountButtonTapped() {
         // warn users that they're about to lose all of their progress
         let alert = CustomAlertViewController(
@@ -140,7 +166,7 @@ class SettingsViewController: UIViewController {
             okButtonTitle: "Link Account",
             cancelButtonTitle: "Log Out",
             completionOk: { [weak self] in
-                self?.convertAccountInWelcome()
+                self?.navigateToConversion()
             },
             completionCancel: { [weak self] in
                 self?.signOut()
@@ -149,6 +175,7 @@ class SettingsViewController: UIViewController {
         present(alert, animated: true)
     }
     
+    /// Back button tapped and exits out of the settings
     var customTransitionDelegate: CustomSlideInTransition?
     @objc private func backButtonTapped() {
         if let navController = navigationController {
@@ -157,17 +184,31 @@ class SettingsViewController: UIViewController {
         dismiss(animated: true)
     }
     
+    /// Signs the user out of Firebase and AppState
+    /// Throws alert if failure
     private func signOut() {
-        do {
-            try Auth.auth().signOut()
-            state.currentUser = nil // update local state
-            navigateToWelcome()
-        } catch {
-            let alert = CustomAlertViewController(title: "Sign Out Failed", message: " There was a problem signing out. Please try again later.")
-            present(alert, animated: true)
-        }
+        authManager.signOut()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                guard let self = self else { return }
+                
+                switch completion {
+                case .failure:
+                    let alert = CustomAlertViewController(title: "Sign Out Failed",
+                                                          message: "There was a problem signing out")
+                    self.present(alert, animated: true)
+                case .finished:
+                    break
+                }
+            }, receiveValue: { [weak self] _ in
+                self?.navigateToWelcome()
+            })
+            .store(in: &cancellableBag)
     }
     
+    /// Handles navigation for sending the user to initial welcome view
+    /// Uses custom transition to present WelcomeViewController
+    /// Removes current view from root view controller
     private func navigateToWelcome() {
         let welcomeVC = WelcomeViewController(state: state)
         
@@ -188,21 +229,28 @@ class SettingsViewController: UIViewController {
             window.rootViewController = navigationController
         }
     }
+}
+
+/// Handle interactions with AccountConversionViewController
+extension SettingsViewController: AccountConversionDelegate {
+    /// Handles navigation to account conversion view
+    private func navigateToConversion() {
+        let conversionVC = AccountConversionViewController()
+        let navigationController = UINavigationController(rootViewController: conversionVC)
+        navigationController.modalPresentationStyle = .fullScreen
+        present(navigationController, animated: true)
+    }
     
-    private func convertAccountInWelcome() {
-        let welcomeVC = WelcomeViewController(state: state)
-        let navigationController = UINavigationController(rootViewController: welcomeVC)
-        
-        let transition = CATransition()
-        transition.duration = 0.3
-        transition.type = CATransitionType.push
-        transition.subtype = CATransitionSubtype.fromLeft
-        transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-        
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.layer.add(transition, forKey: nil)
-            window.rootViewController = navigationController
+    /// Update settings UI if user successfully linked anonymous account
+    /// Takes successfully - true if user successfully linked anonymous account
+    func conversionDidComplete(successfully: Bool) {
+        if successfully {
+            updateUIForAuthState()
+            
+            // present success message for the user
+            let alert = CustomAlertViewController(title: "Account Linked",
+                                                  message: "Your progress has been saved to your new account!")
+            present(alert, animated: true)
         }
     }
 }
