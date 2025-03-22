@@ -27,17 +27,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             //window?.makeKeyAndVisible()
             
             // show tabs if the user is signed in
-            //let tabBarController = TabBarController()
-            //tabBarController.selectedIndex = 1
-            //window?.rootViewController = tabBarController
-            //window?.makeKeyAndVisible()
+            let tabBarController = TabBarController()
+            tabBarController.selectedIndex = 1
+            window.rootViewController = tabBarController
+            window.makeKeyAndVisible()
             
             // setup app coordinator
-            let navigationController = UINavigationController()
-            navigationController.isNavigationBarHidden = true
+            //let navigationController = UINavigationController()
+            //navigationController.isNavigationBarHidden = true
             
-            appCoordinator = AppCoordinator(navigationController: navigationController, window: window)
-            appCoordinator?.start()
+            //appCoordinator = AppCoordinator(navigationController: navigationController, window: window)
+            //appCoordinator?.start()
         } else {
             // user is not signed in
             print("User is not signed in")

@@ -1,43 +1,14 @@
 import Foundation
 import Combine
 import FirebaseAuth
-//import FBSDKCoreKit
-//import FBSDKLoginKit
 
 protocol AuthAPI {
     func login(email: String, password: String) -> Future<User?, Never>
     func signUp(email: String, password: String) -> Future<User?, Never>
-    //func loginWithFacebook() -> Future<User?, Never>
+    func signInAnonymously() -> Future<User?, Never>
 }
 
 class AuthService: AuthAPI {
-    /*
-    func loginWithFacebook() -> Future<User?, Never> {
-        return Future<User?, Never> { promise in
-            let loginManager = LoginManager()
-            loginManager.logIn(permissions: ["email"], from: nil) { (result, error) in
-                guard let token = AccessToken.current, error == nil else {
-                    promise(.success(nil))
-                    return
-                }
-                Auth.auth().signIn(with: FacebookAuthProvider.credential(withAccessToken: token.tokenString), completion: { (firebaseUser, error) in
-                    if error != nil {
-                        promise(.success(nil))
-                        return
-                    }
-                    guard let id = firebaseUser?.user.uid,
-                        let email = firebaseUser?.user.email else {
-                            promise(.success(nil))
-                            return
-                    }
-                    let user = User(id: id, email: email)
-                    promise(.success(user))
-                })
-            }
-        }
-    }
-     */
-    
     func login(email: String, password: String) -> Future<User?, Never> {
         return Future<User?, Never> { promise in
             Auth.auth().signIn(withEmail: email, password: password) {(authResult, _) in
@@ -61,6 +32,21 @@ class AuthService: AuthAPI {
                         return
                 }
                 let user = User(id: id, email: email)
+                promise(.success(user))
+            }
+        }
+    }
+    
+    func signInAnonymously() -> Future<User?, Never> {
+        return Future<User?, Never> { promise in
+            Auth.auth().signInAnonymously { (authResult, error) in
+                guard let id = authResult?.user.uid else {
+                    promise(.success(nil))
+                    return
+                }
+                
+                let email = authResult?.user.email ?? ""
+                let user = User(id: id, email: email, isAnonymous: true)
                 promise(.success(user))
             }
         }

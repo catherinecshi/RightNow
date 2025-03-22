@@ -1,11 +1,9 @@
 import Combine
 import UIKit
-//import FBSDKCoreKit
-//import FBSDKLoginKit
 import FirebaseAuth
 
 class SignInViewController: UIViewController {
-
+    
     private let viewModel: SignInViewModel
     private var cancellableBag: Set<AnyCancellable> = []
     
@@ -32,9 +30,9 @@ class SignInViewController: UIViewController {
         label.textAlignment = .center
         return label
     }()
-
+    
     init(state: AppState) {
-        self.viewModel = SignInViewModel(authAPI: AuthService(), state: state)
+        self.viewModel = SignInViewModel(state: state)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -77,22 +75,17 @@ class SignInViewController: UIViewController {
     @objc func loginButtonTapped() {
         emailChanged()
         passwordChanged()
+        
         viewModel.login()
     }
     
     @objc private func emailChanged() {
         viewModel.email = emailTextField.text ?? ""
     }
-
+    
     @objc private func passwordChanged() {
         viewModel.password = passwordTextField.text ?? ""
     }
-    
-    /*
-    @objc func facebookLoginTapped() {
-        viewModel.facebookLogin()
-    }
-     */
     
     lazy private var loginButton: UIButton = {
         let button = UIButton(type: .system)
@@ -103,19 +96,18 @@ class SignInViewController: UIViewController {
         button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
-
+    
     private func bindViewModel() {
         viewModel.$statusViewModel
             .compactMap { $0 } //filters out nil values
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] status in
-                if let status = status, status.title == "Successful" {
+                if status.title == "Successful" {
                     // This means the login was successful
                     self?.transitionToMainApp()
                 } else {
-                    let alert = UIAlertController(title: status?.title, message: status?.message, preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-                    self?.present(alert, animated: true, completion: nil)
+                    let alert = CustomAlertViewController(title: status.title, message: status.message)
+                    self?.present(alert, animated: true)
                 }
             })
             .store(in: &cancellableBag)
@@ -139,6 +131,4 @@ class SignInViewController: UIViewController {
             window.rootViewController = tabBarController
         }
     }
-
 }
-

@@ -52,6 +52,23 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     }
     
     private func setupNavigationBar() {
+        setupSettings()
+        setupCoins()
+    }
+    
+    private func setupSettings() {
+        // create a settings button
+        let settingsButton = UIBarButtonItem(
+            image: UIImage(systemName: "line.horizontal.3"),
+            style: .plain,
+            target: self,
+            action: #selector(settingsButtonTapped)
+        )
+        settingsButton.tintColor = UIColor.lightGray
+        navigationItem.leftBarButtonItem = settingsButton
+    }
+    
+    private func setupCoins() {
         coinStackView.addArrangedSubview(coinImageView)
         coinStackView.addArrangedSubview(coinCountLabel)
         
@@ -60,7 +77,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
             coinImageView.widthAnchor.constraint(equalToConstant: 32)
         ])
         
-        // container view to help with alignment
+        // container view for coins to help with alignment
         let containerView = UIView()
         containerView.backgroundColor = .clear
         
@@ -146,6 +163,22 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         let navController = UINavigationController(rootViewController: shopVC)
         navController.modalPresentationStyle = .pageSheet
         present(navController, animated: true, completion: nil)
+    }
+    
+    private var settingsTransitionDelegate: CustomSlideInTransition?
+    @objc private func settingsButtonTapped() {
+        let settingsVC = SettingsViewController()
+        let navController = UINavigationController(rootViewController: settingsVC)
+        self.settingsTransitionDelegate = CustomSlideInTransition()
+        
+        navController.modalPresentationStyle = .custom
+        navController.transitioningDelegate = self.settingsTransitionDelegate
+        
+        if let transDelegate = self.settingsTransitionDelegate {
+            settingsVC.customTransitionDelegate = transDelegate
+        }
+        
+        present(navController, animated: true)
     }
     
     func showFailureAlert() {

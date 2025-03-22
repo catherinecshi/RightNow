@@ -1,7 +1,7 @@
 import Combine
-//import FBSDKCoreKit
-//import FBSDKLoginKit
+import FirebaseCore
 import FirebaseAuth
+import GoogleSignIn
 
 class SignInViewModel: ObservableObject {
     @Published var email: String = ""
@@ -10,41 +10,31 @@ class SignInViewModel: ObservableObject {
     @Published var state: AppState
     
     private var cancellableBag = Set<AnyCancellable>()
-    private let authAPI: AuthAPI
+    private let authManager: AuthenticationManager
     
-    init(authAPI: AuthAPI, state: AppState) {
-        self.authAPI = authAPI
+    init(state: AppState, authManager: AuthenticationManager = .shared) {
         self.state = state
+        self.authManager = authManager
     }
     
     func login() {
-        authAPI.login(email: email, password: password)
+        authManager.login(email: email, password: password)
             .receive(on: RunLoop.main)
-            .map(resultMapper)
-            .replaceError(with: StatusViewModel.errorStatus)
-            .assign(to: \.statusViewModel, on: self)
+            .sink(receiveCompletion: { [weak self] completion in
+                if case .failure(let error) = completion {
+                    self?.statusViewModel = StatusViewModel(
+                        title: "Error",
+                        message: error.localizedDescription
+                    )
+                }
+            }, receiveValue: { [weak self] user in
+                if let user = user {
+                    self?.state.currentUser = user
+                    self?.statusViewModel = StatusViewModel.logInSuccessStatus
+                } else {
+                    self?.statusViewModel = StatusViewModel.errorStatus
+                }
+            })
             .store(in: &cancellableBag)
-    }
-    /*
-    func facebookLogin() {
-        authAPI.loginWithFacebook()
-            .receive(on: RunLoop.main)
-            .map(resultMapper)
-            .replaceError(with: StatusViewModel.errorStatus)
-            .assign(to: \.statusViewModel, on: self)
-            .store(in: &cancellableBag)
-    }
-     */
-}
-
-// MARK: - Private helper function
-extension SignInViewModel {
-    private func resultMapper(with user: User?) -> StatusViewModel {
-        if user != nil {
-            state.currentUser = user
-            return StatusViewModel.logInSuccessStatus
-        } else {
-            return StatusViewModel.errorStatus
-        }
     }
 }

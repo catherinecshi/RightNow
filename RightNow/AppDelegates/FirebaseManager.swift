@@ -57,6 +57,14 @@ protocol FirebaseConfigurable {
 class FirebaseManager: FirebaseConfigurable {
     static let shared: FirebaseConfigurable = FirebaseManager()
     
+    enum FirestoreCollection: String {
+        case habits = "habits"
+        
+        static var allCollections: [FirestoreCollection] {
+            return [.habits]
+        }
+    }
+    
     private(set) var isConfigured = false
     
     private init() {}
@@ -85,7 +93,7 @@ class FirebaseManager: FirebaseConfigurable {
         isConfigured = true
         
         Task {
-            Database.database().isPersistenceEnabled = true
+            //Database.database().isPersistenceEnabled = true
         }
     }
     

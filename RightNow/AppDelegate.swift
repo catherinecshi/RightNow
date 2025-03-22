@@ -1,4 +1,5 @@
 import UIKit
+import GoogleSignIn
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -90,6 +91,7 @@ extension AppDelegate {
 extension AppDelegate {
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         appDelegate.application?(app, open: url, options: options) ?? false
+        return GIDSignIn.sharedInstance.handle(url)
     }
 }
 

@@ -23,6 +23,26 @@ class SignUpViewController: UIViewController {
         return tf
     }()
     
+    private let confirmPasswordTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "Confirm Password"
+        tf.borderStyle = .roundedRect
+        tf.isSecureTextEntry = true
+        tf.textContentType = .newPassword
+        return tf
+    }()
+    
+    // if passwords don't match
+    private let passwordMismatchLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Passwords do not match"
+        label.textColor = .red
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.isHidden = true
+        label.textAlignment = .center
+        return label
+    }()
+    
     lazy private var signUpButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Create Account", for: .normal)
@@ -43,7 +63,7 @@ class SignUpViewController: UIViewController {
     }()
     
     init(state: AppState) {
-        self.viewModel = SignUpViewModel(authAPI: AuthService(), state: state)
+        self.viewModel = SignUpViewModel(state: state)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -69,13 +89,21 @@ class SignUpViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .white
-        let stackView = UIStackView(arrangedSubviews: [titleLabel, emailTextField, passwordTextField, signUpButton])
+        let stackView = UIStackView(arrangedSubviews: [
+            titleLabel,
+            emailTextField,
+            passwordTextField,
+            confirmPasswordTextField,
+            signUpButton
+        ])
+        
         stackView.axis = .vertical
         stackView.spacing = 20
         stackView.translatesAutoresizingMaskIntoConstraints = false
         
         emailTextField.addTarget(self, action: #selector(emailChanged), for: .editingChanged)
         passwordTextField.addTarget(self, action: #selector(passwordChanged), for: .editingChanged)
+        confirmPasswordTextField.addTarget(self, action: #selector(confirmPasswordChanged), for: .editingChanged)
         
         view.addSubview(stackView)
         
@@ -89,6 +117,7 @@ class SignUpViewController: UIViewController {
     @objc private func signUpButtonTapped() {
         emailChanged()
         passwordChanged()
+        confirmPasswordChanged()
         viewModel.signUp()
     }
     
@@ -98,6 +127,10 @@ class SignUpViewController: UIViewController {
 
     @objc private func passwordChanged() {
         viewModel.password = passwordTextField.text ?? ""
+    }
+    
+    @objc private func confirmPasswordChanged() {
+        viewModel.passwordConfirmation = confirmPasswordTextField.text ?? ""
     }
     
     private func bindViewModel() {
@@ -115,6 +148,23 @@ class SignUpViewController: UIViewController {
                 }
             })
             // Store the cancellable reference to avoid memory leaks
+            .store(in: &cancellableBag)
+        
+        // binding for password matching validation
+        viewModel.$passwordsMatch
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] match in
+                self?.passwordMismatchLabel.isHidden = match
+                
+                // Optional: Disable the button when passwords don't match
+                if !match && !(self?.confirmPasswordTextField.text?.isEmpty ?? true) {
+                    self?.signUpButton.isEnabled = false
+                    self?.signUpButton.alpha = 0.5
+                } else {
+                    self?.signUpButton.isEnabled = true
+                    self?.signUpButton.alpha = 1.0
+                }
+            }
             .store(in: &cancellableBag)
     }
     

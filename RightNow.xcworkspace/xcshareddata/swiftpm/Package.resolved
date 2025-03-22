@@ -10,12 +10,12 @@
       }
     },
     {
-      "identity" : "calendarkit",
+      "identity" : "appauth-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/catherinecshi/CalendarKit.git",
+      "location" : "https://github.com/openid/AppAuth-iOS.git",
       "state" : {
-        "branch" : "master",
-        "revision" : "2154298df8a31a82309b7369d34bf805201879d3"
+        "revision" : "2781038865a80e2c425a1da12cc1327bcd56501f",
+        "version" : "1.7.6"
       }
     },
     {
@@ -46,6 +46,15 @@
       }
     },
     {
+      "identity" : "googlesignin-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/google/GoogleSignIn-iOS",
+      "state" : {
+        "revision" : "7932d33686c1dc4d7df7a919aae47361d1cdfda4",
+        "version" : "7.0.0"
+      }
+    },
+    {
       "identity" : "googleutilities",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleUtilities.git",
@@ -70,6 +79,15 @@
       "state" : {
         "revision" : "d415594121c9e8a4f9d79cecee0965cf35e74dbd",
         "version" : "3.1.1"
+      }
+    },
+    {
+      "identity" : "gtmappauth",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/google/GTMAppAuth.git",
+      "state" : {
+        "revision" : "cee3c709307912d040bd1e06ca919875a92339c6",
+        "version" : "2.0.0"
       }
     },
     {
