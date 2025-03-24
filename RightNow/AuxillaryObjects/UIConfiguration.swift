@@ -1,6 +1,6 @@
-import SwiftUI
 import UIKit
 
+/// Custom colors and fonts used in the app
 class UIConfiguration {
     // Fonts
     static let titleFont = UIFont(name: "Arial Rounded MT Bold", size: 28)!
@@ -16,6 +16,7 @@ class UIConfiguration {
     static let buttonBorderColor = UIColor(hexString: "#B0B3C6")
 }
 
+/// Convenience function for allowing UIColors to be constructed from RGB
 extension UIColor {
     convenience init?(hexString: String) {
         let chars = Array(hexString.dropFirst())

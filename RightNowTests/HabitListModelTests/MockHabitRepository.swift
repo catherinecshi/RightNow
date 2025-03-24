@@ -3,6 +3,10 @@ import Combine
 @testable import RightNow
 
 class MockHabitRepository: HabitRepositoryProtocol {
+    func clearLocalData() async {
+        print("hi")
+    }
+    
     var habits: [Habit] = []
     private let habitSubject = PassthroughSubject<HabitRepository.HabitChangeType, Never>()
     

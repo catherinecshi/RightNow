@@ -1,18 +1,45 @@
 import Foundation
+import Combine
 import MapKit
 import CoreLocation
 
+/// Central Manager for all things related to location
+///
+/// Features:
+/// - Location authorization management
+/// - User location tracking
+/// - Geofence creation and monitoring of habits
+/// - Automatic habit completion based on geofenced locations
+/// - Notification delivery for location-based events
+///
+/// # Important:
+/// - iOS limits apps to tracking a maximum of 20 geofences at once
+/// - Requires "Always" location authorization for background tracking
+///
+/// # Requirements:
+/// - Info.plist entries:
+///     - NSLocationAlwaysAndWhenInUseUsageDescription
+///     - NSLocationWhenInUseUsageDescription
+///     - NSLocationAlwaysUsageDescription
+/// - Background modes:
+///     - Location updates
+///     - Background fetch
+///     - Remote notifications
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    static let shared = LocationManager() // instantiates as singleton instance
+    static let shared = LocationManager() // singleton instance
     
-    private var locationManager = CLLocationManager()
+    private var locationManager = CLLocationManager() // underlying core location manager
     @Published var userLocation: CLLocationCoordinate2D? // broadcasts user location updates
-    var onLocationUpdate: ((CLLocationCoordinate2D) -> Void)?
-    let habitListModel = HabitListViewModel()
-    let repo = HabitRepository.shared
+    var onLocationUpdate: ((CLLocationCoordinate2D) -> Void)? // callback when user's location updates
+    let repo = HabitRepository.shared // manages habit data
+    private var cancellables = Set<AnyCancellable>()
     
+    /// Dictionary mapping geofence identifiers to its associated data
+    /// Allows for quick lookup
     var monitoredGeofences: [String: GeofenceData] = [:]
     
+    /// Sets up location manager with the appropriate accuracy
+    /// Sets up observers for habit changes in repo
     override private init() {
         super.init()
         locationManager.delegate = self
@@ -20,27 +47,43 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         setupHabitObserver()
     }
     
+    /// Requests "Always" authorization for location services
+    /// Prompts user with system permission dialogue
     func requestAuthorization() {
         locationManager.requestAlwaysAuthorization()
     }
     
-    func requestCurrentLocation() -> CLLocationCoordinate2D? { // returns user's coordinates when available
+    /// Returns user's current location coordinates when available
+    /// Returns nil when location is unavailable
+    func requestCurrentLocation() -> CLLocationCoordinate2D? {
         return locationManager.location?.coordinate
     }
     
-    func startLocationUpdates() { // starts continuous background location updates
+    /// Starts continuous background location updates of user
+    func startLocationUpdates() {
         locationManager.startUpdatingLocation()
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.pausesLocationUpdatesAutomatically = false
     }
     
+    /// Stops background location updates of user
     func stopLocationUpdates() {
         locationManager.stopUpdatingLocation()
         locationManager.allowsBackgroundLocationUpdates = false
     }
     
     // MARK: - Geofence
-    func startMonitoringGeofence(for habit: Habit) { // called when location habit first made
+    /// Starts monitoring geofence for a specific habit
+    ///
+    /// Creates circular region around habit location and monitors for entry and exit events
+    /// Habit marked complete when geofence entered at appropraite time
+    /// Stores geofence data in local dictionary
+    /// Called when location habit is first made
+    ///
+    /// Parameters:
+    /// - habit : Habit
+    ///     - habit whose geofence will start being monitored
+    func startMonitoringGeofence(for habit: Habit) {
         let location = habit.location!
         let time = habit.time
         let daysOfWeek = habit.daysOfTheWeek
@@ -60,6 +103,13 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         print("monitoring latitude: \(location.latitude) longitude: \(location.longitude) for \(habit.name)")
     }
     
+    /// Stops monitoring geofence for specified location
+    ///
+    /// Removes geofence from both iOS monitoring system and local dictionary
+    ///
+    /// Parameters:
+    /// - location : Location
+    ///     - the location to stop monitoring
     func stopMonitoringGeofence(for location: Location) {
         let geofenceRegion = CLCircularRegion(
             center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
@@ -83,13 +133,56 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    /// Checks if a new geofence can be added with exceeding limit
+    /// Returns true if new geofence can be added
+    ///
+    /// iOS has a limit of 20 geofences per app at a single time
+    func canAddNewGeofence() -> Bool {
+        let maxRegions = 20
+        return locationManager.monitoredRegions.count < maxRegions
+    }
+    
+    /// Removes all geofences from iOS and local dictionary
+    func removeAllGeofences() {
+        for region in locationManager.monitoredRegions {
+            locationManager.stopMonitoring(for: region)
+        }
+        
+        monitoredGeofences.removeAll()
+        print("Cleared all geofences")
+    }
+    
     // MARK: - Delegates to Handle Geofence Events
-    // handles incoming location updates & updates userLocation
+    /// Handles location updates from the iOS system
+    ///
+    /// Updates local variable userLocation with most recent location
+    /// Calls onLocationUpdate callback if set
+    ///
+    /// Parameters:
+    /// - manager : CLLocationManager
+    ///     - location manager providing the update
+    ///     - typically just the manager currently monitoring location updates
+    /// - locations : [CLLocation]
+    ///     - array of location objects in chronological order
+    ///     - so last one is the most recent
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         self.userLocation = location.coordinate
     }
     
+    /// Handles geofence region entry events
+    ///
+    /// When the user enters a monitored region,
+    /// 1. Send an entry notification to user
+    /// 2. Verifies if current day and time matches the habit's time and date
+    /// 3. Completes habit if appropriate, and sends a completion notification
+    ///
+    /// Parameters:
+    /// - manager : CLLocationManager
+    ///     - location manager providing the update
+    ///     - typically just the manager currently monitoring location updates
+    /// - region : CLRegion
+    ///     - the region that was entered
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         if let circularRegion = region as? CLCircularRegion {
             print("Entered region: \(circularRegion.identifier)")
@@ -141,6 +234,16 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    /// Handles geofence region exit events
+    ///
+    /// Currently just logs it
+    ///
+    /// Parameters:
+    /// - manager : CLLocationManager
+    ///     - location manager tracking the updates
+    ///     - typically just the manager that's currently monitoring the locations
+    /// - region : CLRegion
+    ///     - the region that was exited
     func locationManager(_ manger: CLLocationManager, didExitRegion region: CLRegion) {
         if let circularRegion = region as? CLCircularRegion {
             print("Exited region: \(circularRegion.identifier)")
@@ -148,6 +251,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     // MARK: - Auxillary Functions
+    /// Sends notification that habit is in progress to the user
+    ///
+    /// Parameters:
+    /// - locationName : String
+    ///     - name of the location to be displayed in notification
     func sendProximityNotification(for locationName: String) {
         print("trying to send notification")
         Task {
@@ -159,6 +267,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    /// Sends notification that the user has entered a geofence
+    ///
+    /// Parameters:
+    /// - locationName : String
+    ///     - name of the location to be displayed in notification
     func sendEnteringNotification(for locationName: String) {
         print("trying to send entering notification")
         Task {
@@ -168,6 +281,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    /// Prints all monitored geofences in iOS and local dictionary
     func printActiveGeofences() {
         print("Currently monitored regions: ")
         for region in locationManager.monitoredRegions {
@@ -180,21 +294,15 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
-    // iOS has a limit of 20 geofences per app
-    func canAddNewGeofence() -> Bool {
-        let maxRegions = 20
-        return locationManager.monitoredRegions.count < maxRegions
-    }
-    
-    func removeAllGeofences() {
-        for region in locationManager.monitoredRegions {
-            locationManager.stopMonitoring(for: region)
-        }
-        
-        monitoredGeofences.removeAll()
-        print("Cleared all geofences")
-    }
-    
+    /// Synchronizes the iOS monitored geofences with the local dictionary
+    ///
+    /// This method:
+    /// 1. Identifies the habits that should have locations from habit repository
+    /// 2. Removes outdated geofences from iOS and local dicttionary
+    /// 3. Adds missing geofences for current habits
+    /// 4. Logs the synchronization process
+    ///
+    /// Called during startup and habit CRUD operations
     func synchronizeGeofencesWithHabits() {
         let currentHabits = repo.getHabits().filter { $0.location != nil }
         
@@ -263,14 +371,17 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
 // MARK: - Checking Authorization Status and Displaying Appropriate Alerts
 extension Notification.Name {
+    /// notification sent when location authorization status changed
     static let locationAuthorizationDidChange = Notification.Name("locationAuthorizationDidChange")
 }
 
 extension LocationManager {
+    /// current location authorization status
     var authorizationStatus: CLAuthorizationStatus {
         return locationManager.authorizationStatus
     }
     
+    /// Indicates whether "When In Use" alert has already been shown
     var hasShownWhenInUseAlert: Bool {
         get {
             return UserDefaults.standard.bool(forKey: "hasShownWhenInUseAlert")
@@ -285,16 +396,29 @@ extension LocationManager {
 
 // MARK: - Observe Habits
 extension LocationManager {
+    /// Sets up obsever for habit changes to update geofences
+    ///
+    /// When habits CRUD, this observer automatically calls synchronizesGeofencesWithHabits
     func setupHabitObserver() {
-        habitListModel.addObserver { [weak self] changeType in
-            guard let self = self else { return }
-            
-            switch changeType {
-            case .habitCRUD:
-                self.synchronizeGeofencesWithHabits()
-            default:
-                break
+        var cancellables = Set<AnyCancellable>()
+        
+        // Subscribe directly to the repository's publisher
+        repo.habitPublisher
+            .receive(on: RunLoop.main) // Ensure updates happen on main thread
+            .sink { [weak self] changeType in
+                guard let self = self else { return }
+                
+                switch changeType {
+                case .habitCRUD:
+                    self.synchronizeGeofencesWithHabits()
+                case .levelChanged, .streakChanged:
+                    // These changes don't affect geofencing, so we ignore them
+                    break
+                }
             }
-        }
+            .store(in: &cancellables)
+        
+        // Store the cancellables as a property to prevent them from being deallocated
+        self.cancellables = cancellables
     }
 }

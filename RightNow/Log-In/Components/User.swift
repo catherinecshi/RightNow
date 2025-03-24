@@ -1,4 +1,4 @@
- /// User Object representing authenticated user
+/// User Object representing authenticated user
 struct User {
     /// Types of ways the user can be logged in
     enum LoginType {

@@ -1,32 +1,58 @@
 import UIKit
 
+/// Handles custom slide-in animations for presenting VCs
+/// Presentation controller & animation controllers
 class CustomSlideInTransition: NSObject, UIViewControllerTransitioningDelegate {
     // Keep track of whether we're currently presenting
     private var isPresenting = true
     
+    /// Returns a custom presentation controller to manage the dimming background effect.
+    /// - Parameters:
+    ///   - presented: The view controller being presented.
+    ///   - presenting: The view controller that is presenting.
+    ///   - source: The view controller that initiated the presentation.
+    /// - Returns: A custom presentation controller instance.
     func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
         return CustomPresentationController(presentedViewController: presented, presenting: presenting)
     }
     
+    /// Provides an animation controller for the presentation transition.
+    /// - Parameters:
+    ///   - presented: The view controller being presented.
+    ///   - presenting: The view controller that is presenting.
+    ///   - source: The view controller that initiated the presentation.
+    /// - Returns: This instance as the animation controller.
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         isPresenting = true
         return self
     }
     
+    /// Provides an animation controller for the dismissal transition.
+    /// - Parameter dismissed: The view controller being dismissed.
+    /// - Returns: This instance as the animation controller.
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         isPresenting = false
         return self
     }
 }
 
-// Make our transition delegate also implement the animation controller
+// MARK: - Animation Controller Implementation
+
+/// Extension that implements the animation controller methods for CustomSlideInTransition.
 extension CustomSlideInTransition: UIViewControllerAnimatedTransitioning {
+    /// Specifies the duration of the transition animation.
+    /// - Parameter transitionContext: The context containing information about the transition.
+    /// - Returns: The duration in seconds.
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
         return 0.4
     }
     
+    /// Performs the transition animation.
+    /// For presentation: slides the view in from the left to the center.
+    /// For dismissal: slides the view out to the left.
+    /// - Parameter transitionContext: The context containing information about the transition.
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
-        // Get the proper view controller and view based on whether we're presenting or dismissing
+        // Get the container view from the transition context
         let containerView = transitionContext.containerView
         
         if isPresenting {
@@ -83,9 +109,13 @@ extension CustomSlideInTransition: UIViewControllerAnimatedTransitioning {
     }
 }
 
+/// A custom presentation controller that manages a dimming background effect during presentation.
 class CustomPresentationController: UIPresentationController {
+    /// The view that dims the background content during presentation.
     private let dimmingView = UIView()
     
+    /// Called when the presentation transition is about to begin.
+    /// Sets up and animates in the dimming view.
     override func presentationTransitionWillBegin() {
         super.presentationTransitionWillBegin()
         
@@ -101,6 +131,8 @@ class CustomPresentationController: UIPresentationController {
         })
     }
     
+    /// Called when the dismissal transition is about to begin.
+    /// Animates out the dimming view.
     override func dismissalTransitionWillBegin() {
         super.dismissalTransitionWillBegin()
         
@@ -110,12 +142,16 @@ class CustomPresentationController: UIPresentationController {
         })
     }
     
+    /// Called when the container view layout is about to change.
+    /// Updates the frames of the dimming view and the presented view.
     override func containerViewWillLayoutSubviews() {
         super.containerViewWillLayoutSubviews()
         dimmingView.frame = containerView?.bounds ?? .zero
         presentedView?.frame = frameOfPresentedViewInContainerView
     }
     
+    /// Returns the frame rectangle to use when positioning the presented view.
+    /// In this implementation, the presented view occupies the entire container view.
     override var frameOfPresentedViewInContainerView: CGRect {
         guard let containerView = containerView else { return .zero }
         return containerView.bounds

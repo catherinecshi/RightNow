@@ -4,6 +4,7 @@ import FirebaseAuth
 
 /// View controller for email/password sign up screen
 class SignUpViewController: UIViewController {
+    // MARK: - Properties
     private var viewModel: SignUpViewModel!
     private var cancellableBag: Set<AnyCancellable> = []
     
@@ -63,6 +64,7 @@ class SignUpViewController: UIViewController {
         return button
     }()
     
+    // MARK: - Lifcycle
     /// Initializes Screen with application state
     /// Takes AppState, which contains information about currentUser
     init(state: AppState) {
@@ -90,6 +92,7 @@ class SignUpViewController: UIViewController {
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
+    // MARK: - Setup UI
     /// Sets up stack of relevant UI elements
     private func setupUI() {
         view.backgroundColor = .white
@@ -118,6 +121,7 @@ class SignUpViewController: UIViewController {
         ])
     }
     
+    // MARK: - Actions
     /// Calls publisher methods and initiates sign up process
     @objc private func signUpButtonTapped() {
         emailChanged()

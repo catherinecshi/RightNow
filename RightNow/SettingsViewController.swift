@@ -10,6 +10,7 @@ import FirebaseAuth
 ///     - Sign out button
 ///     - Conversion button
 class SettingsViewController: UIViewController {
+    // MARK: - Properties
     private let state: AppState // persistent storage
     private let authManager: AuthenticationManager
     private var cancellableBag: Set<AnyCancellable> = []
@@ -50,6 +51,7 @@ class SettingsViewController: UIViewController {
         return button
     }()
     
+    // MARK: - Lifecycle
     /// Initializes settings with current app state
     init(state: AppState = .shared, authManager: AuthenticationManager = .shared) {
         self.state = state
@@ -74,6 +76,7 @@ class SettingsViewController: UIViewController {
         updateUIForAuthState()
     }
     
+    // MARK: - UI Setup
     /// Changes which buttons are visible depending on whether the user is anonymous or not
     /// - Permanently logged in
     ///     - display sign out button
@@ -231,6 +234,7 @@ class SettingsViewController: UIViewController {
     }
 }
 
+// MARK: - Account Conversion
 /// Handle interactions with AccountConversionViewController
 extension SettingsViewController: AccountConversionDelegate {
     /// Handles navigation to account conversion view

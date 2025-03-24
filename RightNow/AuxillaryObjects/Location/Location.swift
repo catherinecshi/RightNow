@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 
+/// Location objects constructed from longitude and latitude
 struct Location: Codable, Equatable, Identifiable {
     var id: UUID
     var name: String

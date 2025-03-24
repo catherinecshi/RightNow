@@ -30,6 +30,36 @@ target 'RightNow' do
   	# pod 'GTMSessionFetcher/Core', '~> 3.1.0'
 end
 
+target 'RightNowTests' do
+  use_frameworks!
+
+  # Pods for RightNow
+	# camera stuff
+	pod 'CameraManager', '~> 5.1'
+	pod 'SDWebImage', :modular_headers => true
+
+	# reactive
+    	pod 'RxSwift', '6.6.0'
+    	pod 'RxCocoa', '6.6.0'
+	pod 'RxDataSources', '~> 5.0'
+
+	#swift lint
+	pod 'SwiftLint'
+
+	# firebase
+	# pod 'FirebaseFirestoreSwift'
+	pod 'Firebase/Core'
+	pod 'Firebase/Firestore'
+	pod 'Firebase/Auth'
+	pod 'Firebase/Storage'
+	$FirebaseSDKVersion = '10.22.0'
+
+	# google
+	pod 'GoogleSignIn', '~> 7.0.0'
+	# pod 'GTMAppAuth', '~> 2.0.0'
+  	# pod 'GTMSessionFetcher/Core', '~> 3.1.0'
+end
+
 # Fix module conflicts
 post_install do |installer|
   installer.pods_project.targets.each do |target|

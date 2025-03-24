@@ -9,6 +9,7 @@ protocol AccountConversionDelegate: AnyObject {
 /// View controller for an anonymous user trying to link a permanent account login type
 /// Currently handles linking with email/password logintype and google sign in
 class AccountConversionViewController: UIViewController {
+    // MARK: - Properties
     weak var delegate: AccountConversionDelegate?
     var viewModel: AccountConversionViewModel
     private var cancellableBag: Set<AnyCancellable> = []
@@ -24,6 +25,7 @@ class AccountConversionViewController: UIViewController {
     private var convertButton: UIButton!
     private var googleSignInButton: UIButton!
     
+    // MARK: - Lifecycle
     /// Initialize controller with corresponding model
     init() {
         self.viewModel = AccountConversionViewModel()
@@ -47,6 +49,7 @@ class AccountConversionViewController: UIViewController {
         self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
+    // MARK: - Setup UI
     /// Creates and configures all UI elements
     /// Arranges elements based on a frame-based layout
     private func setupUI() {
@@ -156,6 +159,7 @@ class AccountConversionViewController: UIViewController {
         navigationItem.rightBarButtonItem = backButton
     }
     
+    // MARK: - Actions
     /// Establishes Combine bindings to view model
     /// Observes authentication status changes and handles navigation
     /// Checks if the password and confirm password values match
@@ -195,8 +199,9 @@ class AccountConversionViewController: UIViewController {
     
     /// Handles successful linking with a permanent account
     private func showSuccessAndDismiss() {
-        delegate?.conversionDidComplete(successfully: true)
-        self.dismiss(animated: true)
+        self.dismiss(animated: true) { [weak self] in
+            self?.delegate?.conversionDidComplete(successfully: true)
+        }
     }
     
     /// Calls publisher methods and initiates conversion process by linking email/password credentials

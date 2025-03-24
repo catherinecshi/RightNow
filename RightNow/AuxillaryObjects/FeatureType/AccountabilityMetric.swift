@@ -1,5 +1,6 @@
 import Foundation
 
+/// Types of accountability the user can choose to use
 enum AccountabilityMetric: String, Codable {
     case locationTracking
     case screenTime
@@ -10,6 +11,7 @@ enum AccountabilityMetric: String, Codable {
     case stepCount
     case stayOffPhone
     
+    /// Returns string for corresponding accountability metric
     var displayName: String {
         switch self {
         case .locationTracking: return "Track your Location"

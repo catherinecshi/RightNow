@@ -13,8 +13,24 @@ enum AuthError: Error {
     case notAnonymous
 }
 
+/// Defining AuthenticationManager behaviors for testing purposes
+protocol AuthenticationServiceProtocol {
+    var isUserAuthenticated: Bool { get }
+    var isAnonymous: Bool { get }
+    var isLoading: Bool { get }
+    var currentUser: User? { get }
+    
+    func login(email: String, password: String) -> Future<User?, Error>
+    func signUp(email: String, password: String) -> Future<User?, Error>
+    func googleSignIn(presentingViewController: UIViewController) -> Future<User?, Error>
+    func signInAnonymously() -> Future<User?, Error>
+    func convertAnonymousUserWithEmail(email: String, password: String) -> Future<User?, Error>
+    func convertAnonymousUserWithGoogle(presentingViewController: UIViewController) async throws -> User
+    func signOut() -> Future<Void, Error>
+}
+
 /// Handles all interaction with FirebaseAuth from authentication models
-class AuthenticationManager {
+class AuthenticationManager: AuthenticationServiceProtocol {
     static let shared = AuthenticationManager()
     
     @Published private(set) var currentUser: User?

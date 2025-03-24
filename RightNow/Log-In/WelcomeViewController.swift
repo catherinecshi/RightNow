@@ -4,6 +4,7 @@ import GoogleSignIn
 
 /// Presents Welcome Screen when the user is not logged in
 class WelcomeViewController: UIViewController {
+    // MARK: - Properties
     var viewModel: WelcomeViewModel
     var state: AppState
     private var cancellableBag: Set<AnyCancellable> = []
@@ -17,6 +18,7 @@ class WelcomeViewController: UIViewController {
     private var googleSignInButton: UIButton!
     private var guestButton: UIButton!
     
+    // MARK: - Lifecycle
     /// Initializes Screen with application state
     /// Takes AppState, which contains information about currentUser
     init(state: AppState) {
@@ -41,6 +43,7 @@ class WelcomeViewController: UIViewController {
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
+    // MARK: - Setup UI
     /// Creates and configures all UI elements
     /// Arranges elements based on a frame-based layout
     func setupUI() {
@@ -120,6 +123,7 @@ class WelcomeViewController: UIViewController {
         guestButton.frame = CGRect(x: 20, y: googleSignInButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
     }
     
+    // MARK: - Actions
     /// Establishes Combine bindings to view model
     /// Observes authentication status changes and handles navigation
     private func bindViewModel() {

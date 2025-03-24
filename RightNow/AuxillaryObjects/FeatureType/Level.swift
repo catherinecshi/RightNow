@@ -1,5 +1,6 @@
 import Foundation
 
+/// Levels representing streak length of a habit
 enum Level: String, Codable, CaseIterable {
     case beginner
     case novice
@@ -11,6 +12,7 @@ enum Level: String, Codable, CaseIterable {
     case elite
     case mastery
     
+    /// Returns string for corresponding level
     var displayName: String {
         switch self {
         case .beginner: return "Beginner"
@@ -25,6 +27,7 @@ enum Level: String, Codable, CaseIterable {
         }
     }
     
+    /// Returns Int (streak length) for corresponding level
     var streakForLevel: Int {
         switch self {
         case .beginner: return 3
@@ -39,6 +42,7 @@ enum Level: String, Codable, CaseIterable {
         }
     }
     
+    /// Returns the level before the input level
     var previousLevel: Level? {
         let levels = Level.allCases
         guard let currentIndex = levels.firstIndex(of: self), currentIndex > 0 else {

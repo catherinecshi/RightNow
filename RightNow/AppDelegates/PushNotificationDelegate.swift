@@ -2,6 +2,24 @@ import Foundation
 import UIKit
 import FirebaseAuth
 
+/// Central manager for all things notification-related
+///
+/// This class is responsible for:
+/// - Requesting and handling notification permissions
+/// - Registering for remote notifications
+/// - Scheduling habit reminder notifications
+/// - Managing notification categories and actions
+/// - Handling notification interactions (taps, action buttons)
+///
+/// Usage example:
+/// ```
+/// // Request notification permissions
+/// await PushNotificationDelegate.shared.registerForPushNotifications()
+///
+/// // Schedule notifications for a habit
+/// let habit = Habit(...)
+/// PushNotificationDelegate.shared.scheduleNotificationsForHabit(habit)
+/// ```
 final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterDelegate {
     static let shared = PushNotificationDelegate()
     let repo = HabitRepository.shared
@@ -9,10 +27,12 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     // avoid unnecessary initialisation
     private override init() { }
     
+    /// Errors that can occur when scheduling notifications
     enum NotificationError: LocalizedError {
         case pastDate
-        case schedulingFailed(Error)
+        case schedulingFailed(Error) // system error
         
+        /// Human readable descriptions of errors
         var errorDescription: String? {
             switch self {
             case .pastDate:
@@ -23,15 +43,21 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
     }
     
-    private let notificationCenter = UNUserNotificationCenter.current()
+    private let notificationCenter = UNUserNotificationCenter.current() // system's notif center
     weak var window: UIWindow?
     
     // for checking notification settings
     private var _cachedPermissionStatus: UNAuthorizationStatus = .notDetermined // last known status
-    public var cachedPermissionStatus: UNAuthorizationStatus {
+    public var cachedPermissionStatus: UNAuthorizationStatus { // cache - returns last known status
         _cachedPermissionStatus
     }
     
+    // MARK: - UIApplicationDelegate Methods
+    /// Called when the app finishes launching.
+    /// - Parameters:
+    ///   - application: The singleton app object.
+    ///   - launchOptions: A dictionary indicating the reason the app was launched.
+    /// - Returns: `true` if the delegate handled the launch successfully.
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         //registerForPushNotifications()
         //removePendingNotifications()
@@ -40,20 +66,29 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         return true
     }
     
+    /// Called when the app successfully registers for remote notifications.
+    /// - Parameters:
+    ///   - application: The singleton app object.
+    ///   - deviceToken: A token that identifies the device to APNs.
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        // possible use case
-        // receive requested device token
-        // save device token to local storage
-        // register device token with FCM
         let deviceToken: String = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         print("Device token is: \(deviceToken)")
     }
     
+    /// Called when the app fails to register for remote notifications.
+    /// - Parameters:
+    ///   - application: The singleton app object.
+    ///   - error: The error that occurred during registration.
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        // some error occurred while registering for device token
         print("Failed to register for remote notifications: \(error)")
     }
     
+    // MARK: - UNUserNotificationCenterDelegate Methods
+    /// Called when a notification is about to be presented while the app is in the foreground.
+    /// - Parameters:
+    ///   - center: The notification center object.
+    ///   - notification: The notification to be presented.
+    ///   - completionHandler: A block to execute with the presentation options.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
@@ -64,6 +99,12 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         completionHandler([.banner, .list, .sound])
     }
     
+    /// Called when the user responds to a notification.
+    /// - Parameters:
+    ///   - center: The notification center object.
+    ///   - response: The user's response to the notification.
+    ///   - completionHandler: A block to execute when you have finished processing the response.
+    /// - Note: This method handles action button taps and notification taps.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
@@ -97,6 +138,8 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
     }
     
+    // MARK: - Private Notification Handling Methods
+    /// Handles "Snooze for 5 minutes" action on notification
     private func handleSnooze5Minutes(notification: UNNotification) async {
         guard let habit = await retrieveHabit(from: notification) else {
             print("Could not retrieve habit from notification \(notification.description)")
@@ -129,6 +172,60 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
     }
     
+    /// Configures notification categories and associated actions
+    private func setupNotificationCategories() {
+        // create actions
+        let snooze5Action = UNNotificationAction(
+            identifier: "Snooze_5",
+            title: "Snooze for 5 mins",
+            options: .foreground
+        )
+        
+        let snoozeNextCueAction = UNNotificationAction(
+            identifier: "Snooze_Next_Cue",
+            title: "Reschedule habit for today",
+            options: .foreground
+        )
+        
+        let snoozeIdleAction = UNNotificationAction(
+            identifier: "Snooze_Idle",
+            title: "Snooze until next idle moment",
+            options: .foreground
+        )
+        
+        // create the category with all the actions
+        let category = UNNotificationCategory(
+            identifier: "HabitReminder",
+            actions: [snooze5Action, snoozeNextCueAction, snoozeIdleAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        // register the category
+        notificationCenter.setNotificationCategories([category])
+    }
+    
+    /// Retrieves the habit associated with a notification.
+    /// - Parameter notification: The notification containing the habit ID.
+    /// - Returns: The habit if found, nil otherwise.
+    func retrieveHabit(from notification: UNNotification) async -> Habit? {
+        guard let habitID = notification.request.content.userInfo["habitID"] as? String else {
+            print("no habit id found in notification")
+            return nil
+        }
+        
+        do {
+            return try await repo.fetchSingleHabit(habitID: habitID)
+        } catch {
+            print("Failed to fetch habit with ID: \(habitID)")
+            return nil
+        }
+    }
+    
+    // MARK: - Navigation Methods
+    var appCoordinator: AppCoordinator?
+    
+    /// Presents camera controller
     private func presentCameraController(habit: Habit) {
         DispatchQueue.main.async {
             if let window = self.window {
@@ -145,16 +242,20 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         }
     }
     
+    
     func setDefaultRootViewController() {
         DispatchQueue.main.async {
             if let window = self.window {
-                let splashVC = SplashViewController(state: AppState())
-                window.rootViewController = UINavigationController(rootViewController: splashVC)
-                window.makeKeyAndVisible()
+                let navigationController = UINavigationController()
+                navigationController.isNavigationBarHidden = true
+                
+                self.appCoordinator = AppCoordinator(navigationController: navigationController, window: window)
+                self.appCoordinator?.start()
             }
         }
     }
     
+    /// Presents welcome screen for users not logged in
     func setWelcomeViewController() {
         DispatchQueue.main.async {
             if let window = self.window {
@@ -164,50 +265,11 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
             }
         }
     }
-    
-    func retrieveHabit(from notification: UNNotification) async -> Habit? {
-        guard let habitID = notification.request.content.userInfo["habitID"] as? String else {
-            print("no habit id found in notification")
-            return nil
-        }
-        
-        do {
-            return try await repo.fetchSingleHabit(habitID: habitID)
-        } catch {
-            print("Failed to fetch habit with ID: \(habitID)")
-            return nil
-        }
-    }
 }
     
-// MARK: - Common Methods to Reference Externally
+// MARK: - Push Notification Management API
 extension PushNotificationDelegate {
-    // request push notification access
-    func registerForPushNotifications() {
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        notificationCenter.requestAuthorization(options: authOptions) { granted, error in
-            if let error = error {
-                print("Failed to request authorization: \(error)")
-                return
-            }
-            
-            // update cached status after authorization
-            self.getPermissionStatus { _ in }
-            
-            if granted {
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
-                    UNUserNotificationCenter.current().delegate = self
-                    //self.setupNotificationCategories()
-                    print("User granted push notifications")
-                }
-            } else {
-                print("User denied push notifications")
-                // handle cases when permission is not granted
-            }
-        }
-    }
-    
+    /// Requests permission to send notifications with a completion handler
     func requestAccessToNotifications(completion: @escaping (Bool) -> Void) {
         notificationCenter.getNotificationSettings { settings in
             switch settings.authorizationStatus {
@@ -229,6 +291,7 @@ extension PushNotificationDelegate {
         }
     }
     
+    /// Schedules notifications for all active days of a habit
     func scheduleNotificationsForHabit(_ habit: Habit) {
         for (day, isActive) in habit.daysOfTheWeek {
             guard isActive else { continue }
@@ -290,6 +353,7 @@ extension PushNotificationDelegate {
         }
     }
     
+    /// Cancels all notifications for a habit
     func cancelNotificationForHabit(for habit: Habit) {
         for day in habit.daysOfTheWeek.keys {
             let identifier = "\(habit.id)_\(day)"
@@ -297,6 +361,10 @@ extension PushNotificationDelegate {
         }
     }
     
+    /// Cancels a specific notification by its identifier
+    ///
+    /// - Parameter identifier: The unique identifier of the notification
+    /// - Returns: `true` if the notification existed and was cancelled
     func cancelNotification(withIdentifier identifier: String) async -> Bool {
         let requests = await notificationCenter.pendingNotificationRequests()
         let exists = requests.contains { $0.identifier == identifier }
@@ -305,39 +373,8 @@ extension PushNotificationDelegate {
         return exists
     }
     
-    private func setupNotificationCategories() {
-        // create actions
-        let snooze5Action = UNNotificationAction(
-            identifier: "Snooze_5",
-            title: "Snooze for 5 mins",
-            options: .foreground
-        )
-        
-        let snoozeNextCueAction = UNNotificationAction(
-            identifier: "Snooze_Next_Cue",
-            title: "Reschedule habit for today",
-            options: .foreground
-        )
-        
-        let snoozeIdleAction = UNNotificationAction(
-            identifier: "Snooze_Idle",
-            title: "Snooze until next idle moment",
-            options: .foreground
-        )
-        
-        // create the category with all the actions
-        let category = UNNotificationCategory(
-            identifier: "HabitReminder",
-            actions: [snooze5Action, snoozeNextCueAction, snoozeIdleAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        // register the category
-        notificationCenter.setNotificationCategories([category])
-    }
-    
-    // get authorization status
+    /// Retrieves current notification permission status
+    /// - Parameter completion: A closure to be executed with the current authorization status
     public func getPermissionStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
         notificationCenter.getNotificationSettings { settings in
             DispatchQueue.main.async {
@@ -349,21 +386,24 @@ extension PushNotificationDelegate {
 }
 
 // MARK: - Create Custom Notification
+/// Model representing notification to be scheduled
 struct NotificationRequest {
     let title: String
     let body: String
-    let trigger: NotificationTrigger?
-    let identifier: String
-    let userInfo: [AnyHashable: Any]?
+    let trigger: NotificationTrigger? // determines when the notification will be delivered
+    let identifier: String // unique identifier
+    let userInfo: [AnyHashable: Any]? // additional data
     let sound: UNNotificationSound?
-    let categoryIdentifier: String?
+    let categoryIdentifier: String? // category identifier used for actions
 }
 
+/// Represents different ways to trigger a notification
 enum NotificationTrigger {
-    case time(Date)
-    case interval(TimeInterval)
-    case calendar(DateComponents)
+    case time(Date) // trigger at specific date and time
+    case interval(TimeInterval) // trigger after a specified time interval
+    case calendar(DateComponents) // trigger when specified calendar components match
     
+    /// Converts into system's notification trigger type
     var unNotificationTrigger: UNNotificationTrigger {
         switch self {
         case .time(let date):
@@ -378,7 +418,9 @@ enum NotificationTrigger {
 }
 
 extension PushNotificationDelegate {
-    // main function to call for custom notifications
+    /// Schedules a notification using the provided request configuration.
+    /// - Parameter request: The notification request to schedule.
+    /// - Throws: An error if scheduling fails.
     func schedule(request: NotificationRequest) async throws {
         let content = UNMutableNotificationContent()
         content.title = request.title
@@ -402,7 +444,13 @@ extension PushNotificationDelegate {
         try await notificationCenter.add(notificationRequest)
     }
     
-    // following are convenience methods for scheduling notifications
+    /// Schedules a one-time notification at a specific date.
+    /// - Parameters:
+    ///   - title: The title of the notification.
+    ///   - body: The body text of the notification.
+    ///   - date: The date and time when the notification should be delivered.
+    ///   - identifier: A unique identifier for the notification. Defaults to a random UUID string.
+    /// - Throws: An error if scheduling fails or if the date is in the past.
     func scheduleOneTime(
         title: String,
         body: String,
@@ -422,6 +470,12 @@ extension PushNotificationDelegate {
         try await schedule(request: request)
     }
     
+    /// Schedules a notification to be delivered immediately.
+    /// - Parameters:
+    ///   - title: The title of the notification.
+    ///   - body: The body text of the notification.
+    ///   - identifier: A unique identifier for the notification. Defaults to a random UUID string.
+    /// - Throws: An error if scheduling fails.
     func scheduleNow(
         title: String,
         body: String,
@@ -440,6 +494,13 @@ extension PushNotificationDelegate {
         try await schedule(request: request)
     }
     
+    /// Schedules a notification to be delivered after a specified delay.
+    /// - Parameters:
+    ///   - title: The title of the notification.
+    ///   - body: The body text of the notification.
+    ///   - delay: The time interval to wait before delivering the notification.
+    ///   - identifier: A unique identifier for the notification. Defaults to a random UUID string.
+    /// - Throws: An error if scheduling fails or if the delay is negative.
     func scheduleAfterDelay(
         title: String,
         body: String,
@@ -459,6 +520,16 @@ extension PushNotificationDelegate {
         try await schedule(request: request)
     }
     
+    /// Schedules a notification to be delivered when a timer completes.
+    /// - Parameters:
+    ///   - timeInterval: The duration of the timer.
+    ///   - title: The title of the notification. Defaults to "Work done!".
+    ///   - body: The body text of the notification. Defaults to "You've completed a session!".
+    ///   - identifier: A unique identifier for the notification. Defaults to a random UUID string.
+    ///   - categoryIdentifier: The category identifier for the notification, used for action buttons.
+    ///   - userInfo: Additional data to store with the notification.
+    ///   - completion: A callback to execute when scheduling completes or fails.
+    /// - Throws: `NotificationError.pastDate` if the time interval is negative, or another error if scheduling fails.
     func scheduleTimerSuccessNotification(
         timeInterval: TimeInterval,
         title: String = "Work done!",
@@ -492,6 +563,7 @@ extension PushNotificationDelegate {
 
 // MARK: - Debugging Purposes
 extension PushNotificationDelegate {
+    /// Prints details of all pending notifications to the console
     private func getPendingNotifications() {
         notificationCenter.getPendingNotificationRequests { requests in
             for request in requests {
@@ -525,11 +597,12 @@ extension PushNotificationDelegate {
         }
     }
     
+    /// Remove all pending notifications
     private func removePendingNotifications() {
         notificationCenter.removeAllPendingNotificationRequests()
     }
     
-    // check that the pending notifications matches the habits available
+    /// Creates and removes unexpected scheduled notifications based on habits
     func auditNotifications() {
         let notificationCenter = UNUserNotificationCenter.current()
         
@@ -583,6 +656,9 @@ extension PushNotificationDelegate {
         }
     }
     
+    /// Finds the habit associated with a notification identifier
+    /// - Parameter notificationId: The identifier of the notification
+    /// - Returns: The associated habit if found, nil otherwise
     private func findHabitForNotificationId(_ notificationId: String) -> Habit? {
         // Check if it's a day-specific notification
         if notificationId.contains("_") {

@@ -1,9 +1,31 @@
 import Foundation
 import UIKit
 
+/// Custom alert view controller to match with the app's aesthetics
+///
+/// # Features:
+/// - Customizable title and message
+/// - Primary action button with configurable title
+/// - Optional cancel button with configurable title
+/// - Completion handlers for primary action and cancel
+/// - Adaptive font sizing based on content and screen size
+/// - Factory methods for common alerts
+///
+/// ## Example Usage
+/// ```
+/// let alert = CustomAlertViewController(
+///     title: "Success",
+///     message: "Your data has been saved.",
+///     okButtonTitle: "Continue",
+///     completionOk: {
+///         // Handle the OK button tap
+///     }
+/// )
+/// present(alert, animated: true)
+/// ```
 class CustomAlertViewController: UIViewController {
-    var completionOk: (() -> Void)?
-    var completionCancel: (() -> Void)?
+    var completionOk: (() -> Void)? // primary action completion handler
+    var completionCancel: (() -> Void)? // cancel action completion handler
     
     private var alertTitle: String
     private var message: String
@@ -59,7 +81,18 @@ class CustomAlertViewController: UIViewController {
     }()
     
     // MARK: - Lifecycle
-    
+    /// Creates a new custom alert view controller
+    ///
+    /// Parameters:
+    /// - title : title to be displayed
+    /// - message : message to be displayed
+    /// - okButtonTitle : title for primary action button
+    ///     - defaults to "OK"
+    /// - cancelButtonTitle : title for cancel button
+    ///     - defaults to nil
+    ///     - nil value -> no cancel button
+    /// - completionOk : Optional closure when primary action is picked
+    /// - completionCancel : Optional closure when cancel action is picked
     convenience init(title: String, message: String, okButtonTitle: String = "OK", cancelButtonTitle: String? = nil, completionOk: (() -> Void)? = nil, completionCancel: (() -> Void)? = nil) {
         self.init(nibName: nil, bundle: nil)
         
@@ -182,13 +215,14 @@ class CustomAlertViewController: UIViewController {
     }
     
     // MARK: - Button Actions
-    
+    /// Dismisses alert and calls completionOk handler
     @objc private func okClicked() {
         dismiss(animated: true) {
             self.completionOk?()
         }
     }
     
+    /// Dismisses alert and calls completionCancel handler
     @objc private func cancelClicked() {
         dismiss(animated: true) {
             self.completionCancel?()
@@ -196,6 +230,18 @@ class CustomAlertViewController: UIViewController {
     }
     
     // MARK: - Auxillary Functions
+    /// Calculates appropriate font size for given text according to how many words can fit
+    ///
+    /// Font sizes are determined based upon:
+    /// - number of words in the text
+    /// - width of container view
+    /// - base font sizes - varies with screen width
+    ///
+    /// Parameters:
+    /// - text : text to calculate the font size for
+    ///
+    /// Returns:
+    /// - CGFloat : calculated font size
     private func calculateFontSize(for text: String) -> CGFloat {
         let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
         let wordCount = words.count
@@ -258,6 +304,14 @@ class CustomAlertViewController: UIViewController {
 }
 
 extension String {
+    /// Calculates height required to display string within constraints
+    ///
+    /// Parameters:
+    /// - width : maximum width available for text
+    /// - font : font used for text
+    ///
+    /// Returns:
+    /// - CGFloat : calculated height required to display the text
     func height(withConstrainedWidth width: CGFloat, font: UIFont) -> CGFloat {
         let constraintRect = CGSize(width: width, height: .greatestFiniteMagnitude)
         let boundingBox = self.boundingRect(with: constraintRect,
@@ -271,6 +325,14 @@ extension String {
 
 // MARK: - Common Alerts
 extension CustomAlertViewController {
+    /// Creates an alert prompting user to enable location services
+    ///
+    /// Parameter:
+    /// - completion
+    ///     - optional closure called when user taps the primary action
+    ///
+    /// Returns:
+    /// - configured CustomAlertViewController instance
     static func createLocationSettingsAlert(completion: (() -> Void)? = nil) -> CustomAlertViewController {
         let alert = CustomAlertViewController(
             title: "Granting Location Authorization",
@@ -282,6 +344,14 @@ extension CustomAlertViewController {
         return alert
     }
     
+    /// Creates an alert prompting the user to enable notifications
+    ///
+    /// Parameters:
+    /// - completion
+    ///     - optional closure called when user taps the primary action
+    ///
+    /// Returns:
+    /// - configured CustomAlertViewController instance
     static func createNotificationSettingsAlert(completion: (() -> Void)? = nil) -> CustomAlertViewController {
         let alert = CustomAlertViewController(
             title: "Notification Permission is Currently Denied!",

@@ -1,21 +1,39 @@
 import Foundation
 import UIKit
 
+/// Matches string to desired icon from SF Symbols 9
+///
+/// Example usage:
+/// ```
+/// let habitName = "morning run"
+/// if let iconImage = HabitIconUtility.icon(for: habitName) {
+///     let iconView = UIImageView(image: iconImage)
+///     // Add to view hierarchy
+/// }
+/// ```
+///
+/// The matching algorithm prioritizes:
+/// 1. Exact matches (where a keyword exactly matches the input)
+/// 2. Partial matches (where a keyword contains or is contained by the input)
+/// 3. Default fallback icon when no match is found
 public struct HabitIconUtility {
     private struct HabitIcon {
-        let keywords: [String]
-        let image: String
+        let keywords: [String] // possible key word matches
+        let image: String // sf symbol name
         
+        /// length of the longest keyword in the keyword array
         var length: Int {
             keywords.map { $0.count }.max() ?? 0
         }
         
+        /// type of match between input string and icon's keywords
         enum MatchType {
             case exact // perfect match
             case partial // partial match
             case none // no match
         }
         
+        /// determines the match type between input string and icon's keywords
         func matchType(_ input: String) -> MatchType {
             let lowercasedInput = input.lowercased()
             
@@ -34,6 +52,7 @@ public struct HabitIconUtility {
         }
     }
     
+    /// Predefined collections of habit icons and associated keywords
     private static let habitIcons: [HabitIcon] = [
         // Exercise/active
         HabitIcon(keywords: ["run", "move", "activity"],
@@ -221,6 +240,18 @@ public struct HabitIconUtility {
                   image: "music.quarternote.3")
     ]
     
+    /// Returns an appropriate SF Symbol icon for the given habit name
+    ///
+    /// - Requires at least 3 characters in the habit name to perform matching
+    /// - Prioritizes exact keyword matches over partial matches
+    /// - For partial matches, selects the match with the longest keyword
+    /// - Returns a default checkmark icon if no appropriate match is found
+    ///
+    /// Parameters:
+    /// - habitName: The name of the habit to find an icon for
+    ///
+    /// Returns:
+    /// -UIImage : containing the appropriate SF Symbol, or a default checkmark icon if no match found
     public static func icon(for habitName: String) -> UIImage? {
         // only allow icon matching if 3 letters or more
         guard habitName.count > 2 else {
