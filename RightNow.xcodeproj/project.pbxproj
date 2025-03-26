@@ -81,6 +81,11 @@
 		FB8E9CCF2AF8823A0055DADC /* HabitData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8E9CCE2AF8823A0055DADC /* HabitData.swift */; };
 		FB8E9CD12AF8987A0055DADC /* UIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8E9CD02AF8987A0055DADC /* UIConfiguration.swift */; };
 		FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */; };
+		FBBC92692D93911D00B730FC /* GameBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC92682D93911D00B730FC /* GameBoard.swift */; };
+		FBBC926B2D94473D00B730FC /* AnalyticsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926A2D94473D00B730FC /* AnalyticsController.swift */; };
+		FBBC926D2D944EB000B730FC /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926C2D944EB000B730FC /* GameState.swift */; };
+		FBBC926F2D94520600B730FC /* ScrollingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926E2D94520600B730FC /* ScrollingEngine.swift */; };
+		FBBC92712D947E2300B730FC /* GameUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC92702D947E2300B730FC /* GameUtilities.swift */; };
 		FBC573D32D77BED80063E90C /* HabitListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D22D77BED80063E90C /* HabitListViewModelTests.swift */; };
 		FBC573D52D789B490063E90C /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D42D789B490063E90C /* FirebaseManager.swift */; };
 		FBC573D82D789E9B0063E90C /* MockFirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573D72D789E9B0063E90C /* MockFirebaseManager.swift */; };
@@ -90,7 +95,7 @@
 		FBC573E12D7A6BD50063E90C /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E02D7A6BD50063E90C /* OnboardingViewController.swift */; };
 		FBC573E32D7A77A00063E90C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E22D7A77A00063E90C /* OnboardingView.swift */; };
 		FBC573E52D7BA04B0063E90C /* OnboardingTaskBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E42D7BA04B0063E90C /* OnboardingTaskBarController.swift */; };
-		FBC573E82D7CA52D0063E90C /* TowerDefenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E72D7CA52D0063E90C /* TowerDefenseViewController.swift */; };
+		FBC573E82D7CA52D0063E90C /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573E72D7CA52D0063E90C /* GameViewController.swift */; };
 		FBC573EC2D80810D0063E90C /* InteractionBlocker.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC573EB2D80810D0063E90C /* InteractionBlocker.swift */; };
 		FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */; };
 		FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */; };
@@ -204,6 +209,11 @@
 		FB8E9CCE2AF8823A0055DADC /* HabitData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitData.swift; sourceTree = "<group>"; };
 		FB8E9CD02AF8987A0055DADC /* UIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIConfiguration.swift; sourceTree = "<group>"; };
 		FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewImageViewConstraints.swift; sourceTree = "<group>"; };
+		FBBC92682D93911D00B730FC /* GameBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoard.swift; sourceTree = "<group>"; };
+		FBBC926A2D94473D00B730FC /* AnalyticsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsController.swift; sourceTree = "<group>"; };
+		FBBC926C2D944EB000B730FC /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
+		FBBC926E2D94520600B730FC /* ScrollingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollingEngine.swift; sourceTree = "<group>"; };
+		FBBC92702D947E2300B730FC /* GameUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameUtilities.swift; sourceTree = "<group>"; };
 		FBC573D22D77BED80063E90C /* HabitListViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListViewModelTests.swift; sourceTree = "<group>"; };
 		FBC573D42D789B490063E90C /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
 		FBC573D72D789E9B0063E90C /* MockFirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockFirebaseManager.swift; sourceTree = "<group>"; };
@@ -213,7 +223,7 @@
 		FBC573E02D7A6BD50063E90C /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
 		FBC573E22D7A77A00063E90C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FBC573E42D7BA04B0063E90C /* OnboardingTaskBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTaskBarController.swift; sourceTree = "<group>"; };
-		FBC573E72D7CA52D0063E90C /* TowerDefenseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TowerDefenseViewController.swift; sourceTree = "<group>"; };
+		FBC573E72D7CA52D0063E90C /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		FBC573EB2D80810D0063E90C /* InteractionBlocker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionBlocker.swift; sourceTree = "<group>"; };
 		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
 		FBC7BD1E2D5C3A3000F94E04 /* ConfidenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidenceViewController.swift; sourceTree = "<group>"; };
@@ -337,7 +347,7 @@
 				FB6E52732AE1FC3500499E1C /* HabitList */,
 				FBA7213E2AD6356400E3EC4F /* Maow */,
 				FBC7BD302D6F753400F94E04 /* Shop */,
-				FBC573E62D7CA50B0063E90C /* TowerDefense */,
+				FBC573E62D7CA50B0063E90C /* Game */,
 				FB22A7D42AB7DD8B00F63D42 /* Log-In */,
 				FB22A7D32AB7DD7E00F63D42 /* Photos */,
 				FBC573DF2D7A6B460063E90C /* Onboarding */,
@@ -555,12 +565,17 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
-		FBC573E62D7CA50B0063E90C /* TowerDefense */ = {
+		FBC573E62D7CA50B0063E90C /* Game */ = {
 			isa = PBXGroup;
 			children = (
-				FBC573E72D7CA52D0063E90C /* TowerDefenseViewController.swift */,
+				FBBC926A2D94473D00B730FC /* AnalyticsController.swift */,
+				FBC573E72D7CA52D0063E90C /* GameViewController.swift */,
+				FBBC92682D93911D00B730FC /* GameBoard.swift */,
+				FBBC926C2D944EB000B730FC /* GameState.swift */,
+				FBBC926E2D94520600B730FC /* ScrollingEngine.swift */,
+				FBBC92702D947E2300B730FC /* GameUtilities.swift */,
 			);
-			path = TowerDefense;
+			path = Game;
 			sourceTree = "<group>";
 		};
 		FBC7BD302D6F753400F94E04 /* Shop */ = {
@@ -876,15 +891,18 @@
 				FBC573E12D7A6BD50063E90C /* OnboardingViewController.swift in Sources */,
 				FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */,
 				FBC573E52D7BA04B0063E90C /* OnboardingTaskBarController.swift in Sources */,
+				FBBC926B2D94473D00B730FC /* AnalyticsController.swift in Sources */,
 				FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */,
 				FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */,
 				FB0E0E752B828B57003177AF /* HabitGoalLevelView.swift in Sources */,
 				FB61E8A42D8A472F0012E7F4 /* SettingsViewController.swift in Sources */,
 				FB23F3ED2D3F0217006A4A16 /* FocusView.swift in Sources */,
 				FB6E527D2AE2021300499E1C /* HabitListViewController.swift in Sources */,
+				FBBC92712D947E2300B730FC /* GameUtilities.swift in Sources */,
 				FB4CA1362D936FF6002853E6 /* LocationDelegate.swift in Sources */,
 				FBC7BD532D752DF300F94E04 /* HabitDataService.swift in Sources */,
 				FB2A2B372C8CBBE3003F31B2 /* Location.swift in Sources */,
+				FBBC92692D93911D00B730FC /* GameBoard.swift in Sources */,
 				FB4CC9752D8EFDBE00A52B88 /* AccountConversionViewModel.swift in Sources */,
 				FB23F3E82D3438C3006A4A16 /* Incentive.swift in Sources */,
 				FB34FCC42AD837BE0032872E /* CameraView.swift in Sources */,
@@ -904,9 +922,11 @@
 				FB8E9CCF2AF8823A0055DADC /* HabitData.swift in Sources */,
 				FB22A7E82AB7E52E00F63D42 /* SignInViewModel.swift in Sources */,
 				FBE946712ACF5D1100CA11ED /* PhotoTakenViewController.swift in Sources */,
+				FBBC926D2D944EB000B730FC /* GameState.swift in Sources */,
 				FB23F3E02D330D84006A4A16 /* CustomAlertViewController.swift in Sources */,
 				FB22A7B62AB7D49C00F63D42 /* SceneDelegate.swift in Sources */,
 				FB0E0E712B8142A9003177AF /* HabitCurrentLevelView.swift in Sources */,
+				FBBC926F2D94520600B730FC /* ScrollingEngine.swift in Sources */,
 				FB0E0E772B883A53003177AF /* ProgressionViewController.swift in Sources */,
 				FB2A2B332C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift in Sources */,
 				FB23F3EB2D347F6B006A4A16 /* SelectCueViewController.swift in Sources */,
@@ -942,7 +962,7 @@
 				FB8E9CCD2AF87FE10055DADC /* SelectHabitViewController.swift in Sources */,
 				FB2A2B392C8D1708003F31B2 /* IncentivesViewController.swift in Sources */,
 				FB61E8A02D88E62C0012E7F4 /* AppCoordinator.swift in Sources */,
-				FBC573E82D7CA52D0063E90C /* TowerDefenseViewController.swift in Sources */,
+				FBC573E82D7CA52D0063E90C /* GameViewController.swift in Sources */,
 				FB61E8A22D88E7F80012E7F4 /* OnboardingCoordinator.swift in Sources */,
 				FB22A7DB2AB7E3D400F63D42 /* User.swift in Sources */,
 				FB34FCBE2AD8369D0032872E /* CameraModel.swift in Sources */,
@@ -1133,7 +1153,6 @@
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
@@ -1170,7 +1189,6 @@
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_NSContactsUsageDescription = "";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Sign in with Face ID";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated. When your authorization is set to only when in use, you'll have to log onto RightNow for us to track your habit.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "When you choose to track a habit with your location, we check your GPS to see if you're in the location for the habit during the time you've indicated";

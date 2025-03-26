@@ -6,7 +6,7 @@ class TabBarController: UITabBarController {
         super.viewDidLoad()
         
         // create instances of view controllers
-        let towerVC = TowerDefenseViewController()
+        let towerVC = GameViewController()
         let towerNav = UINavigationController(rootViewController: towerVC)
         
         let maowVC = MaowViewController()
