@@ -1,21 +1,18 @@
 import UIKit
 import GoogleSignIn
 
+/// Main app delegate responsible for coordinating application lifecycle
+/// Uses composite pattern to delegate certain events to specialized delegates
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
+    
+    /// Forwards events to specialized delegates
     private lazy var appDelegate = AppDelegateFactory.fetchDelegates
     
-    var firebaseManager: FirebaseConfigurable = FirebaseManager.shared
-    
-    // called when app is opened from a state of not running at all
+    /// Called when the application finishes launching
+    /// Coordinates initial application setup and configures system-level services
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // firebase
-        firebaseManager.configure()
-        
-        // initialise LocationManager
-        let _ = LocationManager.shared
-        
         // forward call to composite delegate
         _ = appDelegate.application?(application, didFinishLaunchingWithOptions: launchOptions) ?? false
         

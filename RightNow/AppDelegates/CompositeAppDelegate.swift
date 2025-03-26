@@ -1,11 +1,12 @@
-/*
- calls lifecycle methods of app for each delegation implementation
- */
-
 import UIKit
 
+/// Type definition representing objects that can act as app delegates
 typealias AppDelegateType = UIResponder & UIApplicationDelegate
 
+/// Forwards lifecycle events to app delegates
+///
+/// This class separates concerns in app initialization and lifecycle management
+/// Maintains a collection of the different delegates - ensure each gets appropriate lifecycle callbacks
 final class CompositeAppDelegate: AppDelegateType {
     private let appDelegates: [AppDelegateType]
     

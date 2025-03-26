@@ -22,6 +22,8 @@ target 'RightNow' do
 	pod 'Firebase/Firestore'
 	pod 'Firebase/Auth'
 	pod 'Firebase/Storage'
+	pod 'Firebase/Analytics'
+	pod 'Firebase/Crashlytics'
 	$FirebaseSDKVersion = '10.22.0'
 
 	# google
@@ -52,6 +54,8 @@ target 'RightNowTests' do
 	pod 'Firebase/Firestore'
 	pod 'Firebase/Auth'
 	pod 'Firebase/Storage'
+	pod 'Firebase/Analytics'
+	pod 'Firebase/Crashlytics'
 	$FirebaseSDKVersion = '10.22.0'
 
 	# google
