@@ -22,8 +22,16 @@ protocol HabitDataServiceProtocol {
     func clearLocalStorage() async throws
 }
 
-class HabitDataService: HabitDataServiceProtocol {
-    static let shared = HabitDataService()
+protocol GameDataServiceProtocol {
+    func saveGameStateToFirestore(_ gameState: CentralGameState) async throws
+    func loadGameStateFromFirestore() async throws -> CentralGameState?
+    
+    func saveGameStateLocally(_ gameState: CentralGameState) async throws
+    func loadGameStateLocally() async throws -> CentralGameState?
+}
+
+class DataService: HabitDataServiceProtocol {
+    static let shared = DataService()
     
     // MARK: - Firestore Operations
     // reference to the firebase manager
@@ -50,8 +58,8 @@ class HabitDataService: HabitDataServiceProtocol {
     private func saveHabitToFirestore(_ habit: Habit, userId: String? = nil) async throws {
         try await firebaseManager.setDocument(
             data: habit,
-            collection: "habits",
-            subcollection: "userHabits",
+            collection: "users",
+            subcollection: "habits",
             subdocument: habit.id.uuidString
         )
     }
@@ -59,31 +67,31 @@ class HabitDataService: HabitDataServiceProtocol {
     func updateHabitInFirestore(_ habit: Habit) async throws {
         try await firebaseManager.updateDocument(
             data: habit,
-            collection: "habits",
-            subcollection: "userHabits",
+            collection: "users",
+            subcollection: "habits",
             subdocument: habit.id.uuidString
         )
     }
 
     func loadHabitsFromFirestore() async throws -> [Habit] {
         return try await firebaseManager.getDocuments(
-            collection: "habits",
-            subcollection: "userHabits"
+            collection: "users",
+            subcollection: "habits"
         )
     }
 
     func fetchHabitFromFirestore(habitID: String) async throws -> Habit? {
         return try await firebaseManager.getDocument(
-            collection: "habits",
-            subcollection: "userHabits",
+            collection: "users",
+            subcollection: "habits",
             subdocument: habitID
         )
     }
 
     func deleteHabitFromFirestore(habitId: UUID) async throws {
         try await firebaseManager.deleteDocument(
-            collection: "habits",
-            subcollection: "userHabits",
+            collection: "users",
+            subcollection: "habits",
             subdocument: habitId.uuidString
         )
     }
@@ -142,6 +150,63 @@ class HabitDataService: HabitDataServiceProtocol {
     func clearLocalStorage() async throws {
         // clear for current user
         let fileURL = getHabitsFileURL()
+        
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            try FileManager.default.removeItem(at: fileURL)
+        }
+    }
+}
+
+extension DataService: GameDataServiceProtocol {
+    // MARK: - Game State Firestore Operations
+    func saveGameStateToFirestore(_ gameState: CentralGameState) async throws {
+        try await firebaseManager.setDocument(
+            data: gameState,
+            collection: "users",
+            subcollection: "gameData",
+            subdocument: "centralGame"
+        )
+    }
+    
+    func loadGameStateFromFirestore() async throws -> CentralGameState? {
+        return try await firebaseManager.getDocument(
+            collection: "users",
+            subcollection: "gameData",
+            subdocument: "centralGame"
+        )
+    }
+    
+    // MARK: - Game State Local Operations
+    private func getGameStateFileURL() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0].appendingPathComponent("central_game_state.json")
+    }
+    
+    func saveGameStateLocally(_ gameState: CentralGameState) async throws {
+        let fileURL = getGameStateFileURL()
+        
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(gameState)
+        try data.write(to: fileURL)
+    }
+    
+    func loadGameStateLocally() async throws -> CentralGameState? {
+        let fileURL = getGameStateFileURL()
+        
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return nil // Return nil instead of empty array since we're dealing with a single object
+        }
+        
+        let data = try Data(contentsOf: fileURL)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(CentralGameState.self, from: data)
+    }
+    
+    // MARK: - Clear game state
+    func clearGameStateLocally() async throws {
+        let fileURL = getGameStateFileURL()
         
         if FileManager.default.fileExists(atPath: fileURL.path) {
             try FileManager.default.removeItem(at: fileURL)

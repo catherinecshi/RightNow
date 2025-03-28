@@ -75,11 +75,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
                 print("Habit: \(habit.name), Level: \(habit.currentLevel.displayName)")
             }
         
-        // receives callback
-        viewModel.addObserver { [weak self] changedType in
-            self?.handleModelChange(changedType)
-        }
-        
         habitListView.tableView.reloadData()
         habitListView.tableView.register(HabitTableViewCell.self, forCellReuseIdentifier: "HabitCell")
         habitListView.tableView.allowsSelectionDuringEditing = true //capable of editing mode

@@ -1,17 +1,17 @@
 import Foundation
 
 /// Model for the logic in the game board
-class GameBoard {
+class NumberFactoryBoard {
     // Game constants
     let gridSize = 7
     private let maxInitialNumber = 5
     
     // MARK: - Game State
-    var stateDidChange: ((GameState, GameState) -> Void)?
+    var stateDidChange: ((NumberFactoryState, NumberFactoryState) -> Void)?
     var gameDidEnd: (() -> Void)?
     var didReachGoal: (() -> Void)?
     
-    private var currentState: GameState {
+    private var currentState: NumberFactoryState {
         didSet {
             // notify observers whenver state changes
             stateDidChange?(currentState, oldValue)
@@ -28,22 +28,6 @@ class GameBoard {
     }
     
     // MARK: - Properties
-    var score: Int {
-        get { return currentState.score }
-        set {
-            currentState = GameState(
-                score: newValue,
-                goalValue: currentState.goalValue,
-                isGoalReached: currentState.isGoalReached,
-                isGameOver: currentState.isGameOver,
-                avoidRule: currentState.avoidRule,
-                playerValue: currentState.playerValue,
-                playerPosition: currentState.playerPosition,
-                grid: currentState.grid
-            )
-        }
-    }
-    
     var playerValue: Int {
         get { return currentState.playerValue }
         set {
@@ -52,8 +36,7 @@ class GameBoard {
             let wouldReachGoal = newValue >= currentState.goalValue
             
             // update state with consequences of value change
-            currentState = GameState(
-                score: currentState.score,
+            currentState = NumberFactoryState(
                 goalValue: wouldReachGoal ? newValue + Int.random(in: 5...15) : currentState.goalValue,
                 isGoalReached: wouldReachGoal,
                 isGameOver: wouldViolateRule || currentState.isGameOver,
@@ -75,7 +58,7 @@ class GameBoard {
     
     // MARK: - Initialization
     init() {
-        currentState = GameState.initialState(gridSize: gridSize)
+        currentState = NumberFactoryState.initialState(gridSize: gridSize)
         fillGridWithRandomNumbers()
     }
     
@@ -100,8 +83,7 @@ class GameBoard {
             }
         }
         
-        currentState = GameState(
-            score: currentState.score,
+        currentState = NumberFactoryState(
             goalValue: currentState.goalValue,
             isGoalReached: currentState.isGoalReached,
             isGameOver: currentState.isGameOver,
@@ -131,8 +113,7 @@ class GameBoard {
         
         // check if player falls of the grid
         if newRow >= gridSize {
-            currentState = GameState(
-                score: currentState.score,
+            currentState = NumberFactoryState(
                 goalValue: currentState.goalValue,
                 isGoalReached: currentState.isGoalReached,
                 isGameOver: true,
@@ -141,6 +122,8 @@ class GameBoard {
                 playerPosition: (row: oldRow, col: oldCol),
                 grid: newGrid
             )
+            
+            return false
         }
         
         // remove bottom row and add new top row
@@ -150,8 +133,7 @@ class GameBoard {
         newGrid[newRow][oldCol] = currentState.playerValue // reset player position
         
         // update state
-        currentState = GameState(
-            score: currentState.score,
+        currentState = NumberFactoryState(
             goalValue: currentState.goalValue,
             isGoalReached: currentState.isGoalReached,
             isGameOver: currentState.isGameOver,
@@ -222,8 +204,7 @@ class GameBoard {
         newGrid[position.row][position.col] = currentState.playerValue
         
         // Update state
-        currentState = GameState(
-            score: currentState.score,
+        currentState = NumberFactoryState(
             goalValue: currentState.goalValue,
             isGoalReached: currentState.isGoalReached,
             isGameOver: currentState.isGameOver,
@@ -244,8 +225,7 @@ class GameBoard {
             newGrid[position.row][position.col] = currentState.playerValue
             
             // Game over due to rule violation
-            currentState = GameState(
-                score: currentState.score,
+            currentState = NumberFactoryState(
                 goalValue: currentState.goalValue,
                 isGoalReached: currentState.isGoalReached,
                 isGameOver: true,
@@ -258,16 +238,12 @@ class GameBoard {
             return false
         }
         
-        // Safe to merge
-        let newScore = currentState.score + newValue
-        newGrid[position.row][position.col] = newValue
-        
         // Check if goal was reached
+        newGrid[position.row][position.col] = newValue
         let goalReached = newValue >= currentState.goalValue
         let newGoalValue = goalReached ? newValue + Int.random(in: 5...15) : currentState.goalValue
         
-        currentState = GameState(
-            score: newScore,
+        currentState = NumberFactoryState(
             goalValue: newGoalValue,
             isGoalReached: goalReached,
             isGameOver: currentState.isGameOver,
@@ -283,7 +259,7 @@ class GameBoard {
     // MARK: - Game Reset
     func startNewGame() {
         // reset to initial conditions wiht random rule
-        currentState = GameState.initialState(gridSize: gridSize)
+        currentState = NumberFactoryState.initialState(gridSize: gridSize)
         fillGridWithRandomNumbers()
     }
 }

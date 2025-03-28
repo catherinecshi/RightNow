@@ -23,13 +23,14 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     
     private var coinCountLabel: UILabel = {
         let label = UILabel()
-        label.text = "0"
+        label.text = String(CentralGameModel.shared.gameState.numbers)
         label.font = UIConfiguration.subtitleFont
         return label
     }()
     
     private var isFirstImage = true
     
+    // MARK: - Lifecycle
     init() {
         self.maowView = MaowView()
         super.init(nibName: nil, bundle: nil)
@@ -51,6 +52,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         TimerModel.shared.setupObservers()
     }
     
+    // MARK: - Setup UI
     private func setupNavigationBar() {
         setupSettings()
         setupCoins()
@@ -118,6 +120,12 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         ])
     }
     
+    // MARK: - Delegate Methods
+    func initialViewSetup() {
+        timerModelDidUpdateTime()
+        maowView.updateSliderDisplay(value: Float(TimerModel.shared.focusTime))
+    }
+    
     private func setupDelegates() {
         TimerModel.shared.delegate = self
         maowView.delegate = self
@@ -146,11 +154,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         maowView.updateControlsForSession(isActive: TimerModel.shared.isSessionActive)
     }
     
-    func initialViewSetup() {
-        timerModelDidUpdateTime()
-        maowView.updateSliderDisplay(value: Float(TimerModel.shared.focusTime))
-    }
-    
+    // MARK: - Navigation Bar Views
     func updateCoinCount(_ count: Int) {
         if let customView = navigationItem.rightBarButtonItem?.customView as? UIStackView,
            let label = customView.arrangedSubviews.last as? UILabel {
@@ -181,13 +185,19 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         present(navController, animated: true)
     }
     
+    // MARK: - Alerts
     func showFailureAlert() {
         let alert = CustomAlertViewController(title: "Oh No!", message: "You left before the time was up!")
         present(alert, animated: true)
     }
     
-    func showSuccessAlert() {
-        let alert = CustomAlertViewController(title: "Success!", message: "You completed your session!")
-        present(alert, animated: true)
+    func showSuccessAlert(coupons: Int? = nil) {
+        if let coupons = coupons {
+            let alert = CustomAlertViewController(title: "Congrats!", message: "You earned \(coupons) coupons from that session!")
+            present(alert, animated: true)
+        } else {
+            let alert = CustomAlertViewController(title: "Congrats!", message: "You completed your session!")
+            present(alert, animated: true)
+        }
     }
 }

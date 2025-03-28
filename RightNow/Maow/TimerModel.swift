@@ -4,12 +4,13 @@ import UIKit
 protocol TimerModelDelegate: AnyObject {
     func timerModelDidUpdateTime()
     func showFailureAlert()
-    func showSuccessAlert()
+    func showSuccessAlert(coupons: Int?)
 }
 
 class TimerModel {
     static let shared = TimerModel()
     weak var delegate: TimerModelDelegate?
+    let rewardModel = RewardModel()
     
     var timer: Timer?
     var focusTime: Int = UserDefaults.standard.integer(forKey: "userFocusTime") != 0 ? UserDefaults.standard.integer(forKey: "userFocusTime") : 25 {
@@ -52,7 +53,6 @@ class TimerModel {
         observersSetup = false
     }
     
-    
     // MARK: - Session Management
     func startSession() {
         isSessionActive = true
@@ -64,6 +64,9 @@ class TimerModel {
         timer?.invalidate()
         timer = nil
         isSessionActive = false
+        
+        // get duration for reward calculation if successful
+        let sessionDuration = calculateSessionDuration()
         remainingSeconds = focusTime * 60
         sessionStartTime = nil
         
@@ -71,17 +74,25 @@ class TimerModel {
             if failed {
                 delegate?.showFailureAlert()
             } else {
-                delegate?.showSuccessAlert()
+                let couponsCount = rewardModel.timeToCoupons(minutes: sessionDuration)
+                delegate?.showSuccessAlert(coupons: couponsCount)
             }
         } else {
             if failed {
                 showFailureNotification()
             } else {
-                showSuccessNotification()
+                let couponsCount = rewardModel.timeToCoupons(minutes: sessionDuration)
+                showSuccessNotification(coupons: couponsCount)
             }
         }
         
         delegate?.timerModelDidUpdateTime()
+    }
+    
+    private func calculateSessionDuration() -> Int {
+        guard let startTime = sessionStartTime else { return 0 }
+        let totalSeconds = focusTime * 60 - remainingSeconds
+        return totalSeconds / 60 // convert to minutes
     }
     
     @objc func updateTime() {
@@ -116,10 +127,14 @@ class TimerModel {
         }
     }
     
-    private func showSuccessNotification() {
+    private func showSuccessNotification(coupons: Int? = nil) {
         Task {
             do {
-                try await PushNotificationDelegate.shared.scheduleNow(title: "Work done!", body: "Great work on your session!")
+                if let coupons = coupons {
+                    try await PushNotificationDelegate.shared.scheduleNow(title: "Work done!", body: "Great work earning \(coupons) coupons this session!")
+                } else {
+                    try await PushNotificationDelegate.shared.scheduleNow(title: "Work done!", body: "Great work on your session!")
+                }
             } catch {
                 print("Success timer notification failed: \(error)")
             }

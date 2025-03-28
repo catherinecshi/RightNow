@@ -27,7 +27,7 @@ class HabitRepository: HabitRepositoryProtocol {
     
     private(set) var habits: [Habit] = []
     private var isNetworkAvailable = true
-    private var isSyncing = false
+    private var monitor: NWPathMonitor?
     private var needsSync = false
     
     private let habitSubject = PassthroughSubject<HabitChangeType, Never>()
@@ -36,13 +36,17 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     // MARK: - Initialization
-    private init(dataService: HabitDataServiceProtocol = HabitDataService.shared) {
+    private init(dataService: HabitDataServiceProtocol = DataService.shared) {
         self.dataService = dataService
         
         Task {
             await loadInitialHabits()
         }
         setupNetworkMonitoring()
+    }
+    
+    deinit {
+        monitor?.cancel()
     }
     
     private func loadInitialHabits() async {
@@ -63,6 +67,7 @@ class HabitRepository: HabitRepositoryProtocol {
     // MARK: - Network Monitoring
     private func setupNetworkMonitoring() {
         let monitor = NWPathMonitor()
+        self.monitor = monitor
         monitor.pathUpdateHandler = { [weak self] path in
             let isConnected = path.status == .satisfied
             
@@ -85,9 +90,7 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     private func syncWithFirestore() async {
-        guard isNetworkAvailable, !isSyncing else { return }
-        
-        isSyncing = true
+        guard isNetworkAvailable else { return }
         
         do {
             // load from firestore
@@ -120,11 +123,8 @@ class HabitRepository: HabitRepositoryProtocol {
             // update notification and geofences
             await PushNotificationDelegate.shared.auditNotifications()
             LocationManager.shared.synchronizeGeofencesWithHabits()
-            
-            self.isSyncing = false // done syncing
         } catch {
             print("Error syncing with Firestore: \(error)")
-            isSyncing = false
         }
     }
     

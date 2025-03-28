@@ -6,7 +6,7 @@ class OnboardingTabBarController: UITabBarController {
         super.viewDidLoad()
         
         // create instances of view controllers
-        let towerVC = GameViewController()
+        let towerVC = NumberFactoryViewController()
         let towerNav = UINavigationController(rootViewController: towerVC)
         
         let onboardingVC = OnboardingViewController()

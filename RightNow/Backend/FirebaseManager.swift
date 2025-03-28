@@ -73,10 +73,10 @@ class FirebaseManager: FirebaseConfigurable {
     
     /// Defines all collection names
     enum FirestoreCollection: String {
-        case habits = "habits"
+        case users = "users"
         
         static var allCollections: [FirestoreCollection] {
-            return [.habits]
+            return [.users]
         }
     }
     

@@ -1,24 +1,35 @@
 import UIKit
 
-class GameViewController: UIViewController {
+class NumberFactoryViewController: UIViewController {
     // MARK: - Properties
     // Game constants
     private let boardSize: CGFloat = 350
     private let padding: CGFloat = 4
     
     // Game components
-    private var gameBoard = GameBoard()
+    private var gameBoard = NumberFactoryBoard()
     private var scrollingEngine: ScrollingEngine!
     
     private var cellViews = [[UIView]]()
     private var boardView: UIView!
-    private var scoreLabel: UILabel!
     private var avoidRuleLabel: UILabel!
     private var goalLabel: UILabel!
     private var startButton: UIButton!
     
+    //button to x out
+    private let dismissButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("x", for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
+        button.setTitleColor(.black, for: .normal)
+        return button
+    }()
+    
     // Game state
     private var gameActive = false
+    
+    // callback to send numbers back to central game
+    var onNumbersGenerated: ((Int) -> Void)?
     
     // Color configuration
     private let boardColor = UIColor.systemGray6
@@ -36,6 +47,7 @@ class GameViewController: UIViewController {
         // disable analytics for better performance
         AnalyticsController.shared.disableForComponent()
         
+        setupDismissButton()
         setupGameBoard()
         setupInfoLabels()
         setupStartButton()
@@ -99,7 +111,7 @@ class GameViewController: UIViewController {
     private func setupGameBoard() {
         // Create board container view
         boardView = UIView(frame: CGRect(x: 0, y: 0, width: boardSize, height: boardSize))
-        boardView.center = CGPoint(x: view.center.x, y: view.center.y + 50) // Move down slightly
+        boardView.center = CGPoint(x: view.center.x, y: view.center.y) // Move down slightly
         boardView.backgroundColor = boardColor
         boardView.layer.cornerRadius = 8
         view.addSubview(boardView)
@@ -117,14 +129,6 @@ class GameViewController: UIViewController {
             infoContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             infoContainer.bottomAnchor.constraint(equalTo: boardView.topAnchor, constant: -20)
         ])
-        
-        // Score label
-        scoreLabel = UILabel()
-        scoreLabel.translatesAutoresizingMaskIntoConstraints = false
-        scoreLabel.text = "Score: 0"
-        scoreLabel.font = .boldSystemFont(ofSize: 20)
-        scoreLabel.textAlignment = .center
-        infoContainer.addSubview(scoreLabel)
         
         // Avoid rule box
         let avoidBox = UIView()
@@ -158,10 +162,7 @@ class GameViewController: UIViewController {
         
         // Layout constraints
         NSLayoutConstraint.activate([
-            scoreLabel.topAnchor.constraint(equalTo: infoContainer.topAnchor),
-            scoreLabel.centerXAnchor.constraint(equalTo: infoContainer.centerXAnchor),
-            
-            avoidBox.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 10),
+            avoidBox.topAnchor.constraint(equalTo: infoContainer.topAnchor, constant: 10),
             avoidBox.leadingAnchor.constraint(equalTo: infoContainer.leadingAnchor),
             avoidBox.widthAnchor.constraint(equalTo: infoContainer.widthAnchor, multiplier: 0.45),
             avoidBox.bottomAnchor.constraint(equalTo: infoContainer.bottomAnchor),
@@ -171,7 +172,7 @@ class GameViewController: UIViewController {
             avoidRuleLabel.trailingAnchor.constraint(equalTo: avoidBox.trailingAnchor, constant: -8),
             avoidRuleLabel.bottomAnchor.constraint(equalTo: avoidBox.bottomAnchor, constant: -8),
             
-            goalBox.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 10),
+            goalBox.topAnchor.constraint(equalTo: infoContainer.topAnchor, constant: 10),
             goalBox.trailingAnchor.constraint(equalTo: infoContainer.trailingAnchor),
             goalBox.widthAnchor.constraint(equalTo: infoContainer.widthAnchor, multiplier: 0.45),
             goalBox.bottomAnchor.constraint(equalTo: infoContainer.bottomAnchor),
@@ -200,6 +201,16 @@ class GameViewController: UIViewController {
             startButton.widthAnchor.constraint(equalToConstant: 150),
             startButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+    }
+    
+    private func setupDismissButton() {
+        dismissButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        let dismissBarButton = UIBarButtonItem(customView: dismissButton)
+        self.navigationItem.leftBarButtonItem = dismissBarButton
+        
+        // add action
+        dismissButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
     }
     
     // MARK: - Setup Utilities
@@ -246,6 +257,10 @@ class GameViewController: UIViewController {
     }
     
     // MARK: - Actions
+    @objc private func dismissSelf() {
+        self.dismiss(animated: true, completion: nil)
+    }
+    
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         guard gameActive else { return }
         
@@ -287,7 +302,7 @@ class GameViewController: UIViewController {
         scrollingEngine.start()
         
         startButton.setTitle("End Game", for: .normal)
-        startButton.backgroundColor = .systemRed
+        startButton.backgroundColor = UIConfiguration.tintColor
         gameActive = true
     }
     
@@ -296,13 +311,16 @@ class GameViewController: UIViewController {
         scrollingEngine.stop()
         
         startButton.setTitle("Start Game", for: .normal)
-        startButton.backgroundColor = .systemBlue
+        startButton.backgroundColor = UIConfiguration.tintColor
         gameActive = false
         
         // Show game over message if game ended due to losing
         if gameBoard.isGameOver {
-            showAlert(title: "Game Over", message: "Your score: \(gameBoard.score)")
+            showAlert(title: "Game Over", message: "Your score: \(gameBoard.playerValue)")
         }
+        
+        // send playervalue back to central game
+        onNumbersGenerated?(gameBoard.playerValue)
     }
     
     private func scrollGridDown() {
@@ -318,9 +336,6 @@ class GameViewController: UIViewController {
     }
     
     private func updateUI(animated: Bool) {
-        // Update score
-        scoreLabel.text = "Score: \(gameBoard.score)"
-        
         // Update avoid rule and goal
         avoidRuleLabel.text = "AVOID: " + gameBoard.avoidRule.description
         goalLabel.text = "GOAL: \(gameBoard.goalValue)"
@@ -345,14 +360,6 @@ class GameViewController: UIViewController {
                         cellView.backgroundColor = cellColor
                         numberLabel.textColor = .black
                     }
-                    
-                    // Apply visual indicator if number violates avoid rule
-                    //if gameBoard.avoidRule.checkViolation(value) {
-                    //    cellView.layer.borderWidth = 2
-                    //    cellView.layer.borderColor = UIColor.systemRed.cgColor
-                    //} else {
-                    //    cellView.layer.borderWidth = 0
-                    //}
                     
                     // Scale number size based on value
                     if value < 10 {

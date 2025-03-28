@@ -1,8 +1,7 @@
 import Foundation
 
 /// Represents the state of the game at any point in time
-struct GameState {
-    let score: Int
+struct NumberFactoryState {
     let goalValue: Int
     let isGoalReached: Bool
     let isGameOver: Bool
@@ -12,10 +11,9 @@ struct GameState {
     let grid: [[Int]]
     
     /// Create a new game state with default starting values
-    static func initialState(gridSize: Int) -> GameState {
+    static func initialState(gridSize: Int) -> NumberFactoryState {
         let grid = Array(repeating: Array(repeating: 0, count: gridSize), count: gridSize)
-        return GameState(
-            score: 0,
+        return NumberFactoryState(
             goalValue: 10,
             isGoalReached: false,
             isGameOver: false,

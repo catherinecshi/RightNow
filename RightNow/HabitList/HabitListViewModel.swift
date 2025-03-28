@@ -4,14 +4,8 @@ import Combine
 class HabitListViewModel {
     // MARK: - Properties
     private let repository: HabitRepositoryProtocol
-    private var cancellables = Set<AnyCancellable>()
     
     private(set) var currentDay: Date = Date() // current displayed date
-    
-    // publisher for habit changes
-    var habitChangePublisher: AnyPublisher<HabitRepository.HabitChangeType, Never> {
-        repository.habitPublisher
-    }
     
     // MARK: - Initialisation
     
@@ -20,6 +14,15 @@ class HabitListViewModel {
         setupObservers()
     }
     
+    // publisher for habit changes
+    var habitChangePublisher: AnyPublisher<HabitRepository.HabitChangeType, Never> {
+        repository.habitPublisher
+    }
+    
+    private var observers: [((HabitRepository.HabitChangeType) -> Void)] = []
+    let habitWillChange = PassthroughSubject<Void, Never>()
+    private var cancellables = Set<AnyCancellable>()
+    
     private func setupObservers() {
         repository.habitPublisher
             .sink { [weak self] _ in
@@ -27,27 +30,6 @@ class HabitListViewModel {
                 self?.habitWillChange.send()
             }
             .store(in: &cancellables)
-    }
-    
-    // MARK: - Observer Pattern
-    
-    private var observers: [((HabitRepository.HabitChangeType) -> Void)] = []
-    let habitWillChange = PassthroughSubject<Void, Never>()
-    
-    func addObserver(_ callback: @escaping (HabitRepository.HabitChangeType) -> Void) {
-        observers.append(callback)
-        
-        repository.habitPublisher
-            .sink { [weak self] changeType in
-                self?.notifyObservers(of: changeType)
-            }
-            .store(in: &cancellables)
-    }
-    
-    private func notifyObservers(of changeType: HabitRepository.HabitChangeType) {
-        DispatchQueue.main.async {
-            self.observers.forEach { $0(changeType) }
-        }
     }
     
     // MARK: - UI Methods
@@ -62,7 +44,7 @@ class HabitListViewModel {
         }
         
         habitWillChange.send()
-        notifyObservers(of: .habitCRUD)
+        //notifyObservers(of: .habitCRUD)
     }
     
     // filter habits for the current day

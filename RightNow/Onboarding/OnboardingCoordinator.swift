@@ -47,7 +47,7 @@ class OnboardingCoordinator: Coordinator {
         let onboardingTabBarController = OnboardingTabBarController()
         
         // Create the view controllers
-        let towerVC = GameViewController()
+        let towerVC = NumberFactoryViewController()
         let towerNav = UINavigationController(rootViewController: towerVC)
         
         let onboardingVC = createOnboardingViewController()
