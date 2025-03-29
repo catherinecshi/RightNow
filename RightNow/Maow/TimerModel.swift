@@ -66,6 +66,7 @@ class TimerModel {
         isSessionActive = false
         
         // get duration for reward calculation if successful
+        print("calculating sessiond uration")
         let sessionDuration = calculateSessionDuration()
         remainingSeconds = focusTime * 60
         sessionStartTime = nil
@@ -74,6 +75,7 @@ class TimerModel {
             if failed {
                 delegate?.showFailureAlert()
             } else {
+                print("sending coupons")
                 let couponsCount = rewardModel.timeToCoupons(minutes: sessionDuration)
                 delegate?.showSuccessAlert(coupons: couponsCount)
             }
@@ -81,6 +83,7 @@ class TimerModel {
             if failed {
                 showFailureNotification()
             } else {
+                print("sending coupons")
                 let couponsCount = rewardModel.timeToCoupons(minutes: sessionDuration)
                 showSuccessNotification(coupons: couponsCount)
             }

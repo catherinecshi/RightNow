@@ -47,7 +47,7 @@ class MaowView: UIView {
     
     var timerSlider: UISlider = {
         let slider = UISlider()
-        slider.minimumValue = 10 // 10 minute minimum
+        slider.minimumValue = 1 // 10 minute minimum
         slider.maximumValue = 120
         slider.value = 25
         slider.minimumTrackTintColor = UIConfiguration.tintColor

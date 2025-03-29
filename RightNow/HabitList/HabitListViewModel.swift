@@ -44,7 +44,6 @@ class HabitListViewModel {
         }
         
         habitWillChange.send()
-        //notifyObservers(of: .habitCRUD)
     }
     
     // filter habits for the current day

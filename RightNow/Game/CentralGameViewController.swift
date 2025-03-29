@@ -13,8 +13,10 @@ class CentralGameViewController: UIViewController {
     private let couponsImage = UIImageView()
     private let couponsCountLabel = UILabel()
     
-    private let cookieCountLabel = UILabel()
+    private let numbersCountLabel = UILabel()
     private let upgradesTableView = UITableView()
+    
+    private var expandedCells = Set<IndexPath>()
     
     // Available upgrades
     private var upgrades: [Upgrade] = []
@@ -38,30 +40,6 @@ class CentralGameViewController: UIViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.updateUI()
-            }
-            .store(in: &cancellables)
-        
-        // subscribe to save game
-        gameModel.saveGameCompleted
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                print("Game saved successfully")
-            }
-            .store(in: &cancellables)
-        
-        // subscribe to load game
-        gameModel.loadGameCompleted
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                print("Game loaded successfully")
-            }
-            .store(in: &cancellables)
-        
-        // subscribe to errors
-        gameModel.errorOccurred
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] error in
-                print("Error occurred")
             }
             .store(in: &cancellables)
     }
@@ -110,12 +88,12 @@ class CentralGameViewController: UIViewController {
         buttonStackView.addArrangedSubview(factoryButton)
         view.addSubview(buttonStackView)
         
-        // Setup cookie count label
-        cookieCountLabel.translatesAutoresizingMaskIntoConstraints = false
-        cookieCountLabel.textAlignment = .center
-        cookieCountLabel.font = UIFont.boldSystemFont(ofSize: 24)
-        cookieCountLabel.text = "0"
-        view.addSubview(cookieCountLabel)
+        // Setup numbers count label
+        numbersCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        numbersCountLabel.textAlignment = .center
+        numbersCountLabel.font = UIFont.boldSystemFont(ofSize: 24)
+        numbersCountLabel.text = "0"
+        view.addSubview(numbersCountLabel)
         
         // Setup upgrades table view
         upgradesTableView.translatesAutoresizingMaskIntoConstraints = false
@@ -143,13 +121,13 @@ class CentralGameViewController: UIViewController {
             buttonStackView.topAnchor.constraint(equalTo: factoryImage.bottomAnchor, constant: 20),
             
             // Cookie count label constraints
-            cookieCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            cookieCountLabel.topAnchor.constraint(equalTo: factoryButton.bottomAnchor, constant: 20),
-            cookieCountLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            cookieCountLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            numbersCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            numbersCountLabel.topAnchor.constraint(equalTo: factoryButton.bottomAnchor, constant: 20),
+            numbersCountLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            numbersCountLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             // Upgrades table view constraints
-            upgradesTableView.topAnchor.constraint(equalTo: cookieCountLabel.bottomAnchor, constant: 20),
+            upgradesTableView.topAnchor.constraint(equalTo: numbersCountLabel.bottomAnchor, constant: 20),
             upgradesTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             upgradesTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             upgradesTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
@@ -164,10 +142,15 @@ class CentralGameViewController: UIViewController {
     
     @objc private func numbersTapped() {
         let factoryVC = NumberFactoryViewController()
+        factoryVC.couponCount = gameModel.gameState.coupons
         
         // set up callback to receive the numbers
         factoryVC.onNumbersGenerated = { [weak self] amount in
             self?.gameModel.addNumbers(Double(amount))
+        }
+        
+        factoryVC.onCouponUsed = { [weak self] amount in
+            self?.gameModel.useCoupons(amount)
         }
         
         let navController = UINavigationController(rootViewController: factoryVC)
@@ -187,10 +170,10 @@ class CentralGameViewController: UIViewController {
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = gameModel.gameState.numbers < 1000 ? 1 : 0
         
-        let cookiesText = formatter.string(from: NSNumber(value: gameModel.gameState.numbers)) ?? "0"
-        cookieCountLabel.text = "\(cookiesText) cookies"
+        let numbersText = formatter.string(from: NSNumber(value: gameModel.gameState.numbers)) ?? "0"
+        numbersCountLabel.text = "\(numbersText)"
         
-        couponsCOuntLabel.text = String(gameModel.gameState.coupons)
+        couponsCountLabel.text = String(gameModel.gameState.coupons)
         
         // Refresh the upgrades table to update affordability status
         upgradesTableView.reloadData()
@@ -214,18 +197,41 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
         let cost = gameModel.calculateUpgradeCost(upgradeType)
         let canAfford = gameModel.canPurchaseUpgrade(upgradeType)
         
-        cell.configure(with: upgradeType, level: level, cost: cost, canAfford: canAfford)
+        let isExpanded = expandedCells.contains(indexPath)
+        
+        cell.configure(with: upgradeType, level: level, cost: cost, canAfford: canAfford, isExpanded: isExpanded)
+        
+        cell.buyButtonTapped = { [weak self] upgradeType in
+            self?.gameModel.addNumbers(1000)
+            _ = self?.gameModel.purchaseUpgrade(upgradeType)
+        }
+        
         return cell
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 80
+        return expandedCells.contains(indexPath) ? 140 : 80
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        let upgradeType = UpgradeType.allCases[indexPath.row]
-        gameModel.purchaseUpgrade(upgradeType)
+        // toggle expanded state
+        if expandedCells.contains(indexPath) {
+            expandedCells.remove(indexPath)
+        } else {
+            expandedCells.insert(indexPath)
+        }
+        
+        // update expanded state in cell
+        if let cell = tableView.cellForRow(at: indexPath) as? UpgradeCell {
+            cell.toggleExpanded()
+        }
+        
+        // animate height change
+        UIView.animate(withDuration: 0.3) {
+            tableView.beginUpdates()
+            tableView.endUpdates()
+        }
     }
 }

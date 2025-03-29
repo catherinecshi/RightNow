@@ -15,6 +15,10 @@ class NumberFactoryViewController: UIViewController {
     private var avoidRuleLabel: UILabel!
     private var goalLabel: UILabel!
     private var startButton: UIButton!
+    private let couponsImage = UIImageView()
+    private let couponsCountLabel = UILabel()
+    
+    var couponCount = 0
     
     //button to x out
     private let dismissButton: UIButton = {
@@ -28,8 +32,9 @@ class NumberFactoryViewController: UIViewController {
     // Game state
     private var gameActive = false
     
-    // callback to send numbers back to central game
+    // callback to send numbers and coupons back to central game
     var onNumbersGenerated: ((Int) -> Void)?
+    var onCouponUsed: ((Int) -> Void)?
     
     // Color configuration
     private let boardColor = UIColor.systemGray6
@@ -201,6 +206,30 @@ class NumberFactoryViewController: UIViewController {
             startButton.widthAnchor.constraint(equalToConstant: 150),
             startButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+        
+        // coupon image
+        couponsImage.translatesAutoresizingMaskIntoConstraints = false
+        couponsImage.image = EmojiImage.createImage(from: "🎟️", size: 20)
+        couponsImage.contentMode = .scaleAspectFit
+        view.addSubview(couponsImage)
+        
+        // coupoins label
+        couponsCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        couponsCountLabel.text = String(couponCount)
+        couponsCountLabel.font = UIConfiguration.buttonFont
+        couponsCountLabel.textColor = .black
+        couponsCountLabel.textAlignment = .center
+        view.addSubview(couponsCountLabel)
+        
+        NSLayoutConstraint.activate([
+            couponsImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            couponsImage.topAnchor.constraint(equalTo: startButton.bottomAnchor, constant:20),
+            couponsImage.widthAnchor.constraint(equalToConstant: 28),
+            couponsImage.heightAnchor.constraint(equalToConstant: 28),
+            
+            couponsCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            couponsCountLabel.topAnchor.constraint(equalTo: couponsImage.bottomAnchor, constant:10)
+        ])
     }
     
     private func setupDismissButton() {
@@ -290,7 +319,20 @@ class NumberFactoryViewController: UIViewController {
         if gameActive {
             endGame()
         } else {
+            // check if the user has any coupons
+            if couponCount <= 0 {
+                showAlert(title: "No Coupons", message: "You need a coupon to make numbers")
+                return
+            }
+            
             startGame()
+            
+            // update local count
+            couponCount -= 1
+            updateCouponCount()
+            
+            // send back a coupon was used
+            onCouponUsed?(1)
         }
     }
     
@@ -333,6 +375,10 @@ class NumberFactoryViewController: UIViewController {
             // Game over
             endGame()
         }
+    }
+    
+    private func updateCouponCount() {
+        couponsCountLabel.text = String(couponCount)
     }
     
     private func updateUI(animated: Bool) {

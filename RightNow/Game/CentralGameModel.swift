@@ -48,6 +48,15 @@ class CentralGameModel {
         }
     }
     
+    func useCoupons(_ amount: Int) {
+        gameState.coupons -= amount
+        gameState.lastUpdateTime = Date()
+        
+        Task {
+            await saveGameState()
+        }
+    }
+    
     func canPurchaseUpgrade(_ upgradeType: UpgradeType) -> Bool {
         return gameState.numbers >= calculateUpgradeCost(upgradeType)
     }

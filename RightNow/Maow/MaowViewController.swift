@@ -1,9 +1,13 @@
 import Foundation
+import Combine
 import UIKit
 
 class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate {
     private let timerModel = TimerModel.shared
+    private let gameModel = CentralGameModel.shared
     private let maowView: MaowView
+    
+    private var cancellables = Set<AnyCancellable>()
     
     private var coinStackView: UIStackView = {
         let stackView = UIStackView()
@@ -23,7 +27,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     
     private var coinCountLabel: UILabel = {
         let label = UILabel()
-        label.text = String(CentralGameModel.shared.gameState.numbers)
+        label.text = String(Int(CentralGameModel.shared.gameState.numbers))
         label.font = UIConfiguration.subtitleFont
         return label
     }()
@@ -50,6 +54,16 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         setupView()
         initialViewSetup() // since timemodel stores the user preferences for how long
         TimerModel.shared.setupObservers()
+    }
+    
+    func setupSubscribers() {
+        // subscribe to game state changes
+        gameModel.$gameState
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateNumberCount()
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Setup UI
@@ -159,6 +173,13 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         if let customView = navigationItem.rightBarButtonItem?.customView as? UIStackView,
            let label = customView.arrangedSubviews.last as? UILabel {
             label.text = "\(count)"
+        }
+    }
+    
+    func updateNumberCount() {
+        if let customView = navigationItem.rightBarButtonItem?.customView as? UIStackView,
+           let label = customView.arrangedSubviews.last as? UILabel {
+            label.text = "\(Int(gameModel.gameState.numbers))"
         }
     }
     

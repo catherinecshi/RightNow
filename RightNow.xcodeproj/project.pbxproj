@@ -82,6 +82,7 @@
 		FBA7213D2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */; };
 		FBB367892D95C63E008F764B /* CentralGameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367882D95C63E008F764B /* CentralGameState.swift */; };
 		FBB3678D2D972117008F764B /* RewardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB3678C2D972117008F764B /* RewardModel.swift */; };
+		FBB367932D9861E2008F764B /* UpgradeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367922D9861E2008F764B /* UpgradeCell.swift */; };
 		FBBC92692D93911D00B730FC /* NumberFactoryBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC92682D93911D00B730FC /* NumberFactoryBoard.swift */; };
 		FBBC926B2D94473D00B730FC /* AnalyticsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926A2D94473D00B730FC /* AnalyticsController.swift */; };
 		FBBC926D2D944EB000B730FC /* NumberFactoryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926C2D944EB000B730FC /* NumberFactoryState.swift */; };
@@ -215,6 +216,7 @@
 		FBA7213C2AD5D52D00E3EC4F /* PreviewImageViewConstraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewImageViewConstraints.swift; sourceTree = "<group>"; };
 		FBB367882D95C63E008F764B /* CentralGameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CentralGameState.swift; sourceTree = "<group>"; };
 		FBB3678C2D972117008F764B /* RewardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardModel.swift; sourceTree = "<group>"; };
+		FBB367922D9861E2008F764B /* UpgradeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeCell.swift; sourceTree = "<group>"; };
 		FBBC92682D93911D00B730FC /* NumberFactoryBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryBoard.swift; sourceTree = "<group>"; };
 		FBBC926A2D94473D00B730FC /* AnalyticsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsController.swift; sourceTree = "<group>"; };
 		FBBC926C2D944EB000B730FC /* NumberFactoryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryState.swift; sourceTree = "<group>"; };
@@ -600,6 +602,7 @@
 				FBBC92792D94C0D800B730FC /* CentralGameModel.swift */,
 				FBB367882D95C63E008F764B /* CentralGameState.swift */,
 				FBBC92752D94B5D600B730FC /* UpgradesModel.swift */,
+				FBB367922D9861E2008F764B /* UpgradeCell.swift */,
 			);
 			path = Game;
 			sourceTree = "<group>";
@@ -944,6 +947,7 @@
 				FB23F3E02D330D84006A4A16 /* CustomAlertViewController.swift in Sources */,
 				FB22A7B62AB7D49C00F63D42 /* SceneDelegate.swift in Sources */,
 				FB0E0E712B8142A9003177AF /* HabitCurrentLevelView.swift in Sources */,
+				FBB367932D9861E2008F764B /* UpgradeCell.swift in Sources */,
 				FBBC926F2D94520600B730FC /* ScrollingEngine.swift in Sources */,
 				FB0E0E772B883A53003177AF /* ProgressionViewController.swift in Sources */,
 				FB2A2B332C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift in Sources */,

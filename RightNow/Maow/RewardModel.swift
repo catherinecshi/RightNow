@@ -7,6 +7,7 @@ class RewardModel {
     public func timeToCoupons(minutes: Int) -> Int {
         let noCoupons = getRewardForSession(minutes: minutes)
         addCoupons(noCoupons)
+        print("big boy making coupons")
         
         return noCoupons
     }
