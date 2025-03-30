@@ -34,16 +34,7 @@ class UpgradeCell: UITableViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        
-        let buyButtonMaskPath = UIBezierPath(
-            roundedRect: buyButton.bounds,
-            byRoundingCorners: [.topRight, .bottomRight],
-            cornerRadii: CGSize(width: 12, height: 12)
-        )
-        
-        let buyButtonMaskLayer = CAShapeLayer()
-        buyButtonMaskLayer.path = buyButtonMaskPath.cgPath
-        buyButton.layer.mask = buyButtonMaskLayer
+        //updateBuyButtonMask()
     }
     
     override func prepareForReuse() {
@@ -296,6 +287,18 @@ class UpgradeCell: UITableViewCell {
         }
     }
     
+    private func updateBuyButtonMask() {
+        let buyButtonMaskPath = UIBezierPath(
+            roundedRect: buyButton.bounds,
+            byRoundingCorners: [.topRight, .bottomRight],
+            cornerRadii: CGSize(width: 12, height: 12)
+        )
+        
+        let buyButtonMaskLayer = CAShapeLayer()
+        buyButtonMaskLayer.path = buyButtonMaskPath.cgPath
+        buyButton.layer.mask = buyButtonMaskLayer
+    }
+    
     func toggleExpanded() {
         isExpanded = !isExpanded
         
@@ -309,28 +312,37 @@ class UpgradeCell: UITableViewCell {
             emojiContainerView.heightAnchor.constraint(equalToConstant: emojiContainerHeight).isActive = true
         }
         
-        // Animate all changes together
+        // Important: If expanding, unhide BEFORE animation starts
+        if isExpanded {
+            expandableContentView.isHidden = false
+        }
+        
         UIView.animate(withDuration: 0.3, animations: {
-            // Toggle visibility with alpha for smooth animation
-            self.expandableContentView.isHidden = !self.isExpanded
+            // unhide view first before animation if going from collapsed -> expanded
+            if self.isExpanded {
+                self.expandableContentView.isHidden = !self.isExpanded
+            }
+            
             self.expandableContentView.alpha = self.isExpanded ? 1.0 : 0.0
             
             // Force layout during animation
             self.layoutIfNeeded()
+            //self.updateBuyButtonMask()
+        }, completion: { finished in
+            // hide view after animation if going from expanded -> collapsed
+            if finished {
+                self.expandableContentView.isHidden = !self.isExpanded
+                self.updateBuyButtonMask()
+            }
         })
-        
-        // animate
-        UIView.animate(withDuration: 0.3) {
-            self.expandableContentView.isHidden = !self.isExpanded
-            
-            // force layout update
-            self.layoutIfNeeded()
-        }
     }
     
     @objc private func buyButtonPressed() {
         if let upgradeType = upgradeType {
             buyButtonTapped?(upgradeType)
+            
+            // force layout update
+            updateBuyButtonMask()
         }
     }
 }

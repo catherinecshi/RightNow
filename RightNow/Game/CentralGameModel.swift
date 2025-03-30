@@ -26,7 +26,7 @@ class CentralGameModel {
         }
     }
     
-    // MARK: - Game Actions
+    // MARK: - Change Stored Variables
     func addNumbers(_ amount: Double) {
         gameState.numbers += amount
         gameState.totalNumbersEarned += amount
@@ -57,10 +57,6 @@ class CentralGameModel {
         }
     }
     
-    func canPurchaseUpgrade(_ upgradeType: UpgradeType) -> Bool {
-        return gameState.numbers >= calculateUpgradeCost(upgradeType)
-    }
-    
     func purchaseUpgrade(_ upgradeType: UpgradeType) -> Bool {
         let cost = calculateUpgradeCost(upgradeType)
         
@@ -79,11 +75,29 @@ class CentralGameModel {
         return false
     }
     
+    // MARK: - Fetch Stored Variables
+    func getUpgrades() -> [UpgradeType: Int] {
+        var typedUpgrades: [UpgradeType: Int] = [:]
+        
+        for (upgradeTypeRawValues, level) in gameState.upgradeLevels {
+            // try to create upgradetype from raw value
+            if let upgradeType = UpgradeType(rawValue: upgradeTypeRawValues) {
+                typedUpgrades[upgradeType] = level
+            }
+        }
+        
+        return typedUpgrades
+    }
+    
     // MARK: - Helper Methods
     
     func calculateUpgradeCost(_ upgradeType: UpgradeType) -> Double {
         let level = gameState.level(for: upgradeType)
         return upgradeType.baseCost * pow(1.15, Double(level))
+    }
+    
+    func canPurchaseUpgrade(_ upgradeType: UpgradeType) -> Bool {
+        return gameState.numbers >= calculateUpgradeCost(upgradeType)
     }
     
     // MARK: - Persistence

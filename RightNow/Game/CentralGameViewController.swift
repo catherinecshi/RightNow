@@ -202,7 +202,6 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
         cell.configure(with: upgradeType, level: level, cost: cost, canAfford: canAfford, isExpanded: isExpanded)
         
         cell.buyButtonTapped = { [weak self] upgradeType in
-            self?.gameModel.addNumbers(1000)
             _ = self?.gameModel.purchaseUpgrade(upgradeType)
         }
         

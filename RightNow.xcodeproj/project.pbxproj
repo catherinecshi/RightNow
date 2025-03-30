@@ -83,8 +83,10 @@
 		FBB367892D95C63E008F764B /* CentralGameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367882D95C63E008F764B /* CentralGameState.swift */; };
 		FBB3678D2D972117008F764B /* RewardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB3678C2D972117008F764B /* RewardModel.swift */; };
 		FBB367932D9861E2008F764B /* UpgradeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367922D9861E2008F764B /* UpgradeCell.swift */; };
+		FBB367952D99A180008F764B /* EmojiCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367942D99A180008F764B /* EmojiCell.swift */; };
+		FBB367982D99BCD9008F764B /* MultiplierWheelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367972D99BCD9008F764B /* MultiplierWheelViewController.swift */; };
+		FBB3679A2D99BD1E008F764B /* SpinnerWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367992D99BD1E008F764B /* SpinnerWheelView.swift */; };
 		FBBC92692D93911D00B730FC /* NumberFactoryBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC92682D93911D00B730FC /* NumberFactoryBoard.swift */; };
-		FBBC926B2D94473D00B730FC /* AnalyticsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926A2D94473D00B730FC /* AnalyticsController.swift */; };
 		FBBC926D2D944EB000B730FC /* NumberFactoryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926C2D944EB000B730FC /* NumberFactoryState.swift */; };
 		FBBC926F2D94520600B730FC /* ScrollingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926E2D94520600B730FC /* ScrollingEngine.swift */; };
 		FBBC92712D947E2300B730FC /* NumberFactoryUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC92702D947E2300B730FC /* NumberFactoryUtilities.swift */; };
@@ -217,8 +219,10 @@
 		FBB367882D95C63E008F764B /* CentralGameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CentralGameState.swift; sourceTree = "<group>"; };
 		FBB3678C2D972117008F764B /* RewardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardModel.swift; sourceTree = "<group>"; };
 		FBB367922D9861E2008F764B /* UpgradeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeCell.swift; sourceTree = "<group>"; };
+		FBB367942D99A180008F764B /* EmojiCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiCell.swift; sourceTree = "<group>"; };
+		FBB367972D99BCD9008F764B /* MultiplierWheelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplierWheelViewController.swift; sourceTree = "<group>"; };
+		FBB367992D99BD1E008F764B /* SpinnerWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpinnerWheelView.swift; sourceTree = "<group>"; };
 		FBBC92682D93911D00B730FC /* NumberFactoryBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryBoard.swift; sourceTree = "<group>"; };
-		FBBC926A2D94473D00B730FC /* AnalyticsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsController.swift; sourceTree = "<group>"; };
 		FBBC926C2D944EB000B730FC /* NumberFactoryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryState.swift; sourceTree = "<group>"; };
 		FBBC926E2D94520600B730FC /* ScrollingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollingEngine.swift; sourceTree = "<group>"; };
 		FBBC92702D947E2300B730FC /* NumberFactoryUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryUtilities.swift; sourceTree = "<group>"; };
@@ -551,6 +555,15 @@
 			path = Maow;
 			sourceTree = "<group>";
 		};
+		FBB367962D99BCC1008F764B /* Multiplier Wheel */ = {
+			isa = PBXGroup;
+			children = (
+				FBB367972D99BCD9008F764B /* MultiplierWheelViewController.swift */,
+				FBB367992D99BD1E008F764B /* SpinnerWheelView.swift */,
+			);
+			path = "Multiplier Wheel";
+			sourceTree = "<group>";
+		};
 		FBBC92722D94B3FD00B730FC /* Number Factory */ = {
 			isa = PBXGroup;
 			children = (
@@ -566,7 +579,6 @@
 		FBBC927B2D95BBB400B730FC /* Backend */ = {
 			isa = PBXGroup;
 			children = (
-				FBBC926A2D94473D00B730FC /* AnalyticsController.swift */,
 				FBC7BD522D752DF300F94E04 /* DataService.swift */,
 				FBC573D42D789B490063E90C /* FirebaseManager.swift */,
 			);
@@ -597,12 +609,14 @@
 		FBC573E62D7CA50B0063E90C /* Game */ = {
 			isa = PBXGroup;
 			children = (
+				FBB367962D99BCC1008F764B /* Multiplier Wheel */,
 				FBBC92722D94B3FD00B730FC /* Number Factory */,
 				FBBC92732D94B41C00B730FC /* CentralGameViewController.swift */,
 				FBBC92792D94C0D800B730FC /* CentralGameModel.swift */,
 				FBB367882D95C63E008F764B /* CentralGameState.swift */,
 				FBBC92752D94B5D600B730FC /* UpgradesModel.swift */,
 				FBB367922D9861E2008F764B /* UpgradeCell.swift */,
+				FBB367942D99A180008F764B /* EmojiCell.swift */,
 			);
 			path = Game;
 			sourceTree = "<group>";
@@ -909,7 +923,6 @@
 				FBC573E12D7A6BD50063E90C /* OnboardingViewController.swift in Sources */,
 				FBC7BD2D2D6CE2C400F94E04 /* yolov8s.mlmodel in Sources */,
 				FBC573E52D7BA04B0063E90C /* OnboardingTaskBarController.swift in Sources */,
-				FBBC926B2D94473D00B730FC /* AnalyticsController.swift in Sources */,
 				FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */,
 				FBBC927A2D94C0D800B730FC /* CentralGameModel.swift in Sources */,
 				FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */,
@@ -952,6 +965,7 @@
 				FB0E0E772B883A53003177AF /* ProgressionViewController.swift in Sources */,
 				FB2A2B332C8BB0CA003F31B2 /* LocationAccountabilityViewController.swift in Sources */,
 				FBB3678D2D972117008F764B /* RewardModel.swift in Sources */,
+				FBB3679A2D99BD1E008F764B /* SpinnerWheelView.swift in Sources */,
 				FB23F3EB2D347F6B006A4A16 /* SelectCueViewController.swift in Sources */,
 				FB6E52792AE1FCED00499E1C /* HabitListViewModel.swift in Sources */,
 				FB2A2B402CA60102003F31B2 /* GeofenceData.swift in Sources */,
@@ -980,9 +994,11 @@
 				FBC7BD1F2D5C3A3000F94E04 /* ConfidenceViewController.swift in Sources */,
 				FB23F3F12D51688A006A4A16 /* TabBarController.swift in Sources */,
 				FB61E8AA2D8B0A010012E7F4 /* WelcomeViewModel.swift in Sources */,
+				FBB367952D99A180008F764B /* EmojiCell.swift in Sources */,
 				FB61E8A62D8A4EE10012E7F4 /* AccountConversionViewController.swift in Sources */,
 				FB34FCB82AD824070032872E /* TimerModel.swift in Sources */,
 				FB2665B22CF535C80025353D /* PushNotificationDelegate.swift in Sources */,
+				FBB367982D99BCD9008F764B /* MultiplierWheelViewController.swift in Sources */,
 				FB8E9CCD2AF87FE10055DADC /* SelectHabitViewController.swift in Sources */,
 				FB2A2B392C8D1708003F31B2 /* IncentivesViewController.swift in Sources */,
 				FB61E8A02D88E62C0012E7F4 /* AppCoordinator.swift in Sources */,

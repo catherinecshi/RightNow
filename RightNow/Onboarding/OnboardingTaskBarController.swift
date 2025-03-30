@@ -6,8 +6,8 @@ class OnboardingTabBarController: UITabBarController {
         super.viewDidLoad()
         
         // create instances of view controllers
-        let towerVC = NumberFactoryViewController()
-        let towerNav = UINavigationController(rootViewController: towerVC)
+        let gameVC = CentralGameViewController()
+        let gameNav = UINavigationController(rootViewController: gameVC)
         
         let onboardingVC = OnboardingViewController()
         let onboardingNav = UINavigationController(rootViewController: onboardingVC)
@@ -16,10 +16,10 @@ class OnboardingTabBarController: UITabBarController {
         let habitListNav = UINavigationController(rootViewController: habitListVC)
         
         // configure tab bar items
-        towerNav.tabBarItem = UITabBarItem(
-            title: "Defense",
-            image: UIImage(systemName: "shield"),
-            selectedImage: UIImage(systemName: "shield.fill")
+        gameNav.tabBarItem = UITabBarItem(
+            title: "Numbers",
+            image: UIImage(systemName: "number.circle"),
+            selectedImage: UIImage(systemName: "number.circle.fill")
         )
         
         onboardingNav.tabBarItem = UITabBarItem(
@@ -35,7 +35,7 @@ class OnboardingTabBarController: UITabBarController {
         )
         
         // set tab bar
-        self.viewControllers = [towerNav, onboardingNav, habitListNav]
+        self.viewControllers = [gameNav, onboardingNav, habitListNav]
         
         self.tabBar.tintColor = UIConfiguration.tintColor
         self.tabBar.unselectedItemTintColor = .gray

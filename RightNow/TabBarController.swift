@@ -6,8 +6,8 @@ class TabBarController: UITabBarController {
         super.viewDidLoad()
         
         // create instances of view controllers
-        let towerVC = CentralGameViewController()
-        let towerNav = UINavigationController(rootViewController: towerVC)
+        let gameVC = CentralGameViewController()
+        let gameNav = UINavigationController(rootViewController: gameVC)
         
         let maowVC = MaowViewController()
         let maowNav = UINavigationController(rootViewController: maowVC)
@@ -16,10 +16,10 @@ class TabBarController: UITabBarController {
         let habitListNav = UINavigationController(rootViewController: habitListVC)
         
         // configure tab bar items
-        towerNav.tabBarItem = UITabBarItem(
-            title: "Defense",
-            image: UIImage(systemName: "shield"),
-            selectedImage: UIImage(systemName: "shield.fill")
+        gameNav.tabBarItem = UITabBarItem(
+            title: "Numbers",
+            image: UIImage(systemName: "number.circle"),
+            selectedImage: UIImage(systemName: "number.circle.fill")
         )
         
         maowNav.tabBarItem = UITabBarItem(
@@ -35,7 +35,7 @@ class TabBarController: UITabBarController {
         )
         
         // set tab bar
-        self.viewControllers = [towerNav, maowNav, habitListNav]
+        self.viewControllers = [gameNav, maowNav, habitListNav]
         
         self.tabBar.tintColor = UIConfiguration.tintColor
         self.tabBar.unselectedItemTintColor = .gray

@@ -39,7 +39,7 @@ class NumberFactoryViewController: UIViewController {
     // Color configuration
     private let boardColor = UIColor.systemGray6
     private let cellColor = UIColor.systemGray5
-    private let playerColor = UIColor.systemBlue
+    private let playerColor = UIConfiguration.tintColor
     private let avoidBoxColor = UIColor.systemRed.withAlphaComponent(0.2)
     private let goalBoxColor = UIColor.systemGreen.withAlphaComponent(0.2)
     
@@ -48,9 +48,6 @@ class NumberFactoryViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .white
-        
-        // disable analytics for better performance
-        AnalyticsController.shared.disableForComponent()
         
         setupDismissButton()
         setupGameBoard()
@@ -69,11 +66,6 @@ class NumberFactoryViewController: UIViewController {
         
         // Initial update
         updateUI(animated: false)
-    }
-    
-    deinit {
-        // re-enable analytics when game is closed
-        AnalyticsController.shared.enableForComponent()
     }
     
     private func initializeCellViews() {
@@ -194,7 +186,7 @@ class NumberFactoryViewController: UIViewController {
         startButton.translatesAutoresizingMaskIntoConstraints = false
         startButton.setTitle("Start Game", for: .normal)
         startButton.titleLabel?.font = .boldSystemFont(ofSize: 18)
-        startButton.backgroundColor = .systemBlue
+        startButton.backgroundColor = UIConfiguration.tintColor
         startButton.tintColor = .white
         startButton.layer.cornerRadius = 8
         startButton.addTarget(self, action: #selector(toggleGame), for: .touchUpInside)
@@ -336,6 +328,7 @@ class NumberFactoryViewController: UIViewController {
         }
     }
     
+    // MARK: - Game State
     private func startGame() {
         gameBoard.startNewGame()
         updateUI(animated: false)
@@ -356,15 +349,29 @@ class NumberFactoryViewController: UIViewController {
         startButton.backgroundColor = UIConfiguration.tintColor
         gameActive = false
         
-        // Show game over message if game ended due to losing
-        if gameBoard.isGameOver {
-            showAlert(title: "Game Over", message: "Your score: \(gameBoard.playerValue)")
-        }
-        
-        // send playervalue back to central game
-        onNumbersGenerated?(gameBoard.playerValue)
+        showMultiplierWheel(baseNumber: gameBoard.playerValue)
     }
     
+    private func showMultiplierWheel(baseNumber: Int) {
+        let upgrades = getUserUpgrades()
+        
+        // create and present multiplier wheel controller
+        let wheelVC = MultiplierWheelViewController(baseNumber: baseNumber, upgrades: upgrades)
+        
+        wheelVC.onMultiplierDetermined = { [weak self] finalNumber in
+            self?.onNumbersGenerated?(finalNumber)
+        }
+        
+        wheelVC.modalPresentationStyle = .overFullScreen
+        present(wheelVC, animated: true)
+    }
+    
+    private func getUserUpgrades() -> [UpgradeType: Int] {
+        let upgrades = CentralGameModel.shared.getUpgrades()
+        return upgrades
+    }
+    
+    // MARK: - Updates
     private func scrollGridDown() {
         if gameBoard.scrollDown() {
             // Animate the grid scrolling down
