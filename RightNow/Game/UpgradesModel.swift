@@ -29,11 +29,11 @@ enum UpgradeType: String, CaseIterable {
     
     var baseCost: Double {
         switch self {
-        case .d6: return 15
-        case .cards: return 100
-        case .roulette: return 1100
-        case .bingo: return 12000
-        case .lottery: return 130000
+        case .d6: return 150
+        case .cards: return 2_500
+        case .roulette: return 50_000
+        case .bingo: return 1_000_000
+        case .lottery: return 20_000_000
         }
     }
     
@@ -41,19 +41,19 @@ enum UpgradeType: String, CaseIterable {
         switch self {
         case .d6: return 6
         case .cards: return 13
-        case .roulette: return 36
-        case .bingo: return 75
-        case .lottery: return 200
+        case .roulette: return 24
+        case .bingo: return 44
+        case .lottery: return 90
         }
     }
     
     var description: String {
         switch self {
-        case .d6: return "Adds 1-6 to your total in the number factory"
-        case .cards: return "Adds 1-13 to your total in the number factory"
-        case .roulette: return "Adds 1-36 to your total in the number factory"
-        case .bingo: return "Adds 1-75 to your total in the number factory"
-        case .lottery: return "Adds 1-150 to your total in the number factory"
+        case .d6: return "Multiplies your total by 1-6 in the number factory"
+        case .cards: return "Multiplies your total by 1-13 in the number factory"
+        case .roulette: return "Multiplies your total by 1-24 in the number factory"
+        case .bingo: return "Multiplies your total by 1-44 in the number factory"
+        case .lottery: return "Multiplies your total by 1-90 in the number factory"
         }
     }
 }

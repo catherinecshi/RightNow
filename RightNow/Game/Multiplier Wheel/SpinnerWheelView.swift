@@ -169,7 +169,7 @@ class SpinnerWheelView: UIView {
         // Initialize animation variables with dice-specific adjustments
         spinStartTime = CACurrentMediaTime()
         lastUpdateTime = spinStartTime
-        spinningSpeed = isDice ? 15.0 : 20.0 // Slightly slower for dice
+        spinningSpeed = isDice ? 10.0 : 15.0 // Slightly slower for dice
         isDecelerating = false
         totalRotationDistance = 0
         targetValue = nil

@@ -130,7 +130,6 @@ class MultiplierWheelViewController: UIViewController {
             containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
-            containerView.widthAnchor.constraint(greaterThanOrEqualToConstant: 400),
             containerView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
             containerView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             
@@ -185,8 +184,10 @@ class MultiplierWheelViewController: UIViewController {
         }
         
         // Determine width for each spinner (minimum of 50pt)
-        let minSpinnerWidth: CGFloat = 50
         let availableWidth = spinnerContainerScrollView.bounds.width
+        let isSmallScreen = UIScreen.main.bounds.width <= 375
+        let minSpinnerWidth: CGFloat = isSmallScreen ? 40 : 50
+        
         let optimalWidth = min(max(minSpinnerWidth, availableWidth / CGFloat(activeUpgrades.count)), 80)
         
         // Create a spinner for each upgrade
