@@ -13,6 +13,9 @@ class MaowView: UIView {
     let imageView = UIImageView()
     private var imageViewObserver: NSKeyValueObservation?
     
+    var emoji = "😺"  // Default emoji
+    var happyEmoji = "😸" // Emoji for happy state
+    
     private lazy var focusView: FocusView = {
        let view = FocusView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -99,22 +102,38 @@ class MaowView: UIView {
     }
     
     private func setupImageView() {
-        if let frontImage = UIImage(named: "Maow_Normal") {
-            print("Successfully loaded maow normal")
-            imageView.image = frontImage
-        } else {
-            print("Failed to load maow normal")
+        // Create a clear background for the emoji rendering
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 200))
+        let emojiImage = renderer.image { context in
+            // Fill with clear color
+            UIColor.clear.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 200, height: 200))
+            
+            // Draw the emoji centered
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 120),
+                .paragraphStyle: paragraphStyle,
+                .foregroundColor: UIColor.black
+            ]
+            
+            let attributedText = NSAttributedString(string: emoji, attributes: attributes)
+            attributedText.draw(in: CGRect(x: 0, y: 40, width: 200, height: 200))
         }
         
-        imageView.contentMode = .scaleAspectFill
+        imageView.image = emojiImage
+        imageView.contentMode = .scaleAspectFit // Changed to fit to avoid clipping
         imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.backgroundColor = .clear // Ensure background is clear
         self.addSubview(imageView)
         
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            imageView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            imageView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.3),
-            imageView.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 0.3)
+            imageView.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: 20),
+            imageView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.6),
+            imageView.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 0.6)
         ])
     }
     
@@ -206,16 +225,36 @@ class MaowView: UIView {
         timerSlider.isEnabled = !isActive
     }
     
-    func updateCharacterState(isAsleep: Bool) {
-        guard let newImage = UIImage(named: isAsleep ? "Maow_Happy_Jump" : "Maow_Normal") else {
-            return
+    func updateCharacterState(isHappy: Bool) {
+        let newEmoji = isHappy ? happyEmoji : emoji
+        
+        // Create a clear background for the emoji rendering
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 200))
+        let emojiImage = renderer.image { context in
+            // Fill with clear color
+            UIColor.clear.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 200, height: 200))
+            
+            // Draw the emoji centered
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 120),
+                .paragraphStyle: paragraphStyle,
+                .foregroundColor: UIColor.black
+            ]
+            
+            let attributedText = NSAttributedString(string: newEmoji, attributes: attributes)
+            attributedText.draw(in: CGRect(x: 0, y: 40, width: 200, height: 120))
         }
         
+        // Animate the transition to the new emoji
         UIView.transition(with: imageView,
-                          duration: 0.2,
+                          duration: 0.3,
                           options: .transitionCrossDissolve,
                           animations: { [weak self] in
-            self?.imageView.image = newImage
+            self?.imageView.image = emojiImage
         })
     }
     

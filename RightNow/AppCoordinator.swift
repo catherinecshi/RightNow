@@ -62,11 +62,16 @@ extension AppCoordinator: OnboardingCoordinatorDelegate {
     }
     
     func onboardingCoordinatorDidFinish(_ coordinator: OnboardingCoordinator) {
-        UserDefaults.standard.set(true, forKey: "finishedOnboarding")
-        
-        // remove onboarding coordinator from child coordinators
-        removeChildCoordinator(coordinator)
-        
-        showMainApp()
+        DispatchQueue.main.async {
+            UserDefaults.standard.set(true, forKey: "finishedOnboarding")
+            
+            // Remove onboarding coordinator from child coordinators
+            self.removeChildCoordinator(coordinator)
+            
+            // Animate transition to main app
+            UIView.transition(with: self.window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                self.showMainApp()
+            }, completion: nil)
+        }
     }
 }

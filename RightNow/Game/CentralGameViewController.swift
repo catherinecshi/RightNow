@@ -398,8 +398,12 @@ extension CentralGameViewController {
         })
     }
     
-    func showCompletionAlert() {
-        let alert = CustomAlertViewController(title: "That's it!", message: "Hope you enjoy playing RightNow!")
+    func showCompletionAlert(completion: (() -> Void)? = nil) {
+        let alert = CustomAlertViewController(
+            title: "That's it!",
+            message: "Hope you enjoy playing RightNow!",
+            completionOk: completion
+        )
         present(alert, animated: true)
     }
 }

@@ -5,6 +5,7 @@ struct OnboardingStep {
     enum OnboardingMediaType {
         case mp4
         case staticImage
+        case emoji
     }
     
     let mediaName: String
@@ -185,6 +186,8 @@ class NumberFactoryOnboardingViewController: UIViewController {
                 print("❌ Could not find image: \(step.mediaName)")
                 displayPlaceholder()
             }
+        case .emoji:
+            displayEmoji(step.mediaName)
         }
         
         captionLabel.text = step.caption
@@ -196,6 +199,22 @@ class NumberFactoryOnboardingViewController: UIViewController {
         } else {
             nextButton.setTitle("Next", for: .normal)
         }
+    }
+    
+    private func displayEmoji(_ emoji: String) {
+        let label = UILabel()
+        label.text = emoji
+        
+        // Calculate appropriate font size based on container size
+        let fontSize = min(mediaContainerView.bounds.width, mediaContainerView.bounds.height) * 0.5
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        
+        label.textAlignment = .center
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.5
+        label.frame = mediaContainerView.bounds
+        label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        mediaContainerView.addSubview(label)
     }
     
     // MARK: - Setup Media Player

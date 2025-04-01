@@ -98,16 +98,6 @@ class HabitListViewModel {
         await repository.completeHabit(&habit)
     }
     
-    /*
-    func locationBasedHabits() -> [Habit] {
-        return repository.locationBasedHabits()
-    }
-    
-    func changeLocationToSelfTrack(habits: [Habit]? = nil) {
-        repository.changeLocationToSelfTrack(habits: habits)
-    }
-     */
-    
     // MARK: - Helper Methods
     
     /// Sorts habits based on time, chains, and name
@@ -115,45 +105,6 @@ class HabitListViewModel {
     /// - Returns: Sorted array of habits
     private func sortHabits(_ habits: [Habit]) -> [Habit] {
         return habits.sorted { habit1, habit2 in
-            // Check if habits are chained to other habits
-            if let cue1 = habit1.cue, let matchingHabit1 = habits.first(where: { $0.name == cue1 }) {
-                if habit2.name == matchingHabit1.name {
-                    return false
-                }
-                
-                if let time2 = habit2.time, let matchingTime = matchingHabit1.time {
-                    return matchingTime < time2
-                }
-            }
-            
-            if let cue2 = habit2.cue, let matchingHabit2 = habits.first(where: { $0.name == cue2 }) {
-                if habit1.name == matchingHabit2.name {
-                    return true
-                }
-                
-                if let time1 = habit1.time, let matchingTime = matchingHabit2.time {
-                    return time1 < matchingTime
-                }
-            }
-            
-            // Both habits are chained
-            if let cue1 = habit1.cue, let cue2 = habit2.cue {
-                let ultimateTime1 = findUltimateTimeHabit(habit1, in: habits)
-                let ultimateTime2 = findUltimateTimeHabit(habit2, in: habits)
-                
-                if let time1 = ultimateTime1, let time2 = ultimateTime2 {
-                    return time1 < time2
-                }
-                
-                if ultimateTime1 != nil {
-                    return true
-                }
-                
-                if ultimateTime2 != nil {
-                    return false
-                }
-            }
-            
             // Sort by time if available
             if let time1 = habit1.time, let time2 = habit2.time {
                 return time1 < time2
@@ -170,27 +121,5 @@ class HabitListViewModel {
             // Default to alphabetical order
             return habit1.name < habit2.name
         }
-    }
-    
-    /// Finds the ultimate time-based habit in a chain
-    /// - Parameters:
-    ///   - habit: The habit to check
-    ///   - habits: All available habits
-    ///   - visited: Set of already visited habit names
-    /// - Returns: Time of the root habit in the chain
-    private func findUltimateTimeHabit(_ habit: Habit, in habits: [Habit], visited: Set<String> = []) -> Date? {
-        if let time = habit.time {
-            return time
-        }
-        
-        guard let cue = habit.cue, !visited.contains(cue) else {
-            return nil
-        }
-        
-        guard let chainedHabit = habits.first(where: { $0.name == cue }) else {
-            return nil
-        }
-        
-        return findUltimateTimeHabit(chainedHabit, in: habits, visited: visited.union([cue]))
     }
 }

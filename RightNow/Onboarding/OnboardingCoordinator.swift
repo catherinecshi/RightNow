@@ -262,7 +262,7 @@ class OnboardingCoordinator: Coordinator {
     func switchToGame() {
         guard let tabBarController = onboardingTabBarController else { return }
         onboardingState = .switchToGame
-        print("trying to switch to game")
+        
         Task {
             await focusOnTabBarItem(in: tabBarController, for: 0, with: "You can use the coupons at the number factory")
         }
@@ -299,7 +299,6 @@ class OnboardingCoordinator: Coordinator {
     }
     
     func presentNumberFactoryOnboarding(completion: (() -> Void)? = nil) {
-        print("presenting onboarding vc")
         guard let numberFactoryVC = numberFactoryViewController else {
             print("no numberfactory view controller")
             return
@@ -320,28 +319,83 @@ class OnboardingCoordinator: Coordinator {
                            caption: "Or when you merge into a number in the avoid box"),
             OnboardingStep(mediaName: "goal",
                            mediaType: .staticImage,
-                           caption: "Hit the goal to add that amount to your score")
+                           caption: "Hit the goal to add that amount to your score"),
+            OnboardingStep(mediaName: "🎟️",
+                           mediaType: .emoji,
+                           caption: "It takes one coupon to play one round!")
         ]
         
         let numberFactoryOnboardingVC = NumberFactoryOnboardingViewController(steps: steps)
         numberFactoryOnboardingVC.onComplete = completion
         self.numberFactoryOnboardingViewController = numberFactoryOnboardingVC
         
-        print("almost there folks")
         numberFactoryVC.present(numberFactoryOnboardingVC, animated: true)
     }
     
     func dismissNumberFactory() async {
         guard let gameVC = centralGameViewController else { return }
         
+        onboardingState = .complete
         try? await Task.sleep(nanoseconds: 1_000_000_000) // 1second
-        await gameVC.showCompletionAlert()
         
-        completeOnboarding()
+        // Move completeOnboarding to execute only after alert is dismissed
+        await MainActor.run {
+            gameVC.showCompletionAlert { [weak self] in
+                guard let self = self else { return }
+                self.completeOnboarding()
+            }
+        }
     }
     
     func completeOnboarding() {
-        delegate?.onboardingCoordinatorDidFinish(self)
+        // Ensure we're on the main thread when handling UI
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.cleanUpViewHierarchy {
+                self.delegate?.onboardingCoordinatorDidFinish(self)
+            }
+        }
+    }
+
+    private func cleanUpViewHierarchy(completion: @escaping () -> Void) {
+        // Create a dispatch group to track all dismissals
+        let group = DispatchGroup()
+        
+        // Dismiss any presented view controllers
+        if let numberFactoryVC = numberFactoryViewController,
+           numberFactoryVC.presentedViewController != nil {
+            group.enter()
+            numberFactoryVC.dismiss(animated: false) {
+                group.leave()
+            }
+        }
+        
+        if let centralGameVC = centralGameViewController,
+           centralGameVC.presentedViewController != nil {
+            group.enter()
+            centralGameVC.dismiss(animated: false) {
+                group.leave()
+            }
+        }
+        
+        // Wait for all dismissals to complete
+        group.notify(queue: .main) {
+            // Release strong references to view controllers
+            self.onboardingTabBarController = nil
+            self.onboardingViewController = nil
+            self.habitListViewController = nil
+            self.selectHabitViewController = nil
+            self.selectTimeViewController = nil
+            self.centralGameViewController = nil
+            self.numberFactoryViewController = nil
+            self.numberFactoryOnboardingViewController = nil
+            
+            // Clear any other cached data
+            self.onboardingHabitData = nil
+            
+            // Call completion
+            completion()
+        }
     }
     
     // MARK: - Focus View Methods
@@ -491,9 +545,6 @@ class OnboardingCoordinator: Coordinator {
                              description: "",
                              time: habitDate!,
                              daysOfTheWeek: habitData.selectedDays!,
-                             accountabilityMetric: habitData.accountabilityMetric ?? .selfTracking,
-                             location: habitData.location,
-                             incentive: habitData.incentive ?? .none,
                              notificationEnabled: false,
                              totalDone: 0,
                              totalFailed: 0,

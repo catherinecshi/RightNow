@@ -14,6 +14,7 @@ class SettingsViewController: UIViewController {
     private let state: AppState // persistent storage
     private let authManager: AuthenticationManager
     private var cancellableBag: Set<AnyCancellable> = []
+    weak var sceneDelegate: SceneDelegate?
     
     private lazy var signOutButton: UIButton = {
         let button = UIButton(type: .system)
@@ -213,23 +214,25 @@ class SettingsViewController: UIViewController {
     /// Uses custom transition to present WelcomeViewController
     /// Removes current view from root view controller
     private func navigateToWelcome() {
-        let welcomeVC = WelcomeViewController(state: state)
-        
-        // Create a navigation controller with the sign-in VC as the root
-        let navigationController = UINavigationController(rootViewController: welcomeVC)
-        
-        // Create a transition animation
-        let transition = CATransition()
-        transition.duration = 0.3
-        transition.type = CATransitionType.push
-        transition.subtype = CATransitionSubtype.fromLeft
-        transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-        
-        // Set the window's root view controller to the navigation controller
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.layer.add(transition, forKey: nil)
-            window.rootViewController = navigationController
+        if let sceneDelegate = self.sceneDelegate, let window = sceneDelegate.window {
+            let welcomeVC = WelcomeViewController(state: state)
+            
+            // Create a navigation controller with the sign-in VC as the root
+            let navigationController = UINavigationController(rootViewController: welcomeVC)
+            
+            // Create a transition animation
+            let transition = CATransition()
+            transition.duration = 0.3
+            transition.type = CATransitionType.push
+            transition.subtype = CATransitionSubtype.fromLeft
+            transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+            
+            // Set the window's root view controller to the navigation controller
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                window.layer.add(transition, forKey: nil)
+                window.rootViewController = navigationController
+            }
         }
     }
 }

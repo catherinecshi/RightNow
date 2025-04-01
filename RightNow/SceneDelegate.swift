@@ -21,26 +21,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // if from notification, send information to PushNotificationDelegate
         PushNotificationDelegate.shared.window = window
         
+        // setup app coordinator
+        let navigationController = UINavigationController()
+        navigationController.isNavigationBarHidden = true
+        appCoordinator = AppCoordinator(navigationController: navigationController, window: window)
+        
         if Auth.auth().currentUser != nil {
-            //let onboardingVC = OnboardingViewController()
-            //window?.rootViewController = onboardingVC
-            //window?.makeKeyAndVisible()
-            
-            // show tabs if the user is signed in
-            //let tabBarController = TabBarController()
-            //tabBarController.selectedIndex = 1
-            //window.rootViewController = tabBarController
-            //window.makeKeyAndVisible()
-            
-            // setup app coordinator
-            let navigationController = UINavigationController()
-            navigationController.isNavigationBarHidden = true
-            
-            appCoordinator = AppCoordinator(navigationController: navigationController, window: window)
             appCoordinator?.start()
         } else {
             // user is not signed in
-            print("User is not signed in")
             let welcomeVC = WelcomeViewController(state: AppState.shared)
             window.rootViewController = UINavigationController(rootViewController: welcomeVC)
             window.makeKeyAndVisible()

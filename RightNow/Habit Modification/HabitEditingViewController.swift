@@ -335,8 +335,6 @@ class HabitEditingViewController: UIViewController {
             description: oldHabit.description,
             time: getSelectedTime(),
             daysOfTheWeek: tempHabit.selectedDays ?? oldHabit.daysOfTheWeek,
-            accountabilityMetric: tempHabit.accountabilityMetric ?? oldHabit.accountabilityMetric,
-            incentive: tempHabit.incentive ?? oldHabit.incentive,
             notificationEnabled: oldHabit.notificationEnabled,
             totalDone: oldHabit.totalDone,
             totalFailed: oldHabit.totalFailed,

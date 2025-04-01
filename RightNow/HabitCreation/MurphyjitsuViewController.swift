@@ -156,8 +156,6 @@ class MurphyjitsuViewController: UIViewController {
             let period = hour >= 12 ? "PM" : "AM"
             let displayHour = hour % 12 == 0 ? 12 : hour % 12
             detailsText += "at \(hour):\(String(format: "%02d", minute)) \(period)"
-        } else if let cue = habitData.cue {
-            detailsText += "after you \(cue)"
         } else {
             detailsText += "Not set"
         }
@@ -274,9 +272,6 @@ class MurphyjitsuViewController: UIViewController {
                              description: "",
                              time: habitDate!,
                              daysOfTheWeek: habitData.selectedDays!,
-                             accountabilityMetric: habitData.accountabilityMetric ?? .selfTracking,
-                             location: habitData.location,
-                             incentive: habitData.incentive ?? .none,
                              notificationEnabled: notificationSwitch.isOn,
                              totalDone: 0,
                              totalFailed: 0,

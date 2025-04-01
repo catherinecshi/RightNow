@@ -11,7 +11,6 @@ class OnboardingView: UIView {
     // MARK: - Normal Properties
     var delegate: OnboardingViewDelegate?
     let imageView = UIImageView()
-    private var pulseAnimationIsActive = false
     private var imageViewObserver: NSKeyValueObservation?
     private var couponsImageObserver: NSKeyValueObservation?
     

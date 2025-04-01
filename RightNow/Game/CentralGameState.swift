@@ -7,7 +7,7 @@ struct CentralGameState: Codable {
     
     // Currencies
     var numbers: Double = 0
-    var coupons: Int = 0
+    var coupons: Int = 5
     
     // Timestamps for offline progress calculation
     var lastUpdateTime: Date = Date()

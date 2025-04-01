@@ -122,7 +122,6 @@ class HabitRepository: HabitRepositoryProtocol {
             
             // update notification and geofences
             await PushNotificationDelegate.shared.auditNotifications()
-            LocationManager.shared.synchronizeGeofencesWithHabits()
         } catch {
             print("Error syncing with Firestore: \(error)")
         }
@@ -145,11 +144,6 @@ class HabitRepository: HabitRepositoryProtocol {
         
         // add notificaitons
         PushNotificationDelegate.shared.scheduleNotificationsForHabit(habit)
-        
-        // monitor location if needed
-        if habit.location != nil {
-            LocationManager.shared.startMonitoringGeofence(for: habit)
-        }
         
         notifyChange(.habitCRUD)
     }
@@ -285,23 +279,5 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         notifyChange(.habitCRUD)
-    }
-    
-    // MARK: - Location Specific Methods
-    // returns all habits currently using location tracking
-    func locationBasedHabits() -> [Habit] {
-        return habits.filter { $0.location != nil }
-    }
-    
-    // converts location tracked habits to self tracked
-    func changeLocationToSelfTrack(habits habitsToChange: [Habit]? = nil) async {
-        let habitsToModify = habitsToChange ?? locationBasedHabits()
-        
-        for var habit in habitsToModify {
-            habit.accountabilityMetric = .selfTracking
-            habit.location = nil
-            
-            await updateHabit(habit)
-        }
     }
 }

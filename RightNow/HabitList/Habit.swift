@@ -9,13 +9,6 @@ struct Habit: Codable {
     var cue: String?
     var daysOfTheWeek: [String: Bool] // the strings are 3 letter combos
     
-    // accountability
-    var accountabilityMetric: AccountabilityMetric
-    var location: Location?
-    
-    // incentive
-    var incentive: Incentive
-    
     // notification
     var notificationEnabled: Bool
     
@@ -44,9 +37,6 @@ struct Habit: Codable {
          name: String,
          description: String,
          time: Date, daysOfTheWeek: [String: Bool],
-         accountabilityMetric: AccountabilityMetric,
-         location: Location? = nil,
-         incentive: Incentive,
          notificationEnabled: Bool,
          totalDone: Int = 0,
          totalFailed: Int = 0,
@@ -59,9 +49,6 @@ struct Habit: Codable {
             self.description = description
             self.time = time
             self.daysOfTheWeek = daysOfTheWeek
-            self.accountabilityMetric = accountabilityMetric
-            self.location = location
-            self.incentive = incentive
             self.notificationEnabled = notificationEnabled
             self.totalDone = totalDone
             self.totalFailed = totalFailed
@@ -79,9 +66,6 @@ struct Habit: Codable {
         description = try container.decode(String.self, forKey: .description)
         time = try container.decode(Date.self, forKey: .time)
         daysOfTheWeek = try container.decode([String: Bool].self, forKey: .daysOfTheWeek)
-        accountabilityMetric = try container.decode(AccountabilityMetric.self, forKey: .accountabilityMetric)
-        location = try? container.decode(Location.self, forKey: .location)
-        incentive = try container.decode(Incentive.self, forKey: .incentive)
         notificationEnabled = try container.decodeIfPresent(Bool.self, forKey: .notificationEnabled) ?? true
         totalDone = try container.decodeIfPresent(Int.self, forKey: .totalDone) ?? 0
         totalFailed = try container.decodeIfPresent(Int.self, forKey: .totalFailed) ?? 0

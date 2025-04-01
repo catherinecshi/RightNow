@@ -5,6 +5,7 @@ import FirebaseAuth
 /// View controller for email/password sign up screen
 class SignUpViewController: UIViewController {
     // MARK: - Properties
+    weak var sceneDelegate: SceneDelegate?
     private var viewModel: SignUpViewModel!
     private var cancellableBag: Set<AnyCancellable> = []
     
@@ -78,6 +79,7 @@ class SignUpViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.sceneDelegate = getSceneDelegate()
         setupUI()
         bindViewModel()
     }
@@ -90,6 +92,14 @@ class SignUpViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    private func getSceneDelegate() -> SceneDelegate? {
+        guard let windowScene = self.view.window?.windowScene,
+              let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+            return nil
+        }
+        return sceneDelegate
     }
     
     // MARK: - Setup UI
@@ -187,23 +197,11 @@ class SignUpViewController: UIViewController {
     /// Handles navigation to the main tab bar for the app
     /// Uses custom transition to present main tab bar
     func transitionToMainApp() {
-        // Create our tab bar controller
-        let tabBarController = TabBarController()
-        tabBarController.selectedIndex = 1
-        
-        // Create a transition animation
-        let transition = CATransition()
-        transition.duration = 0.3
-        transition.type = CATransitionType.push
-        transition.subtype = CATransitionSubtype.fromRight
-        transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-        
-        // Get the window using the current window scene
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.layer.add(transition, forKey: nil)
-            window.rootViewController = tabBarController
+        DispatchQueue.main.async { [weak self] in
+            if let sceneDelegate = self?.sceneDelegate, let appCoordinator = sceneDelegate.appCoordinator {
+                // Use the existing app coordinator
+                appCoordinator.start()
+            }
         }
     }
-
 }

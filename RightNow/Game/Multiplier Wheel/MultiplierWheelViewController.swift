@@ -20,8 +20,8 @@ class MultiplierWheelViewController: UIViewController {
         .d6: "🎲",
         .cards: "🃏",
         .roulette: "🎰",
-        .bingo: "🎯",
-        .lottery: "🎟️"
+        .bingo: "🎱",
+        .lottery: "🎫"
     ]
     
     private var spinnersReady = false

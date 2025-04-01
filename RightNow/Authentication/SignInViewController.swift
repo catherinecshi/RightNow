@@ -5,6 +5,7 @@ import FirebaseAuth
 /// View controller for email/password log in screen
 class SignInViewController: UIViewController {
     // MARK: - Properties
+    weak var sceneDelegate: SceneDelegate?
     private let viewModel: SignInViewModel
     private var cancellableBag: Set<AnyCancellable> = []
     
@@ -57,6 +58,7 @@ class SignInViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.sceneDelegate = getSceneDelegate()
         setupUI()
         bindViewModel()
     }
@@ -69,6 +71,14 @@ class SignInViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    private func getSceneDelegate() -> SceneDelegate? {
+        guard let windowScene = self.view.window?.windowScene,
+              let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+            return nil
+        }
+        return sceneDelegate
     }
     
     // MARK: - Setup UI
@@ -131,23 +141,12 @@ class SignInViewController: UIViewController {
     }
     
     /// Handles navigation to main app
-    /// Uses custom transition swiping
     func transitionToMainApp() {
-        let tabBarController = TabBarController()
-        tabBarController.selectedIndex = 1
-        
-        // Create a transition animation
-        let transition = CATransition()
-        transition.duration = 0.3
-        transition.type = CATransitionType.push
-        transition.subtype = CATransitionSubtype.fromRight
-        transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-        
-        // Get the window using the current window scene
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.layer.add(transition, forKey: nil)
-            window.rootViewController = tabBarController
+        DispatchQueue.main.async { [weak self] in
+            if let sceneDelegate = self?.sceneDelegate, let appCoordinator = sceneDelegate.appCoordinator {
+                // Use the existing app coordinator
+                appCoordinator.start()
+            }
         }
     }
 }

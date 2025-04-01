@@ -147,7 +147,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     
     func maowViewDidTapCharacter() {
         isFirstImage.toggle()
-        maowView.updateCharacterState(isAsleep: isFirstImage)
+        maowView.updateCharacterState(isHappy: isFirstImage)
     }
     
     func maowViewDidTapStart() {

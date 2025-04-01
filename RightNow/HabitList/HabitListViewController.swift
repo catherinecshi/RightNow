@@ -4,7 +4,6 @@ import UserNotifications
 import LocalAuthentication
 
 class HabitListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    
     // to section off different levels
     struct LevelSection {
         let header: String
@@ -70,11 +69,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         
         setupSubscriptions() // setup combine subscriptions
         
-        print("viewDidLoad - Direct check of habits:")
-            viewModel.habitsForCurrentDay.forEach { habit in
-                print("Habit: \(habit.name), Level: \(habit.currentLevel.displayName)")
-            }
-        
         habitListView.tableView.reloadData()
         habitListView.tableView.register(HabitCell.self, forCellReuseIdentifier: "HabitCell")
         habitListView.tableView.allowsSelectionDuringEditing = true //capable of editing mode
@@ -83,11 +77,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         setupSwipes()
         
         self.definesPresentationContext = true
-        
-        // checks through location permissions
-        //isLocationPermissionDenied()
-        
-        //addDebugButton()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -186,10 +175,8 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             emptyLabel.textColor = .gray
             
             habitListView.tableView.backgroundView = emptyLabel
-            //habitListView.tableView.separatorStyle = .none
         } else {
             habitListView.tableView.backgroundView = nil
-            //habitListView.tableView.separatorStyle = .none
         }
     }
     
@@ -244,6 +231,16 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         habitListView.tableView.layer.add(transition, forKey: "transition")
     }
     
+    // MARK: - Communicate with Model
+    func completeHabit(for habit: inout Habit) async {
+        await isHabitDone(for: &habit)
+        
+        // reload table ot update button state
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.habitListView.tableView.reloadData()
+        }
+    }
+    
     // MARK: - Creation Button Methods
     
     var addButton: UIButton!
@@ -290,167 +287,23 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     // MARK: - Alert Methods
-    
-    // in the future makes sure this only fires in cases where it makes sense - like if someone frequents a location, don't fire it everytime they go to a place
-    // checks if the habit has already been done for the appropriate number of times that day
+    // checks if the habit has already been done for that day
     func isHabitDone(for habit: inout Habit) async {
         if viewModel.isCurrentDayToday() {
-            print("habit is for today")
-            
-            //#if DEBUG
-            //await viewModel.habitCompleted(&habit)
-            //#else
-            // normal user interface
             if viewModel.isHabitCompletedForDay(habit) {
-                print("habit already completed for today")
                 let alertController = CustomAlertViewController(title: "Habit already completed!", message: "You've already \(habit.name) today!")
                 
                 present(alertController, animated: true, completion: nil)
             } else {
-                print("habit not completed yet")
                 await viewModel.habitCompleted(&habit)
             }
-            //#endif
         } else {
-            print("trying to present alert for habit not today")
             let currentDayString = TimeFormatter.weekdayToString(viewModel.currentDay)
             let alertController = CustomAlertViewController(title: "Habit not for today", message: "You don't have to \(habit.name) on \(currentDayString)!")
             
             present(alertController, animated: true, completion: nil)
         }
     }
-    
-    /*
-    // for when there is a location habit but the user turned location permissions off
-    func isLocationPermissionDenied() {
-        switch LocationManager.shared.authorizationStatus {
-        case .denied, .restricted:
-            print("user denied or restricted location authorization but has lcoation based habits")
-            let locationBasedHabits = viewModel.locationBasedHabits()
-            
-            if locationBasedHabits.count > 3 {
-                print("display alert for 3+ lcoation based habits")
-                let alert = CustomAlertViewController(
-                    title: "Your Location-based Habits need Location Authorization!",
-                    message: "Do you want to keep tracking your habits based on their locations?",
-                    okButtonTitle: "Yes, how can I change my settings?",
-                    cancelButtonTitle: "No, don't track my habits with their locations anymore")
-                
-                alert.completionOk = {
-                    print("user is trying to change settings to allow for location authorization (3+)")
-                    let guideAlert = CustomAlertViewController.createLocationSettingsAlert { [weak self] in
-                        print("user indicated that they have changed their settings for lcoation authorization (3+)")
-                        self?.checkLocationAuthorization()
-                    }
-                    
-                    self.present(guideAlert, animated:true)
-                }
-                
-                alert.completionCancel = {
-                    print("user indicated that they don't want to change their settings for location authoriation (3+)")
-                    self.locationToSelfTrackAlert()
-                    self.viewModel.changeLocationToSelfTrack(habits: locationBasedHabits)
-                }
-                
-                present(alert, animated: true)
-            } else if !locationBasedHabits.isEmpty {
-                print("display alert for <3 location based habits")
-                let names = locationBasedHabits.map { $0.name }
-                let habitNames: String
-                if names.count > 1 {
-                    let allButLast = names.dropLast().joined(separator: ", ")
-                    habitNames = "\(allButLast) and \(names.last!)"
-                } else {
-                    habitNames = names.first ?? "your habits"
-                }
-                
-                let alert = CustomAlertViewController(
-                    title: "Your Location-based Habits need Location Authorization!",
-                    message: "Do you want to keep tracking \(habitNames) based on their locations?",
-                    okButtonTitle: "Yes, how can I change my settings?",
-                    cancelButtonTitle: "No, don't track my habits with their locations anymore")
-                
-                alert.completionOk = {
-                    print("user is trying to change settings to allow for lcoation authorization (3-)")
-                    let guideAlert = CustomAlertViewController.createLocationSettingsAlert { [weak self] in
-                        print("user indicated that they have changed their settings for lcoation authorization (3-)")
-                        self?.checkLocationAuthorization()
-                    }
-                    
-                    self.present(guideAlert, animated: true)
-                }
-                
-                alert.completionCancel = {
-                    print("user indicated that they don't want to change their settings for lcoation authorization (3-)")
-                    self.locationToSelfTrackAlert()
-                    self.viewModel.changeLocationToSelfTrack(habits: locationBasedHabits)
-                }
-                
-                present(alert, animated: true)
-            }
-        case .authorizedWhenInUse:
-            print("user has only authorized location tracking during app usage")
-            if !LocationManager.shared.hasShownWhenInUseAlert {
-                showWhenInUseAlert()
-            }
-        default:
-            break
-        }
-    }
-    
-    private func showWhenInUseAlert() {
-        print("this is the first time that the user has logged into the app since changing their settings to location only being tracked during use")
-        
-        LocationManager.shared.hasShownWhenInUseAlert = true
-        let alert = CustomAlertViewController(
-            title: "Locations Currently Only Authorized During App Use!",
-            message: "Your habits will only get tracked if you go on RightNow with each habit, so we can check your location. If you change your authorization to Always Allow, we can check your location without you going on RightNow.",
-            okButtonTitle: "How do I switch my authorization status?",
-            cancelButtonTitle: "OK, I'll log onto RightNow every time for my location habits to get tracked!")
-        
-        alert.completionOk = { [weak self] in
-            print("the user wants to change their location authorization from when in use -> always")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-                let guideAlert = CustomAlertViewController.createLocationSettingsAlert { [weak self] in
-                    print("the user has indicated that they have changed their settings to when in use -> always")
-                    self?.checkLocationAuthorization()
-                }
-                
-                self?.present(guideAlert, animated: true)
-            }
-        }
-        
-        present(alert, animated: true)
-    }
-    
-    private func locationToSelfTrackAlert() {
-        print("presenting alert informing user that we've changed habit tracking to self tracking instead")
-        let alert = CustomAlertViewController(title: "OK, sounds good!", 
-                                              message: "We've turned all of your habits being tracked with locations to be self-tracked insetad. Don't forget to check them off!")
-        
-        present(alert, animated: true)
-    }
-    
-    private func checkLocationAuthorization() {
-        print("checking location authorization (listVC)")
-        switch LocationManager.shared.authorizationStatus {
-        case .restricted, .denied:
-            print("location authorization still gone despite user indicating otherwise. inform user of changing their habits to self tracking insetad")
-            let alert = CustomAlertViewController(title: "Uh Oh!", 
-                                                  message: "We still don't have location authorization! We've turned your location-tracked habits into self-tracking habits for now.")
-            self.present(alert, animated: true)
-            
-            self.viewModel.changeLocationToSelfTrack(habits: nil)
-        case .authorizedWhenInUse:
-            print("this should only happen when the user turned off location with location based habits -> changed to when in use only, but not always")
-            showWhenInUseAlert()
-        default:
-            print("user has changed settings successfully for location tracking (listVC)")
-            break
-        }
-    }
-    */
-    
     // MARK: - TableView
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -470,8 +323,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     // this is for calling cell view
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "HabitCell", for: indexPath) as? HabitCell else {
-            print("Failed to dequeue HabitTableViewCell - check cell registration")
-            
             // return a basic cell as fallback to avoid crashes
             return UITableViewCell(style: .default, reuseIdentifier: "FallbackCell")
         }
@@ -538,59 +389,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
         return configuration
     }
-    
-    // for tapping on the container
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true) // for visual feedback
-        let selectedHabit = sections[indexPath.section].rows[indexPath.row]
-        
-        // action sheet
-        let actionSheet = UIAlertController(title: nil, message: "Choose an action", preferredStyle: .actionSheet)
-        
-        // edit action
-        let editAction = UIAlertAction(title: "Edit Habit", style: .default) { _ in
-            let editingVC = HabitEditingViewController(habit: selectedHabit)
-            let navController = UINavigationController(rootViewController: editingVC)
-            editingVC.modalPresentationStyle = .pageSheet
-            self.present(navController, animated: true, completion: nil)
-        }
-        
-        actionSheet.addAction(editAction)
-        
-        // check off habit
-        let checkAction = UIAlertAction(title: "Check Off Habit", style: .default) { _ in
-            let checkInVC = CheckInController(habit: selectedHabit)
-            checkInVC.delegate = self
-            checkInVC.modalPresentationStyle = .fullScreen
-            self.present(checkInVC, animated: true, completion: nil)
-        }
-        
-        actionSheet.addAction(checkAction)
-        
-        // cancel
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-        actionSheet.addAction(cancelAction)
-        
-        // for ipad users
-        if let popOverController = actionSheet.popoverPresentationController {
-            popOverController.sourceView = tableView.cellForRow(at: indexPath)
-            popOverController.sourceRect = tableView.cellForRow(at: indexPath)!.bounds
-        }
-        
-        // present
-        present(actionSheet, animated: true, completion: nil)
-    }
-}
-
-extension HabitListViewController: HabitCompleteDelegate {
-    func completeHabit(for habit: inout Habit) async {
-        await isHabitDone(for: &habit)
-        
-        // reload table ot update button state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.habitListView.tableView.reloadData()
-        }
-    }
 }
 
 // MARK: - Onboarding
@@ -600,7 +398,6 @@ extension HabitListViewController {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
-            print("Failed to get window or root view controller")
             return
         }
         
@@ -635,7 +432,6 @@ extension HabitListViewController {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
-            print("Failed to get window or root view controller")
             return
         }
         
@@ -733,11 +529,9 @@ extension HabitListViewController {
     }
     
     func showDeletion() async {
-        print("showing deletion")
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
-            print("Failed to get window or root view controller")
             return
         }
         
@@ -747,7 +541,6 @@ extension HabitListViewController {
         
         // check if there are any habit sin the table view
         guard !sections.isEmpty && !sections[0].rows.isEmpty else {
-            print("onboarding but somehow there are no habits??")
             return
         }
         
@@ -804,8 +597,6 @@ extension HabitListViewController {
         UIView.animate(withDuration: 0.3) {
             self.deletionLabel.alpha = 1.0
             self.focusView.alpha = 1.0
-        } completion: { success in
-            print("completed \(success)")
         }
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(blockerTapped(_:)))
@@ -855,27 +646,5 @@ extension HabitListViewController {
         // let's go back to maow!
         guard let coordinator = coordinator else { return }
         coordinator.switchToMaow()
-    }
-}
-
-// MARK: - Debugging
-extension HabitListViewController {
-    func addDebugButton() {
-        let button = UIButton(frame: CGRect(x: 20, y: 100, width: 120, height: 40))
-        button.setTitle("View Logs", for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 8
-        button.addTarget(self, action: #selector(showLogs), for: .touchUpInside)
-        view.addSubview(button)
-    }
-
-    @objc func showLogs() {
-        let logContents = GeofenceLogger.shared.getLogContents()
-        let alert = UIAlertController(title: "Geofence Logs", message: logContents, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Clear Logs", style: .destructive) { _ in
-            GeofenceLogger.shared.clearLog()
-        })
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
     }
 }

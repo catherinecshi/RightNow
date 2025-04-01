@@ -9,8 +9,7 @@ enum AppDelegateFactory {
     static var fetchDelegates: AppDelegateType {
         CompositeAppDelegate(appDelegates: [
             PushNotificationDelegate.shared,
-            FirebaseDelegate.shared,
-            LocationDelegate.shared
+            FirebaseDelegate.shared
         ])
     }
 }

@@ -7,6 +7,7 @@ class WelcomeViewController: UIViewController {
     // MARK: - Properties
     var viewModel: WelcomeViewModel
     var state: AppState
+    weak var sceneDelegate: SceneDelegate?
     private var cancellableBag: Set<AnyCancellable> = []
     
     // UI elements
@@ -33,6 +34,7 @@ class WelcomeViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.sceneDelegate = getSceneDelegate()
         view.backgroundColor = .white
         setupUI()
         bindViewModel()
@@ -41,6 +43,15 @@ class WelcomeViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    private func getSceneDelegate() -> SceneDelegate? {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+            print("Failed to get SceneDelegate")
+            return nil
+        }
+        return sceneDelegate
     }
     
     // MARK: - Setup UI
@@ -61,7 +72,7 @@ class WelcomeViewController: UIViewController {
         
         // Subtitle Label
         subtitleLabel = UILabel()
-        subtitleLabel.text = "What should you be doing right now?"
+        subtitleLabel.text = "Get addicted to living in the moment."
         subtitleLabel.font = UIConfiguration.subtitleFont
         subtitleLabel.numberOfLines = 0 // to allow wrapping
         subtitleLabel.textAlignment = .center
@@ -165,17 +176,33 @@ class WelcomeViewController: UIViewController {
     /// Handles navigation to different screens depending on user input
     /// Takes index - indicator of where to navigate to
     private func navigateToDestination(index: Int) {
-        let viewController: UIViewController
         switch index {
         case 1:
-            viewController = SignInViewController(state: state)
+            let viewController = SignInViewController(state: state)
+            navigationController?.pushViewController(viewController, animated: true)
         case 2:
-            viewController = SignUpViewController(state: state)
+            let viewController = SignUpViewController(state: state)
+            navigationController?.pushViewController(viewController, animated: true)
         case 3:
-            viewController = TabBarController()
+            // Find the SceneDelegate more reliably
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+                print("Failed to get SceneDelegate for app coordinator transition")
+                return
+            }
+            
+            guard let appCoordinator = sceneDelegate.appCoordinator else {
+                print("AppCoordinator is nil in SceneDelegate")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                // Start the coordinator and add debugging
+                print("Starting AppCoordinator")
+                appCoordinator.start()
+            }
         default:
-            viewController = TabBarController()
+            print("Unknown destination index: \(index)")
         }
-        self.navigationController?.pushViewController(viewController, animated: true)
     }
 }

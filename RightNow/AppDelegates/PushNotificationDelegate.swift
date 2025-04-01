@@ -99,111 +99,7 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         completionHandler([.banner, .list, .sound])
     }
     
-    /// Called when the user responds to a notification.
-    /// - Parameters:
-    ///   - center: The notification center object.
-    ///   - response: The user's response to the notification.
-    ///   - completionHandler: A block to execute when you have finished processing the response.
-    /// - Note: This method handles action button taps and notification taps.
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) async {
-        // called when user interacts with notification
-        let actionIdentifier = response.actionIdentifier
-        print("Notification response received with action identifier: \(actionIdentifier)")
-        
-        if let _ = Auth.auth().currentUser {
-            switch actionIdentifier {
-            case "Snooze_5":
-                await handleSnooze5Minutes(notification: response.notification)
-                completionHandler()
-            case "Snooze_Next_Cue":
-                setDefaultRootViewController()
-                print("snooze next cue")
-                completionHandler()
-            case "Snooze_Idle":
-                setDefaultRootViewController()
-                print("Snooze idle")
-                completionHandler()
-            default:
-                setDefaultRootViewController()
-                print("default vc presented")
-                completionHandler()
-            }
-        } else {
-            print("not logged in")
-            setWelcomeViewController()
-        }
-    }
-    
     // MARK: - Private Notification Handling Methods
-    /// Handles "Snooze for 5 minutes" action on notification
-    private func handleSnooze5Minutes(notification: UNNotification) async {
-        guard let habit = await retrieveHabit(from: notification) else {
-            print("Could not retrieve habit from notification \(notification.description)")
-            return
-        }
-        
-        guard let content = notification.request.content.mutableCopy() as? UNMutableNotificationContent else {
-            print("Failed to create mutable notification content")
-            return
-        }
-        
-        content.categoryIdentifier = "HabitReminder"
-        
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5 * 60, repeats: false)
-        let request = UNNotificationRequest(
-            identifier: "\(habit.id.uuidString)_snoozed",
-            content: content,
-            trigger: trigger
-        )
-        
-        try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            self.notificationCenter.add(request) { error in
-                if let error = error {
-                    print("Error scheduling snoozed notification \(error)")
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
-                }
-            }
-        }
-    }
-    
-    /// Configures notification categories and associated actions
-    private func setupNotificationCategories() {
-        // create actions
-        let snooze5Action = UNNotificationAction(
-            identifier: "Snooze_5",
-            title: "Snooze for 5 mins",
-            options: .foreground
-        )
-        
-        let snoozeNextCueAction = UNNotificationAction(
-            identifier: "Snooze_Next_Cue",
-            title: "Reschedule habit for today",
-            options: .foreground
-        )
-        
-        let snoozeIdleAction = UNNotificationAction(
-            identifier: "Snooze_Idle",
-            title: "Snooze until next idle moment",
-            options: .foreground
-        )
-        
-        // create the category with all the actions
-        let category = UNNotificationCategory(
-            identifier: "HabitReminder",
-            actions: [snooze5Action, snoozeNextCueAction, snoozeIdleAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        // register the category
-        notificationCenter.setNotificationCategories([category])
-    }
     
     /// Retrieves the habit associated with a notification.
     /// - Parameter notification: The notification containing the habit ID.
@@ -219,50 +115,6 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
         } catch {
             print("Failed to fetch habit with ID: \(habitID)")
             return nil
-        }
-    }
-    
-    // MARK: - Navigation Methods
-    var appCoordinator: AppCoordinator?
-    
-    /// Presents camera controller
-    private func presentCameraController(habit: Habit) {
-        DispatchQueue.main.async {
-            if let window = self.window {
-                let rootVC = HabitListViewController()
-                window.rootViewController = rootVC
-                window.makeKeyAndVisible()
-                
-                let cameraVC = CameraController(habit: habit)
-                cameraVC.modalPresentationStyle = .fullScreen
-                rootVC.present(cameraVC, animated: true, completion: nil)
-            } else {
-                print("Window is nil")
-            }
-        }
-    }
-    
-    
-    func setDefaultRootViewController() {
-        DispatchQueue.main.async {
-            if let window = self.window {
-                let navigationController = UINavigationController()
-                navigationController.isNavigationBarHidden = true
-                
-                self.appCoordinator = AppCoordinator(navigationController: navigationController, window: window)
-                self.appCoordinator?.start()
-            }
-        }
-    }
-    
-    /// Presents welcome screen for users not logged in
-    func setWelcomeViewController() {
-        DispatchQueue.main.async {
-            if let window = self.window {
-                let welcomeVC = WelcomeViewController(state: AppState.shared)
-                window.rootViewController = UINavigationController(rootViewController: welcomeVC)
-                window.makeKeyAndVisible()
-            }
         }
     }
 }
@@ -312,8 +164,7 @@ extension PushNotificationDelegate {
             
             // information that can be fetched in notification
             let uuidString = habit.id.uuidString
-            let metric = habit.accountabilityMetric.displayName
-            content.userInfo = ["habitID": uuidString, "metric": metric]
+            content.userInfo = ["habitID": uuidString]
             
             // debug printing
             let dateFormatter = DateFormatter()
