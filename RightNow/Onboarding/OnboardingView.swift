@@ -11,7 +11,12 @@ class OnboardingView: UIView {
     // MARK: - Normal Properties
     var delegate: OnboardingViewDelegate?
     let imageView = UIImageView()
+    private var pulseAnimationIsActive = false
     private var imageViewObserver: NSKeyValueObservation?
+    private var couponsImageObserver: NSKeyValueObservation?
+    
+    var emoji = "😺"  // Default emoji
+    var happyEmoji = "😸" // Emoji for happy state
     
     private lazy var focusView: FocusView = {
        let view = FocusView()
@@ -35,6 +40,19 @@ class OnboardingView: UIView {
         return label
     }()
     
+    private lazy var couponsInstructionLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "Maow will also give you coupons if you lock your phone away and spend time with her"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
+    
     let timerLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 48, weight: .bold)
@@ -48,7 +66,7 @@ class OnboardingView: UIView {
     
     var timerSlider: UISlider = {
         let slider = UISlider()
-        slider.minimumValue = 10 // 10 minute minimum
+        slider.minimumValue = 15 // 15 minute minimum
         slider.maximumValue = 120
         slider.value = 25
         slider.minimumTrackTintColor = UIConfiguration.tintColor
@@ -67,6 +85,26 @@ class OnboardingView: UIView {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.isHidden = true
         return button
+    }()
+    
+    private let couponsImage: UIImageView = {
+        let image = UIImageView()
+        image.translatesAutoresizingMaskIntoConstraints = false
+        image.image = EmojiImage.createImage(from: "🎟️", size: 20)
+        image.contentMode = .scaleAspectFit
+        image.isHidden = true
+        return image
+    }()
+    
+    private let couponsCountLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = String(5)
+        label.font = UIConfiguration.buttonFont
+        label.textColor = .black
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
     }()
     
     // MARK: - Onboarding Properties
@@ -110,7 +148,7 @@ class OnboardingView: UIView {
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.numberOfLines = 0
         //label.text = "Maow doesn't have any arms or legs, so her life is in your hands"
-        label.text = "It's a good thing you're adopting her, she's been abandonded for a while"
+        label.text = "Thanks for adopting her! She's been abandoned for a while"
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -123,7 +161,7 @@ class OnboardingView: UIView {
         label.font = .systemFont(ofSize: 20, weight: .thin)
         label.numberOfLines = 0
         //label.text = "(she doesn't have those either)"
-        label.text = "ever since her last owner..."
+        label.text = "ever since her last owner threw her out..."
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -135,7 +173,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 22, weight: .medium)
         label.numberOfLines = 0
-        label.text = "Well, her last owner abandoned her because she's too high maintenance."
+        label.text = "Well, Maow doesn't have hands or legs, so you'd have to take care of her 24/7"
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -147,7 +185,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 20, weight: .medium)
         label.numberOfLines = 0
-        label.text = "But, you can probably lower her standards by neglecting her."
+        label.text = "So most people end up neglecting her"
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -159,7 +197,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.numberOfLines = 0
-        label.text = "Yea, yea, you say that now"
+        label.text = "Umm... Of course not..."
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -171,7 +209,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.numberOfLines = 0
-        label.text = "Let's see how long you can keep that up."
+        label.text = "I'm sure you wouldn't do that..."
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -204,12 +242,24 @@ class OnboardingView: UIView {
     
     deinit {
         imageViewObserver?.invalidate()
+        couponsImageObserver?.invalidate()
     }
     
     private func setupObservers() {
         imageViewObserver = imageView.observe(\.bounds, options: [.new]) { [weak self] _, _ in
-            guard let self = self, !self.focusView.isHidden else { return }
+            guard let self = self,
+                  !self.focusView.isHidden,
+                  self.currentFocusTarget == .maow else { return }
+            
             self.updateFocusView()
+        }
+        
+        couponsImageObserver = couponsImage.observe(\.bounds, options: [.new]) { [weak self] _, _ in
+            guard let self = self,
+                  !self.focusView.isHidden,
+                  self.currentFocusTarget == .coupons else { return }
+            
+            self.updateFocusViewCoupons()
         }
     }
     
@@ -222,20 +272,37 @@ class OnboardingView: UIView {
         setupTimerLabel()
         setupSlider()
         setupButton()
+        setupCoupons()
         setupTapGesture()
         setupFocusView()
     }
     
     private func setupImageView() {
-        if let frontImage = UIImage(named: "Maow_Normal") {
-            print("Successfully loaded maow normal")
-            imageView.image = frontImage
-        } else {
-            print("Failed to load maow normal")
+        // Create a clear background for the emoji rendering
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 200))
+        let emojiImage = renderer.image { context in
+            // Fill with clear color
+            UIColor.clear.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 200, height: 200))
+            
+            // Draw the emoji centered
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 120),
+                .paragraphStyle: paragraphStyle,
+                .foregroundColor: UIColor.black
+            ]
+            
+            let attributedText = NSAttributedString(string: emoji, attributes: attributes)
+            attributedText.draw(in: CGRect(x: 0, y: 40, width: 200, height: 200))
         }
         
-        imageView.contentMode = .scaleAspectFill
+        imageView.image = emojiImage
+        imageView.contentMode = .scaleAspectFit // Changed to fit to avoid clipping
         imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.backgroundColor = .clear // Ensure background is clear
         self.addSubview(imageView)
         
         NSLayoutConstraint.activate([
@@ -249,6 +316,7 @@ class OnboardingView: UIView {
     private func setupFocusView() {
         addSubview(focusView)
         addSubview(focusInstructionLabel)
+        addSubview(couponsInstructionLabel)
         
         NSLayoutConstraint.activate([
             focusView.topAnchor.constraint(equalTo: topAnchor),
@@ -259,7 +327,12 @@ class OnboardingView: UIView {
             focusInstructionLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 20),
             focusInstructionLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
             focusInstructionLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
-            focusInstructionLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40)
+            focusInstructionLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40),
+            
+            couponsInstructionLabel.bottomAnchor.constraint(equalTo: couponsCountLabel.topAnchor, constant: -10),
+            couponsInstructionLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            couponsInstructionLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            couponsInstructionLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20)
         ])
     }
     
@@ -304,8 +377,24 @@ class OnboardingView: UIView {
         ])
     }
     
+    private func setupCoupons() {
+        self.addSubview(couponsImage)
+        self.addSubview(couponsCountLabel)
+        
+        NSLayoutConstraint.activate([
+            couponsImage.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            couponsImage.bottomAnchor.constraint(equalTo: startStopButton.topAnchor, constant: -20),
+            couponsImage.widthAnchor.constraint(equalToConstant: 28),
+            couponsImage.heightAnchor.constraint(equalToConstant: 28),
+            
+            couponsCountLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            couponsCountLabel.bottomAnchor.constraint(equalTo: couponsImage.topAnchor, constant: -10)
+        ])
+    }
+    
     // MARK: - Actions
     @objc private func handleTap() {
+        stopEmojiTransitionSequence()
         delegate?.onboardingViewDidTapCharacter()
         hideFocusView()
     }
@@ -332,24 +421,53 @@ class OnboardingView: UIView {
         timerSlider.isEnabled = !isActive
     }
     
-    func updateCharacterState(isAsleep: Bool) {
-        guard let newImage = UIImage(named: isAsleep ? "Maow_Smile_3" : "Maow_Normal") else {
-            return
+    func updateCharacterState(isHappy: Bool) {
+        let newEmoji = isHappy ? happyEmoji : emoji
+        
+        // Create a clear background for the emoji rendering
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 200))
+        let emojiImage = renderer.image { context in
+            // Fill with clear color
+            UIColor.clear.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 200, height: 200))
+            
+            // Draw the emoji centered
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 120),
+                .paragraphStyle: paragraphStyle,
+                .foregroundColor: UIColor.black
+            ]
+            
+            let attributedText = NSAttributedString(string: newEmoji, attributes: attributes)
+            attributedText.draw(in: CGRect(x: 0, y: 40, width: 200, height: 120))
         }
         
+        // Animate the transition to the new emoji
         UIView.transition(with: imageView,
-                          duration: 0.1,
+                          duration: 0.3,
                           options: .transitionCrossDissolve,
                           animations: { [weak self] in
-            self?.imageView.image = newImage
+            self?.imageView.image = emojiImage
         })
     }
     
     // MARK: - Focus View Methods
+    private enum FocusTarget {
+        case none
+        case maow
+        case coupons
+    }
+    
+    private var currentFocusTarget: FocusTarget = .none
+    
     func showFocusView(withInstructions text: String? = nil) {
         // make sure the view has been laid out
         layoutIfNeeded()
         
+        currentFocusTarget = .maow
         focusView.ovalRect = imageView.frame.insetBy(dx: -20, dy: -20)
         
         // update instruction text
@@ -371,6 +489,31 @@ class OnboardingView: UIView {
         }
     }
     
+    func showFocusViewCoupons(withInstructions text: String? = nil) {
+        // make sure the view has been laid out
+        layoutIfNeeded()
+        
+        currentFocusTarget = .coupons
+        focusView.ovalRect = couponsImage.frame.insetBy(dx: -20, dy: -20)
+        
+        // update instruction text
+        if let text = text {
+            couponsInstructionLabel.text = text
+        }
+        
+        // bring to the front
+        bringSubviewToFront(focusView)
+        bringSubviewToFront(couponsInstructionLabel)
+        
+        focusView.isHidden = false
+        couponsInstructionLabel.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.focusView.alpha = 1.0
+            self.couponsInstructionLabel.alpha = 1.0
+        }
+    }
+    
     func updateFocusView() {
         // get actual frame of image view
         let actualFrame = convert(imageView.frame, from: imageView.superview)
@@ -378,36 +521,16 @@ class OnboardingView: UIView {
         focusView.ovalRect = actualFrame.insetBy(dx: -20, dy: -20)
     }
     
-    func showFocusViewOnExternalRect(_ rect: CGRect, withInstructions text: String? = nil) {
-        // make sure view has been laid out
-        layoutIfNeeded()
+    func updateFocusViewCoupons() {
+        // get actual frame of image view
+        let actualFrame = convert(couponsImage.frame, from: couponsImage.superview)
         
-        // highlight provided rect
-        focusView.ovalRect = rect
-        
-        // update instructions
-        if let text = text {
-            focusInstructionLabel.text = text
-        }
-        
-        // position instructions
-        let labelYPosition = rect.minY - 60
-        focusInstructionLabel.frame.origin.y = labelYPosition
-        
-        // bring to front
-        bringSubviewToFront(focusView)
-        bringSubviewToFront(focusInstructionLabel)
-        
-        focusView.isHidden = false
-        focusInstructionLabel.isHidden = false
-        
-        UIView.animate(withDuration: 0.3) {
-            self.focusView.alpha = 1.0
-            self.focusInstructionLabel.alpha = 1.0
-        }
+        focusView.ovalRect = actualFrame.insetBy(dx: -20, dy: -20)
     }
     
     func hideFocusView() {
+        stopEmojiTransitionSequence()
+        
         UIView.animate(withDuration: 0.3, animations: {
             self.focusView.alpha = 0.0
             self.focusInstructionLabel.alpha = 0.0
@@ -568,5 +691,108 @@ class OnboardingView: UIView {
     func showResponseButton(title: String, duration: TimeInterval = 0.2) {
         responseButton.setTitle(title, for: .normal)
         animateAppearance(of: responseButton, duration: duration)
+    }
+    
+    // for part 2 of onbaording where it transitions between them
+    private var emojiSequence = ["😺", "😿", "😸"]
+    private var currentEmojiIndex = 0
+    private var emojiTransitionTimer: Timer?
+    private var emojiCycleCompleted: (() -> Void)?
+    
+    func startEmojiTransitionSequence(onCycleCompleted: (() -> Void)?) {
+        // store completion handler
+        self.emojiCycleCompleted = onCycleCompleted
+        
+        // Reset to the first emoji
+        currentEmojiIndex = 0
+        updateEmojiDisplay(emoji: emojiSequence[currentEmojiIndex])
+        
+        // Stop any existing timer
+        emojiTransitionTimer?.invalidate()
+        
+        // Create a new timer that changes the emoji every 1.5 seconds
+        emojiTransitionTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            
+            // Move to next emoji in sequence
+            self.currentEmojiIndex = (self.currentEmojiIndex + 1) % self.emojiSequence.count
+            self.updateEmojiDisplay(emoji: self.emojiSequence[self.currentEmojiIndex])
+            
+            // check if we've completed a full cycle (back to first emoji)
+            if self.currentEmojiIndex == 0 && self.emojiCycleCompleted != nil {
+                let handler = self.emojiCycleCompleted
+                self.emojiCycleCompleted = nil
+                handler?()
+            }
+        }
+    }
+    
+    func stopEmojiTransitionSequence() {
+        emojiTransitionTimer?.invalidate()
+        emojiTransitionTimer = nil
+        emojiCycleCompleted = nil
+    }
+
+    // Reusable method to update emoji display
+    func updateEmojiDisplay(emoji: String) {
+        // Create a clear background for the emoji rendering
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 200))
+        let emojiImage = renderer.image { context in
+            // Fill with clear color
+            UIColor.clear.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 200, height: 200))
+            
+            // Draw the emoji centered
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 120),
+                .paragraphStyle: paragraphStyle,
+                .foregroundColor: UIColor.black
+            ]
+            
+            let attributedText = NSAttributedString(string: emoji, attributes: attributes)
+            attributedText.draw(in: CGRect(x: 0, y: 40, width: 200, height: 200))
+        }
+        
+        // Animate the transition to the new emoji
+        UIView.transition(with: imageView,
+                          duration: 0.3,
+                          options: .transitionCrossDissolve,
+                          animations: { [weak self] in
+            self?.imageView.image = emojiImage
+        })
+    }
+    
+    // MARK: - Onboarding Pt 2
+    func showTimer() {
+        // have them be invisible at the start
+        timerLabel.alpha = 0.0
+        timerLabel.isHidden = false
+        timerSlider.alpha = 0.0
+        timerSlider.isHidden = false
+        
+        // animate them in
+        UIView.animate(withDuration: 0.1) {
+            self.timerLabel.alpha = 1.0
+            self.timerSlider.alpha = 1.0
+        }
+    }
+    
+    func showCoupons() {
+        startStopButton.alpha = 0.0
+        startStopButton.isHidden = false
+        
+        couponsImage.alpha = 0.0
+        couponsImage.isHidden = false
+        couponsCountLabel.alpha = 0.0
+        couponsCountLabel.isHidden = false
+        
+        UIView.animate(withDuration: 0.1) {
+            self.startStopButton.alpha = 1.0
+            self.couponsImage.alpha = 1.0
+            self.couponsCountLabel.alpha = 1.0
+        }
     }
 }

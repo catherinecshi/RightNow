@@ -15,6 +15,9 @@ class OnboardingCoordinator: Coordinator {
     private var habitListViewController: HabitListViewController?
     private var selectHabitViewController: SelectHabitViewController?
     private var selectTimeViewController: SelectTimeViewController?
+    private var centralGameViewController: CentralGameViewController?
+    private var numberFactoryViewController: NumberFactoryViewController?
+    private var numberFactoryOnboardingViewController: NumberFactoryOnboardingViewController?
     
     // track onboarding state
     private var onboardingState: OnboardingState = .initial
@@ -28,6 +31,9 @@ class OnboardingCoordinator: Coordinator {
         case habitModification
         case switchToMaow
         case saveMaow
+        case switchToGame
+        case gameIntroduction
+        case numberFactory
         case complete
     }
     
@@ -47,7 +53,7 @@ class OnboardingCoordinator: Coordinator {
         let onboardingTabBarController = OnboardingTabBarController()
         
         // Create the view controllers
-        let gameVC = CentralGameViewController()
+        let gameVC = createGameViewController()
         let gameNav = UINavigationController(rootViewController: gameVC)
         
         let onboardingVC = createOnboardingViewController()
@@ -103,27 +109,14 @@ class OnboardingCoordinator: Coordinator {
         return habitListVC
     }
     
-    func saveHabit(habitData: HabitData) {
-        // save the habitData
-        let habitDate = TimeFormatter.hourMinuteToDate(hour: habitData.hour ?? 9, minute: habitData.minute ?? 0)
-        let newHabit = Habit(id: UUID(),
-                             name: habitData.name!,
-                             description: "",
-                             time: habitDate!,
-                             daysOfTheWeek: habitData.selectedDays!,
-                             accountabilityMetric: habitData.accountabilityMetric ?? .selfTracking,
-                             location: habitData.location,
-                             incentive: habitData.incentive ?? .none,
-                             notificationEnabled: false,
-                             totalDone: 0,
-                             totalFailed: 0,
-                             streaks: 0,
-                             lastUpdateDate: Date())
-        
-        HabitRepository.shared.addHabit(newHabit)
+    private func createGameViewController() -> CentralGameViewController {
+        let gameVC = CentralGameViewController()
+        gameVC.coordinator = self
+        self.centralGameViewController = gameVC
+        return gameVC
     }
     
-    // MARK: - Navigation
+    // MARK: - How to make a habit
     func startOnboardingSequence() {
         let onboardingVC = createOnboardingViewController()
         window.rootViewController = onboardingVC
@@ -217,20 +210,24 @@ class OnboardingCoordinator: Coordinator {
     }
     
     func finishHabitCreation(habitData: HabitData) {
+        print("habit creation finished")
         saveHabit(habitData: habitData)
         dismissHabitCreationFlow(didCompleteHabitCreation: true)
     }
     
     func dismissHabitCreationFlow(didCompleteHabitCreation: Bool) {
+        print("habit creation flow being dismissed")
         Task {
             try? await Task.sleep(nanoseconds: 500_000_000) // wait for animation
-        }
-        
-        if !didCompleteHabitCreation { // this realistically shouldn't really happen
-            showHabitListFocus()
-        } else {
-            self.onboardingState = .habitModification
-            showHabitModification()
+            
+            if !didCompleteHabitCreation { // this realistically shouldn't really happen
+                print("did not finish habit creation")
+                showHabitListFocus()
+            } else {
+                print("trying to show habit modification")
+                self.onboardingState = .habitModification
+                showHabitModification()
+            }
         }
     }
     
@@ -238,6 +235,7 @@ class OnboardingCoordinator: Coordinator {
         guard let habitListVC = habitListViewController else { return }
         
         Task {
+            print("trying ot show deletion")
             await habitListVC.showDeletion()
         }
     }
@@ -251,8 +249,95 @@ class OnboardingCoordinator: Coordinator {
         }
     }
     
-    func showSaveMaow() {
+    func showMaowHealth() {
+        guard let onboardingVC = onboardingViewController else { return }
+        onboardingState = .saveMaow
         
+        Task {
+            await onboardingVC.sixthOnboardingSequence()
+        }
+    }
+    
+    // MARK: - How to make numbers
+    func switchToGame() {
+        guard let tabBarController = onboardingTabBarController else { return }
+        onboardingState = .switchToGame
+        print("trying to switch to game")
+        Task {
+            await focusOnTabBarItem(in: tabBarController, for: 0, with: "You can use the coupons at the number factory")
+        }
+    }
+    
+    func showGameIntroduction() {
+        guard let tabBarController = onboardingTabBarController else { return }
+        onboardingState = .gameIntroduction
+        
+        if let gameNav = tabBarController.viewControllers?[0] as? UINavigationController,
+           let gameVC = gameNav.topViewController as? CentralGameViewController {
+            gameVC.coordinator = self
+            gameVC.setupOnboarding()
+            gameVC.showOnboardingFocus()
+        }
+    }
+    
+    func showNumberFactory() {
+        guard let tabBarController = onboardingTabBarController else { return }
+        guard let gameVC = centralGameViewController else { return }
+        
+        onboardingState = .numberFactory
+        
+        let numberFactoryVC = NumberFactoryViewController()
+        numberFactoryVC.coordinator = self
+        numberFactoryViewController = numberFactoryVC
+        
+        // present
+        if let gameNav = tabBarController.viewControllers?[0] as? UINavigationController {
+            let navController = UINavigationController(rootViewController: numberFactoryVC)
+            navController.modalPresentationStyle = .overFullScreen
+            gameNav.present(navController, animated: true, completion: nil)
+        }
+    }
+    
+    func presentNumberFactoryOnboarding(completion: (() -> Void)? = nil) {
+        print("presenting onboarding vc")
+        guard let numberFactoryVC = numberFactoryViewController else {
+            print("no numberfactory view controller")
+            return
+        }
+        // present onboarding alert
+        let steps = [
+            OnboardingStep(mediaName: "gifset_1",
+                           mediaType: .mp4,
+                           caption: "Swipe to combine numbers"),
+            OnboardingStep(mediaName: "dontfalloff",
+                           mediaType: .staticImage,
+                           caption: "Don't fall off when the game scrolls"),
+            OnboardingStep(mediaName: "bomb",
+                           mediaType: .staticImage,
+                           caption: "The game ends when you hit a bomb"),
+            OnboardingStep(mediaName: "avoid",
+                           mediaType: .staticImage,
+                           caption: "Or when you merge into a number in the avoid box"),
+            OnboardingStep(mediaName: "goal",
+                           mediaType: .staticImage,
+                           caption: "Hit the goal to add that amount to your score")
+        ]
+        
+        let numberFactoryOnboardingVC = NumberFactoryOnboardingViewController(steps: steps)
+        numberFactoryOnboardingVC.onComplete = completion
+        self.numberFactoryOnboardingViewController = numberFactoryOnboardingVC
+        
+        print("almost there folks")
+        numberFactoryVC.present(numberFactoryOnboardingVC, animated: true)
+    }
+    
+    func dismissNumberFactory() async {
+        guard let gameVC = centralGameViewController else { return }
+        
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1second
+        await gameVC.showCompletionAlert()
+        
+        completeOnboarding()
     }
     
     func completeOnboarding() {
@@ -260,7 +345,7 @@ class OnboardingCoordinator: Coordinator {
     }
     
     // MARK: - Focus View Methods
-    
+     
     @MainActor
     private func focusOnTabBarItem(in tabBarController: OnboardingTabBarController, for position: Int, with text: String) async {
         // Calculate the frame of the second tab item based on the tab bar's width
@@ -391,7 +476,30 @@ class OnboardingCoordinator: Coordinator {
         if onboardingState == .switchToHabits {
             showHabitListFocus()
         } else if onboardingState == .switchToMaow {
-            showSaveMaow()
+            showMaowHealth()
+        } else if onboardingState == .switchToGame {
+            showGameIntroduction()
         }
+    }
+    
+    // MARK: - Utility Functions
+    func saveHabit(habitData: HabitData) {
+        // save the habitData
+        let habitDate = TimeFormatter.hourMinuteToDate(hour: habitData.hour ?? 9, minute: habitData.minute ?? 0)
+        let newHabit = Habit(id: UUID(),
+                             name: habitData.name!,
+                             description: "",
+                             time: habitDate!,
+                             daysOfTheWeek: habitData.selectedDays!,
+                             accountabilityMetric: habitData.accountabilityMetric ?? .selfTracking,
+                             location: habitData.location,
+                             incentive: habitData.incentive ?? .none,
+                             notificationEnabled: false,
+                             totalDone: 0,
+                             totalFailed: 0,
+                             streaks: 0,
+                             lastUpdateDate: Date())
+        
+        HabitRepository.shared.addHabit(newHabit)
     }
 }

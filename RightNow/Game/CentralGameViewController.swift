@@ -4,6 +4,7 @@ import Combine
 class CentralGameViewController: UIViewController {
     // Model
     private let gameModel = CentralGameModel.shared
+    var coordinator: OnboardingCoordinator?
     
     // UI elements
     private let factoryImage = UIImageView()
@@ -26,6 +27,29 @@ class CentralGameViewController: UIViewController {
     
     // store cancellables to prevent deallocation
     private var cancellables = Set<AnyCancellable>()
+    
+    // onboarding
+    private lazy var focusView: FocusView = {
+       let view = FocusView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isHidden = true
+        view.alpha = 0.0
+        view.shapeType = .circle
+        return view
+    }()
+    
+    private lazy var onboardingLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.text = "You can use your coupons to make numbers"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        label.alpha = 0.0
+        return label
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -144,6 +168,14 @@ class CentralGameViewController: UIViewController {
         let factoryVC = NumberFactoryViewController()
         factoryVC.couponCount = gameModel.gameState.coupons
         
+        // check if this is part of the onboarding process
+        if coordinator != nil {
+            hideOnboardingFocus()
+            factoryVC.coordinator = coordinator
+            coordinator?.showNumberFactory()
+            return
+        }
+        
         // set up callback to receive the numbers
         factoryVC.onNumbersGenerated = { [weak self] amount in
             self?.gameModel.addNumbers(Double(amount))
@@ -232,5 +264,142 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
             tableView.beginUpdates()
             tableView.endUpdates()
         }
+    }
+}
+
+// MARK: - Onboarding
+extension CentralGameViewController {
+    func setupOnboarding() {
+        // this makes sure that the focusview is added on top of everything, including the tab bar controller, because there were issues where only putting on top of the current view controller creates additional tab bar controller that causes crashes if tapped on when focus view was up
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController else {
+            print("Failed to get window or root view controller")
+            return
+        }
+        
+        // Get the appropriate container view (should be the tab bar controller)
+        let containerView = rootViewController.view!
+        
+        // Clean up any existing focus views (to prevent duplicates)
+        containerView.subviews.forEach { subview in
+            if subview is FocusView {
+                subview.removeFromSuperview()
+            }
+        }
+        
+        containerView.addSubview(focusView)
+        containerView.addSubview(onboardingLabel)
+        
+        NSLayoutConstraint.activate([
+            focusView.topAnchor.constraint(equalTo: view.topAnchor),
+            focusView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            focusView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            focusView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            // position label above add button
+            onboardingLabel.bottomAnchor.constraint(equalTo: buttonStackView.topAnchor, constant: -20),
+            onboardingLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            onboardingLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            onboardingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40)
+        ])
+    }
+    
+    func showOnboardingFocus() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController else {
+            print("Failed to get window or root view controller")
+            return
+        }
+        
+        let containerView = rootViewController.view!
+        
+        containerView.bringSubviewToFront(focusView)
+        containerView.bringSubviewToFront(onboardingLabel)
+        //containerView.bringSubviewToFront(addButton)
+        
+        // make focus oval around add button
+        let convertedButtonFrame = view.convert(buttonStackView.frame, to: containerView)
+        focusView.shapeType = .roundedRect(cornerRadius: 12)
+        focusView.frame = window.bounds
+        focusView.isUserInteractionEnabled = true
+        
+        // convert frame to coords
+        let buttonFrame = buttonStackView.convert(buttonStackView.bounds, to: window)
+        let paddedFrame = buttonFrame.insetBy(dx: -4, dy: -4)
+        focusView.ovalRect = paddedFrame
+        
+        focusView.isHidden = false
+        onboardingLabel.isHidden = false
+        
+        UIView.animate(withDuration: 0.3) {
+            self.focusView.alpha = 1.0
+            self.onboardingLabel.alpha = 1.0
+        }
+        
+        // add tap gesture recogniser to the focus view - makes sure user can only tap within focus view highlight
+        let tapGesture = UITapGestureRecognizer()
+        
+        tapGesture.addTarget { [weak self, weak focusView] gesture in
+            guard let self = self, let focusView = focusView else { return }
+            
+            // Get the tap location
+            let location = gesture.location(in: focusView)
+            
+            // Check if the tap is within the highlighted area
+            let isInHighlightedArea: Bool
+            
+            switch focusView.shapeType {
+            case .circle:
+                // For circle, check if distance from center is less than radius
+                let diameter = min(paddedFrame.width, paddedFrame.height)
+                let radius = diameter / 2
+                let centerX = paddedFrame.midX
+                let centerY = paddedFrame.midY
+                
+                let dx = location.x - centerX
+                let dy = location.y - centerY
+                let distance = sqrt(dx*dx + dy*dy)
+                
+                isInHighlightedArea = distance <= radius
+                
+            case .roundedRect(let cornerRadius):
+                // For rounded rect, check if point is inside the rect
+                isInHighlightedArea = paddedFrame.contains(location)
+            }
+            
+            // Only trigger the button tap if the gesture is within the highlight area
+            if isInHighlightedArea {
+                Task {
+                    await InteractionBlocker.shared.unblockInteractions()
+                }
+                numbersTapped()
+            }
+        }
+        
+        focusView.addGestureRecognizer(tapGesture)
+    }
+    
+    func hideOnboardingFocus() {
+        UIView.animate(withDuration: 0.3, animations: {
+            self.focusView.alpha = 0.0
+            self.onboardingLabel.alpha = 0.0
+        }, completion: { _ in
+            self.focusView.isHidden = true
+            self.onboardingLabel.isHidden = true
+            
+            // remove gesture recognizers when hiding
+            if let existingGestures = self.focusView.gestureRecognizers {
+                for gesture in existingGestures {
+                    self.focusView.removeGestureRecognizer(gesture)
+                }
+            }
+        })
+    }
+    
+    func showCompletionAlert() {
+        let alert = CustomAlertViewController(title: "That's it!", message: "Hope you enjoy playing RightNow!")
+        present(alert, animated: true)
     }
 }

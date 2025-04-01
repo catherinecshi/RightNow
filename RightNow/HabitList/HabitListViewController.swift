@@ -76,7 +76,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             }
         
         habitListView.tableView.reloadData()
-        habitListView.tableView.register(HabitTableViewCell.self, forCellReuseIdentifier: "HabitCell")
+        habitListView.tableView.register(HabitCell.self, forCellReuseIdentifier: "HabitCell")
         habitListView.tableView.allowsSelectionDuringEditing = true //capable of editing mode
         
         setupAddButton()
@@ -294,12 +294,12 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     // in the future makes sure this only fires in cases where it makes sense - like if someone frequents a location, don't fire it everytime they go to a place
     // checks if the habit has already been done for the appropriate number of times that day
     func isHabitDone(for habit: inout Habit) async {
-        if viewModel.isHabitForToday(habit) {
+        if viewModel.isCurrentDayToday() {
             print("habit is for today")
             
-            #if DEBUG
-            await viewModel.habitCompleted(&habit)
-            #else
+            //#if DEBUG
+            //await viewModel.habitCompleted(&habit)
+            //#else
             // normal user interface
             if viewModel.isHabitCompletedForDay(habit) {
                 print("habit already completed for today")
@@ -308,9 +308,9 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
                 present(alertController, animated: true, completion: nil)
             } else {
                 print("habit not completed yet")
-                viewModel.habitCompleted(&habit)
+                await viewModel.habitCompleted(&habit)
             }
-            #endif
+            //#endif
         } else {
             print("trying to present alert for habit not today")
             let currentDayString = TimeFormatter.weekdayToString(viewModel.currentDay)
@@ -469,7 +469,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     // this is for calling cell view
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "HabitCell", for: indexPath) as? HabitTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "HabitCell", for: indexPath) as? HabitCell else {
             print("Failed to dequeue HabitTableViewCell - check cell registration")
             
             // return a basic cell as fallback to avoid crashes
@@ -501,6 +501,13 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
             // delete habit from firestore + locally, also delete notification
             Task {
                 await self.viewModel.deleteHabit(habitToDelete)
+                
+                // ensures the check for no habits left happens after deletion finishes
+                DispatchQueue.main.async {
+                    if self.sections.isEmpty {
+                        self.habitsPresent()
+                    }
+                }
             }
             
             // remove from local sections data
@@ -578,6 +585,11 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
 extension HabitListViewController: HabitCompleteDelegate {
     func completeHabit(for habit: inout Habit) async {
         await isHabitDone(for: &habit)
+        
+        // reload table ot update button state
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.habitListView.tableView.reloadData()
+        }
     }
 }
 
@@ -721,12 +733,15 @@ extension HabitListViewController {
     }
     
     func showDeletion() async {
+        print("showing deletion")
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
             print("Failed to get window or root view controller")
             return
         }
+        
+        updateSections()
         
         let containerView = rootViewController.view!
         

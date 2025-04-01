@@ -5,6 +5,7 @@ struct NumberFactoryState {
     let goalValue: Int
     let isGoalReached: Bool
     let isGameOver: Bool
+    let bombProbability: Double
     let avoidRule: AvoidRule
     let playerValue: Int
     let playerPosition: (row: Int, col: Int)
@@ -17,6 +18,7 @@ struct NumberFactoryState {
             goalValue: 10,
             isGoalReached: false,
             isGameOver: false,
+            bombProbability: 0.05, // initial 5% probability
             avoidRule: AvoidRule.allCases.randomElement() ?? .endsWithThree,
             playerValue: 1,
             playerPosition: (row: gridSize - 2, col: gridSize / 2),

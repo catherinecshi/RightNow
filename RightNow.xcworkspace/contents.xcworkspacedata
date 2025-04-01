@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:/Users/catpillow/Documents/RightNow/RightNow/RightNow/Assets.xcassets">
+   </FileRef>
+   <FileRef
       location = "group:MyLibrary">
    </FileRef>
    <FileRef

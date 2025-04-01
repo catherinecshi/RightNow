@@ -5,6 +5,9 @@ class NumberFactoryBoard {
     // Game constants
     let gridSize = 7
     private let maxInitialNumber = 5
+    static let bombValue = -1
+    private let bombProbabilityIncrement = 0.01
+    private let maxBombProbability = 0.4
     
     // MARK: - Game State
     var stateDidChange: ((NumberFactoryState, NumberFactoryState) -> Void)?
@@ -40,6 +43,7 @@ class NumberFactoryBoard {
                 goalValue: wouldReachGoal ? newValue + Int.random(in: 5...15) : currentState.goalValue,
                 isGoalReached: wouldReachGoal,
                 isGameOver: wouldViolateRule || currentState.isGameOver,
+                bombProbability: currentState.bombProbability,
                 avoidRule: currentState.avoidRule,
                 playerValue: newValue,
                 playerPosition: currentState.playerPosition,
@@ -87,6 +91,7 @@ class NumberFactoryBoard {
             goalValue: currentState.goalValue,
             isGoalReached: currentState.isGoalReached,
             isGameOver: currentState.isGameOver,
+            bombProbability: currentState.bombProbability,
             avoidRule: currentState.avoidRule,
             playerValue: currentState.playerValue,
             playerPosition: currentState.playerPosition,
@@ -96,9 +101,37 @@ class NumberFactoryBoard {
     
     // Generate a new row at the top of the grid
     func generateNewTopRow() -> [Int] {
-        return (0..<gridSize).map { _ in
-            Int.random(in: 1...maxInitialNumber)
+        var newRow = Array(repeating: 0, count: gridSize)
+        var bombCount = 0
+        
+        // decide which cells will be bombs
+        for col in 0..<gridSize {
+            if Double.random(in: 0...1) < currentState.bombProbability && bombCount < gridSize - 2 {
+                newRow[col] = NumberFactoryBoard.bombValue
+                bombCount += 1
+            }
         }
+        
+        // fill remaining cells with numbers
+        for col in 0..<gridSize {
+            if newRow[col] == 0 {
+                newRow[col] = Int.random(in: 1...maxInitialNumber)
+            }
+        }
+        
+        // ensure there are at least two non-bomb cells
+        let nonBombCount = newRow.filter { $0 != NumberFactoryBoard.bombValue }.count
+        if nonBombCount < 2 {
+            var indicesToConvert = newRow.indices.filter { newRow[$0] == NumberFactoryBoard.bombValue }
+            indicesToConvert.shuffle()
+            
+            while nonBombCount + (2 - nonBombCount) > indicesToConvert.count {
+                // this shouldn't happen, but just incase
+                indicesToConvert.append(Int.random(in: 0..<gridSize))
+            }
+        }
+        
+        return newRow
     }
     
     // MARK: - Game Actions
@@ -117,6 +150,7 @@ class NumberFactoryBoard {
                 goalValue: currentState.goalValue,
                 isGoalReached: currentState.isGoalReached,
                 isGameOver: true,
+                bombProbability: currentState.bombProbability,
                 avoidRule: currentState.avoidRule,
                 playerValue: currentState.playerValue,
                 playerPosition: (row: oldRow, col: oldCol),
@@ -125,6 +159,12 @@ class NumberFactoryBoard {
             
             return false
         }
+        
+        // calculate new bomb probability as it increases over time
+        let newBombProbability = min(
+            currentState.bombProbability + bombProbabilityIncrement,
+            maxBombProbability
+        )
         
         // remove bottom row and add new top row
         newGrid.removeLast()
@@ -137,6 +177,7 @@ class NumberFactoryBoard {
             goalValue: currentState.goalValue,
             isGoalReached: currentState.isGoalReached,
             isGameOver: currentState.isGameOver,
+            bombProbability: newBombProbability,
             avoidRule: currentState.avoidRule,
             playerValue: currentState.playerValue,
             playerPosition: (row: newRow, col: oldCol),
@@ -208,6 +249,7 @@ class NumberFactoryBoard {
             goalValue: currentState.goalValue,
             isGoalReached: currentState.isGoalReached,
             isGameOver: currentState.isGameOver,
+            bombProbability: currentState.bombProbability,
             avoidRule: currentState.avoidRule,
             playerValue: currentState.playerValue,
             playerPosition: position,
@@ -220,6 +262,23 @@ class NumberFactoryBoard {
         var newGrid = grid
         let newValue = currentState.playerValue + targetValue
         
+        // check if hte merge is into a bomb
+        if targetValue == NumberFactoryBoard.bombValue {
+            // game over due to bomb
+            currentState = NumberFactoryState(
+                goalValue: currentState.goalValue,
+                isGoalReached: currentState.isGoalReached,
+                isGameOver: true,
+                bombProbability: currentState.bombProbability,
+                avoidRule: currentState.avoidRule,
+                playerValue: currentState.playerValue,
+                playerPosition: position,
+                grid: newGrid
+            )
+            
+            return false
+        }
+        
         // Check if merge violates the avoid rule
         if currentState.avoidRule.checkViolation(newValue) {
             newGrid[position.row][position.col] = currentState.playerValue
@@ -229,6 +288,7 @@ class NumberFactoryBoard {
                 goalValue: currentState.goalValue,
                 isGoalReached: currentState.isGoalReached,
                 isGameOver: true,
+                bombProbability: currentState.bombProbability,
                 avoidRule: currentState.avoidRule,
                 playerValue: currentState.playerValue,
                 playerPosition: position,
@@ -247,6 +307,7 @@ class NumberFactoryBoard {
             goalValue: newGoalValue,
             isGoalReached: goalReached,
             isGameOver: currentState.isGameOver,
+            bombProbability: currentState.bombProbability,
             avoidRule: currentState.avoidRule,
             playerValue: newValue,
             playerPosition: position,

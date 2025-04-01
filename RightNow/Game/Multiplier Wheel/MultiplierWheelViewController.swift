@@ -68,7 +68,7 @@ class MultiplierWheelViewController: UIViewController {
         // Title label
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Number Multipliers"
+        titleLabel.text = "Game Over"
         titleLabel.font = .boldSystemFont(ofSize: 20)
         titleLabel.textAlignment = .center
         containerView.addSubview(titleLabel)

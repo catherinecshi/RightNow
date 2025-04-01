@@ -44,7 +44,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
     
     func onboardingViewDidTapCharacter() {
         isFirstImage.toggle()
-        onboardingView.updateCharacterState(isAsleep: isFirstImage)
+        onboardingView.updateCharacterState(isHappy: isFirstImage)
     }
     
     func onboardingViewDidAdjustTime(_ minutes: Int) {
@@ -99,7 +99,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         
         // show button
         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 second delay
-        onboardingView.showResponseButton(title: "What happened?")
+        onboardingView.showResponseButton(title: "What? Why would they do that?")
     }
     
     func thirdOnboardingSequence() async {
@@ -126,7 +126,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 second delay
         onboardingView.animateAppearance(of: onboardingView.tauntLabel)
         
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
+        try? await Task.sleep(nanoseconds: 1_500_000_000) // 1 second delay
         onboardingView.animateAppearance(of: onboardingView.keepUpLabel)
         
         try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
@@ -156,6 +156,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
     func onboardingViewDidTapResponseButton() {
         onboardingView.hideResponseButton()
         steps += 1
+        print(steps)
         
         if steps == 2 {
             Task {
@@ -178,5 +179,41 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
                 await showHabitsScreen()
             }
         }
+    }
+    
+    // MARK: - Onboarding Pt 2
+    func sixthOnboardingSequence() async {
+        onboardingView.showFocusView(withInstructions: "Maow's health depends on whether you finish your habits on time")
+        
+        await withCheckedContinuation { continuation in
+            onboardingView.startEmojiTransitionSequence {
+                // stop focus vew
+                print("emoji transition ended")
+                self.onboardingView.hideFocusView()
+                
+                continuation.resume()
+            }
+        }
+        
+        await showTimer()
+    }
+    
+    func showTimer() async {
+        onboardingView.showTimer()
+        onboardingView.showCoupons()
+        
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        onboardingView.showFocusViewCoupons(withInstructions: "Maow will also give you coupons if you lock your phone away and spend time with her")
+        
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        onboardingView.hideFocusView()
+        
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        await showGameScreen()
+    }
+    
+    func showGameScreen() async {
+        print("showing game screen")
+        coordinator?.switchToGame()
     }
 }

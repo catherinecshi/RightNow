@@ -45,7 +45,7 @@ class HabitListView: UIView {
         tableView.estimatedRowHeight = 44.0
         
         //register cell
-        tableView.register(HabitTableViewCell.self, forCellReuseIdentifier: "HabitCell")
+        tableView.register(HabitCell.self, forCellReuseIdentifier: "HabitCell")
         
         addSubview(tableView)
         

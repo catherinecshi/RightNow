@@ -70,7 +70,7 @@
 		FB61E8AA2D8B0A010012E7F4 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB61E8A92D8B0A010012E7F4 /* WelcomeViewModel.swift */; };
 		FB61E8AC2D8B393F0012E7F4 /* CustomTransitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB61E8AB2D8B393F0012E7F4 /* CustomTransitions.swift */; };
 		FB6E52752AE1FC4D00499E1C /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52742AE1FC4D00499E1C /* Habit.swift */; };
-		FB6E52772AE1FC9700499E1C /* HabitTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52762AE1FC9700499E1C /* HabitTableViewCell.swift */; };
+		FB6E52772AE1FC9700499E1C /* HabitCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52762AE1FC9700499E1C /* HabitCell.swift */; };
 		FB6E52792AE1FCED00499E1C /* HabitListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E52782AE1FCED00499E1C /* HabitListViewModel.swift */; };
 		FB6E527B2AE201F500499E1C /* HabitListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E527A2AE201F500499E1C /* HabitListView.swift */; };
 		FB6E527D2AE2021300499E1C /* HabitListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6E527C2AE2021300499E1C /* HabitListViewController.swift */; };
@@ -86,6 +86,8 @@
 		FBB367952D99A180008F764B /* EmojiCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367942D99A180008F764B /* EmojiCell.swift */; };
 		FBB367982D99BCD9008F764B /* MultiplierWheelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367972D99BCD9008F764B /* MultiplierWheelViewController.swift */; };
 		FBB3679A2D99BD1E008F764B /* SpinnerWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB367992D99BD1E008F764B /* SpinnerWheelView.swift */; };
+		FBB3679C2D9A2128008F764B /* EmojiAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB3679B2D9A2128008F764B /* EmojiAnimator.swift */; };
+		FBB3679E2D9B2E45008F764B /* NumberFactoryOnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBB3679D2D9B2E45008F764B /* NumberFactoryOnboardingViewController.swift */; };
 		FBBC92692D93911D00B730FC /* NumberFactoryBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC92682D93911D00B730FC /* NumberFactoryBoard.swift */; };
 		FBBC926D2D944EB000B730FC /* NumberFactoryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926C2D944EB000B730FC /* NumberFactoryState.swift */; };
 		FBBC926F2D94520600B730FC /* ScrollingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBC926E2D94520600B730FC /* ScrollingEngine.swift */; };
@@ -116,6 +118,7 @@
 		FBC7BD552D7533F300F94E04 /* HabitRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC7BD542D7533F300F94E04 /* HabitRepository.swift */; };
 		FBD216A62B3297780084F70B /* SelectTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD216A52B3297780084F70B /* SelectTimeViewController.swift */; };
 		FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBDE05182D29BD1D00C46EBB /* Level.swift */; };
+		FBDE7CE42D9B809A004B28B4 /* gifset_1.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = FBDE7CE32D9B809A004B28B4 /* gifset_1.mp4 */; };
 		FBE946712ACF5D1100CA11ED /* PhotoTakenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -206,7 +209,7 @@
 		FB61E8A92D8B0A010012E7F4 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeViewModel.swift; sourceTree = "<group>"; };
 		FB61E8AB2D8B393F0012E7F4 /* CustomTransitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTransitions.swift; sourceTree = "<group>"; };
 		FB6E52742AE1FC4D00499E1C /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
-		FB6E52762AE1FC9700499E1C /* HabitTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTableViewCell.swift; sourceTree = "<group>"; };
+		FB6E52762AE1FC9700499E1C /* HabitCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitCell.swift; sourceTree = "<group>"; };
 		FB6E52782AE1FCED00499E1C /* HabitListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListViewModel.swift; sourceTree = "<group>"; };
 		FB6E527A2AE201F500499E1C /* HabitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListView.swift; sourceTree = "<group>"; };
 		FB6E527C2AE2021300499E1C /* HabitListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListViewController.swift; sourceTree = "<group>"; };
@@ -222,6 +225,8 @@
 		FBB367942D99A180008F764B /* EmojiCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiCell.swift; sourceTree = "<group>"; };
 		FBB367972D99BCD9008F764B /* MultiplierWheelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplierWheelViewController.swift; sourceTree = "<group>"; };
 		FBB367992D99BD1E008F764B /* SpinnerWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpinnerWheelView.swift; sourceTree = "<group>"; };
+		FBB3679B2D9A2128008F764B /* EmojiAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiAnimator.swift; sourceTree = "<group>"; };
+		FBB3679D2D9B2E45008F764B /* NumberFactoryOnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryOnboardingViewController.swift; sourceTree = "<group>"; };
 		FBBC92682D93911D00B730FC /* NumberFactoryBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryBoard.swift; sourceTree = "<group>"; };
 		FBBC926C2D944EB000B730FC /* NumberFactoryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFactoryState.swift; sourceTree = "<group>"; };
 		FBBC926E2D94520600B730FC /* ScrollingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollingEngine.swift; sourceTree = "<group>"; };
@@ -255,6 +260,7 @@
 		FBC7BD542D7533F300F94E04 /* HabitRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitRepository.swift; sourceTree = "<group>"; };
 		FBD216A52B3297780084F70B /* SelectTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTimeViewController.swift; sourceTree = "<group>"; };
 		FBDE05182D29BD1D00C46EBB /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
+		FBDE7CE32D9B809A004B28B4 /* gifset_1.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = gifset_1.mp4; sourceTree = "<group>"; };
 		FBE946702ACF5D1100CA11ED /* PhotoTakenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTakenViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -373,6 +379,7 @@
 				FB2665BC2D0A0CB80025353D /* CheckInController.swift */,
 				FB61E8A32D8A472F0012E7F4 /* SettingsViewController.swift */,
 				FBC7BD2C2D6CE2C400F94E04 /* yolov8s.mlmodel */,
+				FBDE7CE32D9B809A004B28B4 /* gifset_1.mp4 */,
 				FB22A7BC2AB7D49E00F63D42 /* Assets.xcassets */,
 				FB22A7BE2AB7D49E00F63D42 /* LaunchScreen.storyboard */,
 				FB22A7C12AB7D49E00F63D42 /* Info.plist */,
@@ -431,6 +438,7 @@
 				FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */,
 				FB61E8AB2D8B393F0012E7F4 /* CustomTransitions.swift */,
 				FBBC92772D94B92F00B730FC /* EmojiToImage.swift */,
+				FBB3679B2D9A2128008F764B /* EmojiAnimator.swift */,
 			);
 			path = AuxillaryObjects;
 			sourceTree = "<group>";
@@ -507,7 +515,7 @@
 			children = (
 				FB6E52742AE1FC4D00499E1C /* Habit.swift */,
 				FBC7BD542D7533F300F94E04 /* HabitRepository.swift */,
-				FB6E52762AE1FC9700499E1C /* HabitTableViewCell.swift */,
+				FB6E52762AE1FC9700499E1C /* HabitCell.swift */,
 				FB6E527A2AE201F500499E1C /* HabitListView.swift */,
 				FB6E52782AE1FCED00499E1C /* HabitListViewModel.swift */,
 				FB6E527C2AE2021300499E1C /* HabitListViewController.swift */,
@@ -602,6 +610,7 @@
 				FBC573E42D7BA04B0063E90C /* OnboardingTaskBarController.swift */,
 				FB61E8A12D88E7F80012E7F4 /* OnboardingCoordinator.swift */,
 				FBC573EB2D80810D0063E90C /* InteractionBlocker.swift */,
+				FBB3679D2D9B2E45008F764B /* NumberFactoryOnboardingViewController.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -770,6 +779,7 @@
 				FB22A7C02AB7D49E00F63D42 /* LaunchScreen.storyboard in Resources */,
 				FB2665BB2D00EECC0025353D /* test notifications.apns in Resources */,
 				FB22A7BD2AB7D49E00F63D42 /* Assets.xcassets in Resources */,
+				FBDE7CE42D9B809A004B28B4 /* gifset_1.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -925,6 +935,7 @@
 				FBC573E52D7BA04B0063E90C /* OnboardingTaskBarController.swift in Sources */,
 				FBC7BD1D2D5AC84B00F94E04 /* HabitIconUtility.swift in Sources */,
 				FBBC927A2D94C0D800B730FC /* CentralGameModel.swift in Sources */,
+				FBB3679C2D9A2128008F764B /* EmojiAnimator.swift in Sources */,
 				FBC7BD272D69427100F94E04 /* ShopViewController.swift in Sources */,
 				FB0E0E752B828B57003177AF /* HabitGoalLevelView.swift in Sources */,
 				FB61E8A42D8A472F0012E7F4 /* SettingsViewController.swift in Sources */,
@@ -941,9 +952,10 @@
 				FB34FCC42AD837BE0032872E /* CameraView.swift in Sources */,
 				FB2665BD2D0A0CB80025353D /* CheckInController.swift in Sources */,
 				FB22A7B42AB7D49C00F63D42 /* AppDelegate.swift in Sources */,
-				FB6E52772AE1FC9700499E1C /* HabitTableViewCell.swift in Sources */,
+				FB6E52772AE1FC9700499E1C /* HabitCell.swift in Sources */,
 				FB2665B92CF55CE30025353D /* AppDelegateFactory.swift in Sources */,
 				FB2665B42CF5466E0025353D /* CompositeAppDelegate.swift in Sources */,
+				FBB3679E2D9B2E45008F764B /* NumberFactoryOnboardingViewController.swift in Sources */,
 				FBDE05192D29BD1D00C46EBB /* Level.swift in Sources */,
 				FB23F3E42D343798006A4A16 /* TimeFormatter.swift in Sources */,
 				FBC573E32D7A77A00063E90C /* OnboardingView.swift in Sources */,

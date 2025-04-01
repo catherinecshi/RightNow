@@ -59,13 +59,18 @@ class HabitListViewModel {
         let currentDayString = TimeFormatter.dateToString(currentDay)
         let currentCompletions = habit.dailyCompletion[currentDayString, default: 0]
         
-        return currentCompletions >= habit.numberOfRepetitions
+        return currentCompletions > 0
     }
     
     // check if a specific habit should be shown for the day the screen is on
     func isHabitForToday(_ habit: Habit) -> Bool {
         let currentDayString = TimeFormatter.getTodayWeekday()
         return habit.daysOfTheWeek[currentDayString] == true
+    }
+    
+    func isCurrentDayToday() -> Bool {
+        let calendar = Calendar.current
+        return calendar.isDate(currentDay, inSameDayAs: Date())
     }
     
     // MARK: - Habit Operations (Delegates to Repository)

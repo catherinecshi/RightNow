@@ -6,21 +6,30 @@ enum PlayerDirection {
 // Rules for numbers to avoid
 enum AvoidRule: CaseIterable {
     case endsWithThree
-    case isDivisibleByThree
-    case isEven
-    case isOdd
+    case endsWithFour
+    case endsWithFive
+    case endsWithSix
+    case endsWithSeven
+    case endsWithEight
+    case endsWithNine
     
     // Get readable description of the rule
     var description: String {
         switch self {
         case .endsWithThree:
             return "Ending in 3"
-        case .isDivisibleByThree:
-            return "Multiples of 3"
-        case .isEven:
-            return "Even numbers"
-        case .isOdd:
-            return "Odd numbers"
+        case .endsWithFour:
+            return "Ending in 4"
+        case .endsWithFive:
+            return "Ending in 5"
+        case .endsWithSix:
+            return "Ending in 6"
+        case .endsWithSeven:
+            return "Ending in 7"
+        case .endsWithEight:
+            return "Ending in 8"
+        case .endsWithNine:
+            return "Ending in 9"
         }
     }
     
@@ -29,12 +38,18 @@ enum AvoidRule: CaseIterable {
         switch self {
         case .endsWithThree:
             return number % 10 == 3
-        case .isDivisibleByThree:
-            return number % 3 == 0
-        case .isEven:
-            return number % 2 == 0
-        case .isOdd:
-            return number % 2 != 0
+        case .endsWithFour:
+            return number % 10 == 4
+        case .endsWithFive:
+            return number % 10 == 5
+        case .endsWithSix:
+            return number % 10 == 6
+        case .endsWithSeven:
+            return number % 10 == 7
+        case .endsWithEight:
+            return number % 10 == 8
+        case .endsWithNine:
+            return number % 10 == 9
         }
     }
 }

@@ -253,6 +253,7 @@ class SelectTimeViewController: UIViewController {
     
     @objc private func nextButtonTapped() {
         if let coordinator = coordinator { // user onboarding
+            print("next button tapped while onboarding")
             coordinator.finishHabitCreation(habitData: habitData)
             dismissSelf()
         } else {

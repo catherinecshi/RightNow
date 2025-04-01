@@ -36,6 +36,9 @@ class NumberFactoryViewController: UIViewController {
     var onNumbersGenerated: ((Int) -> Void)?
     var onCouponUsed: ((Int) -> Void)?
     
+    // onboarding
+    var coordinator: OnboardingCoordinator?
+    
     // Color configuration
     private let boardColor = UIColor.systemGray6
     private let cellColor = UIColor.systemGray5
@@ -66,6 +69,20 @@ class NumberFactoryViewController: UIViewController {
         
         // Initial update
         updateUI(animated: false)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        print("view did appear")
+        
+        // check if onboarding
+        if coordinator != nil {
+            print("coordinator is not nil")
+            coordinator?.presentNumberFactoryOnboarding() { [weak self] in
+                print("presented onboarding stuff")
+                //self?.showAlert(title: "Play around!", message: "placeholder")
+            }
+        }
     }
     
     private func initializeCellViews() {
@@ -279,6 +296,13 @@ class NumberFactoryViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func dismissSelf() {
+        // check if currently doing onboarding or not
+        if coordinator != nil {
+            Task {
+                await coordinator?.dismissNumberFactory()
+            }
+        }
+        
         self.dismiss(animated: true, completion: nil)
     }
     
@@ -355,15 +379,20 @@ class NumberFactoryViewController: UIViewController {
     private func showMultiplierWheel(baseNumber: Int) {
         let upgrades = getUserUpgrades()
         
-        // create and present multiplier wheel controller
-        let wheelVC = MultiplierWheelViewController(baseNumber: baseNumber, upgrades: upgrades)
-        
-        wheelVC.onMultiplierDetermined = { [weak self] finalNumber in
-            self?.onNumbersGenerated?(finalNumber)
+        if !upgrades.isEmpty {
+            // create and present multiplier wheel controller
+            let wheelVC = MultiplierWheelViewController(baseNumber: baseNumber, upgrades: upgrades)
+            
+            wheelVC.onMultiplierDetermined = { [weak self] finalNumber in
+                self?.onNumbersGenerated?(finalNumber)
+            }
+            
+            wheelVC.modalPresentationStyle = .overFullScreen
+            present(wheelVC, animated: true)
+        } else {
+            showAlert(title: "Congrats", message: "You just made \(baseNumber) numbers!")
+            onNumbersGenerated?(baseNumber)
         }
-        
-        wheelVC.modalPresentationStyle = .overFullScreen
-        present(wheelVC, animated: true)
     }
     
     private func getUserUpgrades() -> [UpgradeType: Int] {
@@ -403,24 +432,32 @@ class NumberFactoryViewController: UIViewController {
                 
                 // Get the number label
                 if let numberLabel = cellView.viewWithTag(100) as? UILabel {
-                    numberLabel.text = value > 0 ? "\(value)" : ""
-                    
-                    // Highlight player's position
-                    if row == gameBoard.playerRow && col == gameBoard.playerCol {
-                        cellView.backgroundColor = playerColor
-                        numberLabel.textColor = .white
-                    } else {
+                    // display bombs
+                    if value == NumberFactoryBoard.bombValue {
+                        numberLabel.text = "💣"
+                        numberLabel.font = .systemFont(ofSize: 18)
                         cellView.backgroundColor = cellColor
                         numberLabel.textColor = .black
-                    }
-                    
-                    // Scale number size based on value
-                    if value < 10 {
-                        numberLabel.font = .boldSystemFont(ofSize: 18)
-                    } else if value < 100 {
-                        numberLabel.font = .boldSystemFont(ofSize: 16)
                     } else {
-                        numberLabel.font = .boldSystemFont(ofSize: 14)
+                        numberLabel.text = value > 0 ? "\(value)" : ""
+                        
+                        // Highlight player's position
+                        if row == gameBoard.playerRow && col == gameBoard.playerCol {
+                            cellView.backgroundColor = playerColor
+                            numberLabel.textColor = .white
+                        } else {
+                            cellView.backgroundColor = cellColor
+                            numberLabel.textColor = .black
+                        }
+                        
+                        // Scale number size based on value
+                        if value < 10 {
+                            numberLabel.font = .boldSystemFont(ofSize: 18)
+                        } else if value < 100 {
+                            numberLabel.font = .boldSystemFont(ofSize: 16)
+                        } else {
+                            numberLabel.font = .boldSystemFont(ofSize: 14)
+                        }
                     }
                     
                     // Add animation if requested
