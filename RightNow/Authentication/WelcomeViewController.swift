@@ -61,7 +61,7 @@ class WelcomeViewController: UIViewController {
         
         // Subtitle Label
         subtitleLabel = UILabel()
-        subtitleLabel.text = "What should you be doing right now?"
+        subtitleLabel.text = "Being in the moment."
         subtitleLabel.font = UIConfiguration.subtitleFont
         subtitleLabel.numberOfLines = 0 // to allow wrapping
         subtitleLabel.textAlignment = .center
@@ -115,8 +115,8 @@ class WelcomeViewController: UIViewController {
         
         // Setting frames
         logoImageView.frame = CGRect(x: (view.bounds.width - 200) / 2, y: 100, width: 200, height: 200)
-        titleLabel.frame = CGRect(x: 20, y: logoImageView.frame.maxY + 20, width: view.bounds.width - 40, height: 30)
-        subtitleLabel.frame = CGRect(x: 20, y: titleLabel.frame.maxY + 10, width: view.bounds.width - 40, height: 60)
+        titleLabel.frame = CGRect(x: 20, y: logoImageView.frame.maxY + 10, width: view.bounds.width - 40, height: 30)
+        subtitleLabel.frame = CGRect(x: 20, y: titleLabel.frame.maxY + 10, width: view.bounds.width - 40, height: 30)
         loginButton.frame = CGRect(x: 20, y: subtitleLabel.frame.maxY + 20, width: view.bounds.width - 40, height: 50)
         signUpButton.frame = CGRect(x: 20, y: loginButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
         googleSignInButton.frame = CGRect(x: 20, y: signUpButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
