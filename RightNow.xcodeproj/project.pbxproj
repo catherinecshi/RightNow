@@ -203,7 +203,6 @@
 		FBC7BD1C2D5AC84B00F94E04 /* HabitIconUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIconUtility.swift; sourceTree = "<group>"; };
 		FBC7BD242D5E9A2300F94E04 /* MaowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaowView.swift; sourceTree = "<group>"; };
 		FBC7BD262D69427100F94E04 /* ShopViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopViewController.swift; sourceTree = "<group>"; };
-		FBC7BD2F2D6E823B00F94E04 /* RightNow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RightNow.entitlements; sourceTree = "<group>"; };
 		FBC7BD352D6F84CE00F94E04 /* RightNowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RightNowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBC7BD372D6F84CE00F94E04 /* RightNowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightNowTests.swift; sourceTree = "<group>"; };
 		FBC7BD422D6FC7F000F94E04 /* HabitListModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HabitListModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -291,7 +290,6 @@
 		FB22A7B22AB7D49C00F63D42 /* RightNow */ = {
 			isa = PBXGroup;
 			children = (
-				FBC7BD2F2D6E823B00F94E04 /* RightNow.entitlements */,
 				FB23F3E12D343683006A4A16 /* AuxillaryObjects */,
 				FB2665B52CF55C800025353D /* AppDelegates */,
 				FB22A7D42AB7DD8B00F63D42 /* Authentication */,
