@@ -325,6 +325,8 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
+        gameModel.addNumbers(10000)
+        
         // toggle expanded state
         if expandedCells.contains(indexPath) {
             expandedCells.remove(indexPath)

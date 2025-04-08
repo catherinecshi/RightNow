@@ -1,67 +1,51 @@
-platform :ios, '14.0'
+platform :ios, '18.0'
 
 target 'RightNow' do
   use_frameworks!
 
   # Pods for RightNow
-	# camera stuff
-	pod 'CameraManager', '~> 5.1'
-	pod 'SDWebImage', :modular_headers => true
-
 	# reactive
-    	pod 'RxSwift', '6.6.0'
-    	pod 'RxCocoa', '6.6.0'
-	pod 'RxDataSources', '~> 5.0'
+    	pod 'RxSwift'
+    	pod 'RxCocoa'
+	pod 'RxDataSources'
 
 	#swift lint
 	pod 'SwiftLint'
 
 	# firebase
-	# pod 'FirebaseFirestoreSwift'
 	pod 'Firebase/Core'
 	pod 'Firebase/Firestore'
 	pod 'Firebase/Auth'
 	pod 'Firebase/Storage'
 	pod 'Firebase/Analytics'
 	pod 'Firebase/Crashlytics'
-	$FirebaseSDKVersion = '10.22.0'
 
 	# google
-	pod 'GoogleSignIn', '~> 7.0.0'
-	# pod 'GTMAppAuth', '~> 2.0.0'
-  	# pod 'GTMSessionFetcher/Core', '~> 3.1.0'
+	pod 'GoogleSignIn'
 end
 
 target 'RightNowTests' do
   use_frameworks!
 
   # Pods for RightNow
-	# camera stuff
-	pod 'CameraManager', '~> 5.1'
-	pod 'SDWebImage', :modular_headers => true
-
 	# reactive
-    	pod 'RxSwift', '6.6.0'
-    	pod 'RxCocoa', '6.6.0'
-	pod 'RxDataSources', '~> 5.0'
+    	pod 'RxSwift'
+    	pod 'RxCocoa'
+	pod 'RxDataSources'
 
 	#swift lint
 	pod 'SwiftLint'
 
 	# firebase
-	# pod 'FirebaseFirestoreSwift'
 	pod 'Firebase/Core'
 	pod 'Firebase/Firestore'
 	pod 'Firebase/Auth'
 	pod 'Firebase/Storage'
 	pod 'Firebase/Analytics'
 	pod 'Firebase/Crashlytics'
-	$FirebaseSDKVersion = '10.22.0'
 
 	# google
-	pod 'GoogleSignIn', '~> 7.0.0'
-	# pod 'GTMAppAuth', '~> 2.0.0'
-  	# pod 'GTMSessionFetcher/Core', '~> 3.1.0'
+	pod 'GoogleSignIn'
 end
 
 # Fix module conflicts

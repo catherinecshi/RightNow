@@ -347,6 +347,8 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     /// presents appropriate alert depending on completion status and date
     /// - Parameter habit: habit to check and potentially complete
     func isHabitDone(for habit: inout Habit) async {
+        await viewModel.habitCompleted(&habit)
+        
         if viewModel.isCurrentDayToday() {
             if viewModel.isHabitCompletedForDay(habit) {
                 let alertController = CustomAlertViewController(title: "Habit already completed!", message: "You've already \(habit.name) today!")
