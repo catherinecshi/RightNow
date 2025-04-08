@@ -1,6 +1,6 @@
 import Foundation
 
-// Handles scrolling behavior independent of game logic
+/// Handles scrolling behavior independent of game logic
 struct ScrollingEngine {
     let scrollInterval: TimeInterval // in seconds per row
     let onScroll: () -> Void // call to scroll

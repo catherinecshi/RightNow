@@ -1,6 +1,6 @@
 import Foundation
 
-// Game state model that's compatible with Firestore and local JSON storage
+/// Game state model that's compatible with Firestore and local JSON storage
 struct CentralGameState: Codable {
     // Unique identifier
     var id: UUID

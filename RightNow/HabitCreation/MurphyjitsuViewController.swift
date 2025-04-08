@@ -1,14 +1,24 @@
+/// # MurphyjitsuViewController
+///
+/// Displays a summary of the habit details, and turn on or off notification
+///
+/// ## Features
+/// - Displays a summary of the habit configuration (name, time, days)
+/// - Provides a toggle for enabling/disabling notifications
+/// - Handles saving the completed habit to the repository
+/// - Manages notification permission requests and fallbacks
+
 import Foundation
 import UIKit
 
 class MurphyjitsuViewController: UIViewController {
-    // MARK: - Declaration
+    // MARK: - Properties
     var repo = HabitRepository.shared
     var habitData = HabitData()
     
-    let daysOfWeek = TimeFormatter.allDays
+    private let daysOfWeek = TimeFormatter.allDays
     
-    let viewTitle: UILabel = {
+    private let viewTitle: UILabel = {
         let label = UILabel()
         label.text = "Create Habit"
         label.font = UIConfiguration.titleFont
@@ -17,7 +27,7 @@ class MurphyjitsuViewController: UIViewController {
         return label
     }()
     
-    let habitDetails: UILabel = {
+    private let habitDetails: UILabel = {
         let label = UILabel()
         label.textColor = .white
         label.font = UIConfiguration.genericFont
@@ -32,7 +42,7 @@ class MurphyjitsuViewController: UIViewController {
         return view
     }()
     
-    lazy var notificationLabel: UILabel = {
+    private lazy var notificationLabel: UILabel = {
         let label = UILabel()
         label.text = "Enable Notifications"
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -40,14 +50,14 @@ class MurphyjitsuViewController: UIViewController {
         return label
     }()
     
-    lazy var notificationSwitch: UISwitch = {
+    private lazy var notificationSwitch: UISwitch = {
         let turnOnOff = UISwitch()
         turnOnOff.isOn = true
         turnOnOff.translatesAutoresizingMaskIntoConstraints = false
         return turnOnOff
     }()
     
-    let confidenceLabel: UILabel = {
+    private let confidenceLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
         label.font = UIConfiguration.subtitleFont
@@ -59,7 +69,7 @@ class MurphyjitsuViewController: UIViewController {
         return label
     }()
     
-    let confidenceSlider: UISlider = {
+    private let confidenceSlider: UISlider = {
         let slider = UISlider()
         slider.minimumValue = 0
         slider.maximumValue = 100
@@ -71,7 +81,7 @@ class MurphyjitsuViewController: UIViewController {
         return slider
     }()
     
-    let selectedConfidenceLabel: UILabel = {
+    private let selectedConfidenceLabel: UILabel = {
         let label = UILabel()
         label.font = UIConfiguration.subtitleFont
         label.textColor = .white
@@ -92,6 +102,7 @@ class MurphyjitsuViewController: UIViewController {
     
     // MARK: - Lifecycle Methods
     
+    /// Sets up UI and requests notification permissions
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIConfiguration.tintColor
@@ -146,6 +157,10 @@ class MurphyjitsuViewController: UIViewController {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
+    /// Sets up the text according to what the user has picked
+    /// - habit name
+    /// - scheduled time (in 12 hour format)
+    /// - selected days of the week
     private func setupHabitDetails() {
         view.addSubview(habitDetails)
         habitDetails.translatesAutoresizingMaskIntoConstraints = false
@@ -178,7 +193,7 @@ class MurphyjitsuViewController: UIViewController {
         ])
     }
     
-    func setupNotificationToggle() {
+    private func setupNotificationToggle() {
         // container for centering
         view.addSubview(notificationContainer)
         
@@ -237,6 +252,11 @@ class MurphyjitsuViewController: UIViewController {
     }
     
     // MARK: - Action Methods
+    
+    /// Handles notification toggle switch
+    /// Checks for notifications if on
+    ///
+    /// - Parameter sender: The switch that triggered the action
     @objc private func notificationSwitchChanged(_ sender: UISwitch) {
         let isEnabled = sender.isOn
         
@@ -253,33 +273,64 @@ class MurphyjitsuViewController: UIViewController {
         } else {
             selectedConfidenceLabel.text = "I am \(selectedValue)% confident I will keep up my habit for a month"
         }
-        
-        // hide or display reminder label depending on confidence
-        /*
-        if selectedValue < 90 {
-            reminderLabel.isHidden = false
-        } else {
-            reminderLabel.isHidden = true
-        }
-         */
     }
     
+    /// Saves habit when next button is tapped
+    ///
+    /// Formats time to be a Date object
+    /// Creates habit and adds it in the repository
     @objc private func nextButtonTapped() {
-        // save the habitData
-        let habitDate = TimeFormatter.hourMinuteToDate(hour: habitData.hour ?? 7, minute: habitData.minute ?? 0)
-        let newHabit = Habit(id: UUID(),
-                             name: habitData.name!,
-                             description: "",
-                             time: habitDate!,
-                             daysOfTheWeek: habitData.selectedDays!,
-                             notificationEnabled: notificationSwitch.isOn,
-                             totalDone: 0,
-                             totalFailed: 0,
-                             streaks: 0,
-                             lastUpdateDate: Date())
+        // Create an alert function closure for reuse
+        let showErrorAlert = { [weak self] (message: String) in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                let alert = CustomAlertViewController(
+                    title: "Error Saving Habit",
+                    message: message
+                )
+                
+                self.present(alert, animated: true)
+            }
+        }
+        
+        // Validate required fields
+        guard let habitName = habitData.name, !habitName.isEmpty else {
+            showErrorAlert("Habit name is missing. Please go back and enter a habit name.")
+            return
+        }
+        
+        guard let selectedDays = habitData.selectedDays, selectedDays.values.contains(true) else {
+            showErrorAlert("No days selected. Please go back and select at least one day for your habit.")
+            return
+        }
+        
+        guard let hour = habitData.hour, let minute = habitData.minute else {
+            showErrorAlert("Time is not set. Please go back and set a time for your habit.")
+            return
+        }
+        
+        // Create date safely
+        guard let habitDate = TimeFormatter.hourMinuteToDate(hour: hour, minute: minute) else {
+            showErrorAlert("Could not create a valid time for the habit. Please try again.")
+            return
+        }
+        
+        // Create habit object safely
+        let newHabit = Habit(
+            id: UUID(),
+            name: habitName,
+            description: "",
+            time: habitDate,
+            daysOfTheWeek: selectedDays,
+            notificationEnabled: notificationSwitch.isOn,
+            totalDone: 0,
+            totalFailed: 0,
+            streaks: 0,
+            lastUpdateDate: Date()
+        )
         
         repo.addHabit(newHabit)
-        
         dismissSelf()
     }
      
@@ -289,6 +340,9 @@ class MurphyjitsuViewController: UIViewController {
     }
     
     // MARK: - Push Notifications
+    
+    /// Requests permission to send notification to user
+    /// Alerts user when permission is denied
     private func requestNotificationPermission() {
         PushNotificationDelegate.shared.requestAccessToNotifications { [weak self] granted in
             DispatchQueue.main.async {
@@ -299,6 +353,9 @@ class MurphyjitsuViewController: UIViewController {
         }
     }
     
+    /// Alerts user to direct user to system settings if permissions are denied
+    ///
+    /// - Parameter alert: Whether to show an alert for denied permissions
     private func checkNotificationPermission(alert: Bool) {
         PushNotificationDelegate.shared.getPermissionStatus { status in
             switch status {
@@ -314,10 +371,12 @@ class MurphyjitsuViewController: UIViewController {
         }
     }
     
+    /// Makes sure switch is off when permission is not given
     private func userDeniedNotificationPermissions() {
         notificationSwitch.isOn = false
     }
     
+    /// Displays alert when user has denied permission
     private func deniedNotificationAlert() {
         DispatchQueue.main.async {
             let alert = CustomAlertViewController.createNotificationSettingsAlert()

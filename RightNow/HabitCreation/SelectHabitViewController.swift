@@ -1,13 +1,30 @@
-/**
- This is the first view controller when the user creates a habit. The user indicates which habit they want to track with the app here.
-It supports users putting in their own habits via the textfield or a list of predefined habits shown at the start. Either way the code
- */
+/// The first view controller in the habit creation flow - user indicates which habit they want to track here
+///
+/// ## Features
+///  - Scrollable list of predefined habit suggestions
+/// - Text input for custom habits
+/// - Filters suggestion list based on user input
+/// - Handles navigation to next step in habit creation process
+/// - Supports onboarding with guided focus areas
+///
+/// ## Usage
+///  ```swift
+/// // Standard usage - instantiate and present
+/// let creationVC = SelectHabitViewController()
+/// let navController = UINavigationController(rootViewController: creationVC)
+/// navController.modalPresentationStyle = .pageSheet
+/// present(navController, animated: true, completion: nil)
+///
+/// // For onboarding - call from OnboardingCoordinator
+/// let creationVC = SelectHabitViewController()
+/// creationVC.coordinator = self
+/// ```
 
 import Foundation
 import UIKit
 
 class SelectHabitViewController: UIViewController, UITextFieldDelegate {
-    // MARK: - Declaration
+    // MARK: - Properties
     weak var coordinator: OnboardingCoordinator?
     var habitData = HabitData()
     var habitButtons: [UIButton] = []
@@ -66,6 +83,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         return label
     }()
     
+    /// container for what label, text field, and suggestions label
     private lazy var fixedStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -97,7 +115,6 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         return button
     }()
     
-    //button to x out
     private let dismissButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("x", for: .normal)
@@ -106,7 +123,8 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         return button
     }()
     
-    // for the onboarding process
+    // onboarding properties
+    /// Button being highlighted with focus view during onboarding process
     private var useDeviceButton: UIButton?
     
     private lazy var focusView: FocusView = {
@@ -117,6 +135,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         return view
     }()
     
+    /// first label during onboarding
     private lazy var onboardingLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .medium)
@@ -130,6 +149,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         return label
     }()
     
+    /// second label during onboarding
     private lazy var nextLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .medium)
@@ -145,6 +165,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     
     // MARK: - Lifecycle
     
+    /// Sets up UI, navigation, and keyboard observers
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIConfiguration.tintColor
@@ -159,16 +180,12 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         setupKeyboardObservers()
     }
     
+    /// handles onboarding focus view
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if coordinator != nil {
-            print("coordinatinwietnwewt")
-        }
-        
         if coordinator != nil && useDeviceButton != nil {
             showFocusOnUseDevice()
-            print("presenting focus on use device")
         }
     }
     
@@ -222,13 +239,14 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         ])
     }
     
+    /// Sets up a button for each button in predefinedHabits
+    /// Adds an additional button during onboarding that is at the top and focusview displays on
     private func setupHabitButtons() {
         if coordinator != nil { // onboarding currently
             let button = createHabitButton(with: "Check in on Maow")
             habitsStackView.addArrangedSubview(button)
             habitButtons.append(button)
             useDeviceButton = button
-            print("checkign use device button is here")
         }
         
         for habit in predefinedHabits {
@@ -293,6 +311,8 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     // MARK: - Observers
+    /// sets up observers for keyboard show/hide notifications
+    /// Adjusts layout constraints to make sure nothing will be blocked by the keyboard
     private func setupKeyboardObservers() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillShow),
@@ -304,18 +324,33 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
                                                object:nil)
     }
     
+    /// adds tap gesture to dismiss keyboard when tapping off the keyboard
     private func setupTapGesture() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tapGesture.cancelsTouchesInView = false
         view.addGestureRecognizer(tapGesture)
     }
     
-    //activate the next button if there is a habit name
+    /// activate the next button if there is a habit name
     private func updateNextButtonState() {
         nextButton.isEnabled = !(habitData.name?.isEmpty ?? true)
     }
     
     // MARK: - Actions
+    /// Handles text change in the text field
+    ///
+    /// When text is entered:
+    /// - Updates or creates custom habit button
+    /// - filters the predefined habit list so only the entered habit is present
+    /// - updates habit data model
+    /// - enables next button
+    ///
+    /// When text is cleared:
+    /// - Removes custom button
+    /// - shows all predefined habits again
+    /// - disables the next button
+    ///
+    /// - Parameter textField: text field that changed
     @objc private func textFieldDidChange(_ textField: UITextField) {
         if let text = textField.text, !text.isEmpty {
             updateCustomButton(with: text)
@@ -329,6 +364,16 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
+    /// Handles tap on habit buttons
+    ///
+    /// When a habit button is tapped:
+    /// - Updates text field with selected habit name
+    /// - filters the predefined habit list
+    /// - updates habit data model
+    /// - enables the next button
+    /// - remove any present focus views (when onboarding)
+    ///
+    /// - Parameter sender: the button that was tapped
     @objc private func habitButtonTapped(_ sender: UIButton) {
         guard let habitName = sender.titleLabel?.text else { return }
         habitTextField.text = habitName
@@ -342,6 +387,11 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         removeFocus()
     }
     
+    /// Handles next button tap and navigates to next VC
+    /// - Checks if habit already exists
+    ///     - shows alert if the user already has that habit
+    /// - creates new vc
+    /// - when onboarding, delegates back to the coordinator
     @objc private func nextButtonTapped() {
         if HabitRepository.shared.getHabits().contains(where: { $0.name == habitData.name }) {
             if let habitName = habitData.name {
@@ -371,6 +421,8 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         self.navigationController?.popViewController(animated: true)
     }
     
+    /// dismisses this view controller
+    /// if onboarding, delegates back to coordinator to handle (shouldn't happen)
     @objc private func dismissSelf() {
         if let coordinator = coordinator { // only call if somehow user pressed it during onboarding
             coordinator.dismissHabitCreationFlow(didCompleteHabitCreation: false)
@@ -383,6 +435,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         view.endEditing(true)
     }
     
+    /// Adjusts scroll view so all habits are visible and not behind keyboard when it appears
     @objc private func keyboardWillShow(notification: NSNotification) {
         if let keyboardFrame: NSValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
             let keyboardRectangle = keyboardFrame.cgRectValue
@@ -392,19 +445,22 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
+    /// Resets scroll view constraints when keyboard is dismissed
     @objc private func keyboardWillHide(notification: NSNotification) {
         scrollView.contentInset.bottom = 0
         scrollView.verticalScrollIndicatorInsets.bottom = 0
     }
     
     // MARK: - Onboarding
+    /// Highlights recommended habit button during onboarding
+    ///
+    /// - Creates overlay with highlighted area around button
+    /// - Displays instructional label to inform user
+    /// - Animates appearance and disappearance of both
+    /// - Adds tap gesture to the highlighted button
     func showFocusOnUseDevice() {
-        print("focusing")
         guard let useDeviceButton = useDeviceButton else { return }
-        print("button present")
         guard let window = view.window else { return }
-        
-        print("focusing still")
         
         window.addSubview(focusView)
         focusView.shapeType = .roundedRect(cornerRadius: 12)
@@ -443,6 +499,13 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         focusView.addGestureRecognizer(tapGesture)
     }
     
+    /// Handles taps on habit button focus view during onboarding
+    ///
+    /// If tap is within highlighted area
+    /// - triggers habit button action
+    /// - shows next button focus view after a delay
+    ///
+    /// - Parameter gesture: tap gesture recognizer
     @objc private func focusViewTapped(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: focusView)
         
@@ -473,6 +536,12 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
+    /// Highlights next button during onboarding
+    ///
+    /// - Creates overlay with highlighted area around button
+    /// - Displays instructional label to inform user
+    /// - Animates appearance and disappearance of both
+    /// - Adds tap gesture to the highlighted button
     private func showFocusViewOnNext() {
         guard let window = view.window else { return }
         
@@ -512,6 +581,13 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         focusView.addGestureRecognizer(tapGesture)
     }
     
+    /// Handles taps on next button focus view during onboarding
+    ///
+    /// If tap is within highlighted area
+    /// - triggers next button action
+    /// - removes focus view
+    ///
+    /// - Parameter gesture: tap gesture recognizer
     @objc private func focusViewNextTapped(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: focusView)
         
@@ -540,6 +616,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
+    /// Animates the disappearance of focus views
     private func removeFocus() {
         guard let window = view.window else { return }
         
@@ -558,6 +635,10 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     // MARK: - Auxillary Methods
+    /// Filters habit button based on text typed in from text field
+    /// Only show buttons whose titles contains partial or complete amount of text
+    ///
+    /// - Parameter text: The text to filter by
     private func filterHabits(with text: String) {
         let lowercasedText = text.lowercased()
         for button in habitButtons {
@@ -568,6 +649,12 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
+    /// Updates or creates a custom habit button with given text
+    ///
+    /// If no custom button exists yet, create one an dinsert it at the top
+    /// if custom button already exists, update its title and icon
+    ///
+    /// - Parameter text: The text for custom button
     private func updateCustomButton(with text: String) {
         if !isShowingCustomButton {
             let button = createHabitButton(with: text)
@@ -586,6 +673,7 @@ class SelectHabitViewController: UIViewController, UITextFieldDelegate {
         customButton?.isHidden = false
     }
     
+    /// Removes custom habit button from view hierarchy
     private func removeCustomButton() {
         customButton?.removeFromSuperview()
         customButton = nil

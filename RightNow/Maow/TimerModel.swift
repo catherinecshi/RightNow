@@ -1,3 +1,15 @@
+/// TimerModel.swift
+/// A comprehensive timer management system for focus/pomodoro sessions.
+///
+/// ## Features
+/// - Tracking active sessions and remaining time
+/// - Persisting user preferences and session state
+/// - Handling app state transitions (foreground/background)
+/// - Managing device lock state detection
+/// - Sending notifications based on session state
+/// - Rewarding users for completed sessions
+/// - Communicating state changes via delegate pattern
+
 import Foundation
 import UIKit
 
@@ -7,12 +19,18 @@ protocol TimerModelDelegate: AnyObject {
     func showSuccessAlert(coupons: Int?)
 }
 
+/// Manages timer functionality, session state, and rewards
 class TimerModel {
     static let shared = TimerModel()
     weak var delegate: TimerModelDelegate?
     let rewardModel = RewardModel()
     
     var timer: Timer?
+    
+    /// User's preferred focus session duration in minutes
+    ///
+    /// Stored and retrieved from UserDefaults for persistence
+    /// Automatically updates userDefaults when changed by user
     var focusTime: Int = UserDefaults.standard.integer(forKey: "userFocusTime") != 0 ? UserDefaults.standard.integer(forKey: "userFocusTime") : 25 {
         didSet {
             UserDefaults.standard.set(focusTime, forKey: "userFocusTime")
@@ -23,6 +41,10 @@ class TimerModel {
         }
     }
     var remainingSeconds: Int
+    
+    /// start time of the current session
+    /// used to calculate elapsed time
+    /// persisted to UserDefaults
     var sessionStartTime: Date? {
         didSet {
             if let date = sessionStartTime {
@@ -32,41 +54,69 @@ class TimerModel {
             }
         }
     }
+    
+    /// time when app transitioned to the background
+    /// used to determine if hte user has been away for too long
     var intoBackgroundTime: Date?
+    
+    /// flag to determine whether a focus session is currently running
     var isSessionActive = false {
         didSet {
             UserDefaults.standard.set(isSessionActive, forKey: "isSessionActive")
         }
     }
+    
+    /// identifier for current notification that would be triggered when user abandons session
+    /// used to cancel notification if user returns in time
     var currentNotificationIdentifier: String = "workFailed"
     private var observersSetup = false // to prevent multiple observers working at once
-    private var isDeviceLocked = false
+    private var isDeviceLocked = false // whether the device is currently locked
     
+    /// initialises timer model with saved focus time length
+    /// sets initial remaining seconds on that number
     init() {
         let savedFocusTime = UserDefaults.standard.integer(forKey: "userFocusTime")
         let initialFocusTime = savedFocusTime != 0 ? savedFocusTime : 25
         self.remainingSeconds = initialFocusTime * 60
     }
     
+    /// cleans up by removing notification observers when model is deallocated
     deinit {
         NotificationCenter.default.removeObserver(self)
         observersSetup = false
     }
     
     // MARK: - Session Management
+    
+    /// Starts a new focus session
+    ///
+    /// This method:
+    /// 1. Sets the session as active
+    /// 2. Records the start time
+    /// 3. Creates a repeating timer that fires every second to update the remaining time
     func startSession() {
         isSessionActive = true
         sessionStartTime = Date()
         timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateTime), userInfo: nil, repeats: true)
     }
     
+    /// Ends the current focus session and calculates rewards if successful
+    ///
+    /// This method:
+    /// 1. Invalidates and nullifies the timer
+    /// 2. Marks the session as inactive
+    /// 3. Calculates the session duration for reward purposes
+    /// 4. Resets the remaining seconds to the full focus time
+    /// 5. Clears the session start time
+    /// 6. Shows appropriate alerts or notifications based on success/failure and app state
+    ///
+    /// - Parameter failed: true if failed session, false otherwise
     func endSession(failed: Bool = false) {
         timer?.invalidate()
         timer = nil
         isSessionActive = false
         
         // get duration for reward calculation if successful
-        print("calculating sessiond uration")
         let sessionDuration = calculateSessionDuration()
         remainingSeconds = focusTime * 60
         sessionStartTime = nil
@@ -75,7 +125,6 @@ class TimerModel {
             if failed {
                 delegate?.showFailureAlert()
             } else {
-                print("sending coupons")
                 let couponsCount = rewardModel.timeToCoupons(minutes: sessionDuration)
                 delegate?.showSuccessAlert(coupons: couponsCount)
             }
@@ -83,7 +132,6 @@ class TimerModel {
             if failed {
                 showFailureNotification()
             } else {
-                print("sending coupons")
                 let couponsCount = rewardModel.timeToCoupons(minutes: sessionDuration)
                 showSuccessNotification(coupons: couponsCount)
             }
@@ -92,12 +140,23 @@ class TimerModel {
         delegate?.timerModelDidUpdateTime()
     }
     
+    /// Calculates the duration of the current session in minutes.
+    /// This is used to determine rewards for completed sessions.
+    ///
+    /// - Returns: The duration of the current session in minutes (0 if no session)
     private func calculateSessionDuration() -> Int {
         guard let startTime = sessionStartTime else { return 0 }
         let totalSeconds = focusTime * 60 - remainingSeconds
         return totalSeconds / 60 // convert to minutes
     }
     
+    /// Updates the remaining time in the current session
+    ///
+    /// This method is called every second by the timer and:
+    /// 1. Calculates elapsed time since session start
+    /// 2. Updates remaining seconds
+    /// 3. Notifies the delegate to update the UI
+    /// 4. Automatically ends the session when time reaches zero
     @objc func updateTime() {
         guard let startTime = sessionStartTime else { return }
         
@@ -111,6 +170,8 @@ class TimerModel {
         }
     }
     
+    /// if session is active -> ends it as failed
+    /// if no session -> starts a new session
     func buttonTapped() {
         if isSessionActive {
             endSession(failed: true)
@@ -120,6 +181,9 @@ class TimerModel {
     }
     
     // MARK: - Notifications
+    
+    /// shows push notification when a session fails
+    /// happens when app is in the background when a session fails
     private func showFailureNotification() {
         Task {
             do {
@@ -130,6 +194,11 @@ class TimerModel {
         }
     }
     
+    /// shows push notification when session is completed successfully
+    /// happens when app is in background when session succeeds
+    ///
+    /// - Parameter coupons: optional number of coupons earned duringsession
+    ///     If provided, value is included in notification
     private func showSuccessNotification(coupons: Int? = nil) {
         Task {
             do {
@@ -144,9 +213,14 @@ class TimerModel {
         }
     }
     
+    /// Sends notification when user leaves the app during a session
+    ///
+    /// This method:
+    /// 1. immediately sends notification warning
+    /// 2. schedules another notification in 60 seconds if the user doesn't return to app in time
+    ///
+    /// delayed notification is cancelled if the user returns in time
     private func userLeftAppNotification() {
-        print("trying to send notification")
-        
         Task {
             do {
                 try await PushNotificationDelegate.shared.scheduleNow(title: "Work Stopped", body: "Your work will be forefeited if you don't return to the app in one minute!")
@@ -165,6 +239,19 @@ class TimerModel {
     }
     
     // MARK: - App State Observers
+    
+    /// Sets up observers for app and device state changes.
+    ///
+    /// This method registers for notifications about:
+    /// 1. App entering background
+    /// 2. App entering foreground
+    /// 3. Device being locked (protected data becoming unavailable)
+    /// 4. Device being unlocked (protected data becoming available)
+    ///
+    /// Allows for user to lock their phone without killing session with the combination of observers
+    /// however, user can go from locked -> another app in this configuration
+    ///
+    /// Note: doesn't work if user does not have a passcode
     func setupObservers() {
         // prevent multiple observers being setup at once
         guard !observersSetup else { return }
@@ -200,6 +287,18 @@ class TimerModel {
         observersSetup = true
     }
     
+    /// Handles the app transitioning to the background
+    ///
+    /// This method:
+    /// 1. If no session is active, it does nothing
+    /// 2. If a session is active, it requests background execution time
+    /// 3. It checks if the app went to background due to device lock
+    /// 4. It sets up a timer to periodically check if the device is locked
+    /// 5. After a few seconds of checks, it decides whether to show a notification
+    ///    based on whether the user locked their device or left the app
+    ///
+    /// locking phone -> no trigger
+    /// switching to another app -> trigger warnings after time
     @objc private func appDidEnterBackground() {
         // only care if there is an active session going on
         guard isSessionActive else { return }
@@ -260,8 +359,12 @@ class TimerModel {
         RunLoop.current.add(lockCheckTimer!, forMode: .common)
     }
     
+    /// Handles the app transitioning to the foreground.
+    /// This method:
+    /// 1. If no session is active or no background time is recorded, it does nothing
+    /// 2. If the user returns within 60 seconds, it cancels the pending notification
+    /// 3. If the user returns after 60 seconds, it ends the session as failed
     @objc private func appWillEnterForeground() {
-        print("foreground - session is active \(isSessionActive), time is \(intoBackgroundTime)")
         guard isSessionActive,
               let backgroundDate = intoBackgroundTime else { return }
         
@@ -277,13 +380,13 @@ class TimerModel {
         self.intoBackgroundTime = nil
     }
     
+    /// updates device lock when device is locked
     @objc private func handleDeviceLock() {
         isDeviceLocked = true
-        print("Device is being locked")
     }
     
+    /// updates device lock when device is not locked
     @objc private func handleDeviceUnlock() {
         isDeviceLocked = false
-        print("Device is being unlocked")
     }
 }

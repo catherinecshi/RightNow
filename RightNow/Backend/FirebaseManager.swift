@@ -453,11 +453,4 @@ class FirebaseManager: FirebaseConfigurable {
             throw FirebaseError.operationFailed(error)
         }
     }
-    
-    // MARK: - Debugging
-    #if DEBUG
-    func forceDatabaseAccess() -> Firestore {
-        return firestore
-    }
-    #endif
 }

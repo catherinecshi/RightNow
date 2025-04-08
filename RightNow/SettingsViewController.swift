@@ -70,11 +70,20 @@ class SettingsViewController: UIViewController {
         navigationController?.navigationBar.isHidden = false
         setupButton()
         setupBackButton()
+        self.sceneDelegate = getSceneDelegate()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateUIForAuthState()
+    }
+    
+    private func getSceneDelegate() -> SceneDelegate? {
+        guard let windowScene = self.view.window?.windowScene,
+              let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+            return nil
+        }
+        return sceneDelegate
     }
     
     // MARK: - UI Setup

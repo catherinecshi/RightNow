@@ -4,6 +4,7 @@ protocol OnboardingCoordinatorDelegate: AnyObject {
     func onboardingCoordinatorDidFinish(_ coordinator: OnboardingCoordinator)
 }
 
+/// Handles navigation and flow logic during onboarding
 class OnboardingCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
@@ -42,6 +43,7 @@ class OnboardingCoordinator: Coordinator {
         self.window = window
     }
     
+    /// this starts the sequence in the onboarding view
     func start() {
         startOnboardingSequence()
         onboardingState = .initial
@@ -49,6 +51,7 @@ class OnboardingCoordinator: Coordinator {
     
     // MARK: - Setup
     
+    /// creates the onboarding tab bar controller after the onboarding view sequence is done
     private func showOnboardingTabBarController() {
         let onboardingTabBarController = OnboardingTabBarController()
         
@@ -400,6 +403,7 @@ class OnboardingCoordinator: Coordinator {
     
     // MARK: - Focus View Methods
      
+    /// focuses on tab bar item without crashes by blocking all other tap gestures
     @MainActor
     private func focusOnTabBarItem(in tabBarController: OnboardingTabBarController, for position: Int, with text: String) async {
         // Calculate the frame of the second tab item based on the tab bar's width

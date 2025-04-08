@@ -1,5 +1,18 @@
 import UIKit
 
+/// # NumberFactoryViewController
+///
+/// A game-based view controller that creates a grid-based number collection game where
+/// players navigate through a dynamically scrolling grid to accumulate number values
+/// while avoiding specific rule violations.
+ 
+/// ## Game Overview
+/// - Players navigate a number around a grid using swipe gestures
+/// - The grid continuously scrolls downward at timed intervals
+/// - Players can double their score if they reach goal values
+/// - Players must avoid specific rule conditions
+/// - The game uses a coupon system as entry payment
+/// - Upon completion, a multiplier wheel determines final number rewards
 class NumberFactoryViewController: UIViewController {
     // MARK: - Properties
     // Game constants
@@ -47,6 +60,8 @@ class NumberFactoryViewController: UIViewController {
     private let goalBoxColor = UIColor.systemGreen.withAlphaComponent(0.2)
     
     // MARK: - Lifecycle
+    
+    /// sets up game environment
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -71,13 +86,12 @@ class NumberFactoryViewController: UIViewController {
         updateUI(animated: false)
     }
     
+    /// check if onboarding, and if so, present tutorial through coordinator
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        print("view did appear")
         
         // check if onboarding
         if coordinator != nil {
-            print("coordinator is not nil")
             coordinator?.presentNumberFactoryOnboarding() { [weak self] in
                 print("presented onboarding stuff")
                 //self?.showAlert(title: "Play around!", message: "placeholder")
@@ -85,6 +99,17 @@ class NumberFactoryViewController: UIViewController {
         }
     }
     
+     /// Creates the visual grid of cell views that represent the game board
+     ///
+     /// This method:
+     /// 1. Calculates the appropriate cell size based on board dimensions
+     /// 2. Creates a 2D array of UIViews for each cell
+     /// 3. Positions each cell on the board with proper spacing
+     /// 4. Adds a label to each cell for displaying the number value
+     /// 5. Stores the cell views for later reference and updates
+     ///
+     /// The cell size calculation considers both the board size and the
+     /// padding between cells to ensure consistent spacing throughout the grid.
     private func initializeCellViews() {
         // Create a 2D array of cell views
         let gridSize = gameBoard.gridSize
@@ -122,6 +147,8 @@ class NumberFactoryViewController: UIViewController {
     }
     
     // MARK: - Setup UI
+    
+    /// Creates the container view for the game board
     private func setupGameBoard() {
         // Create board container view
         boardView = UIView(frame: CGRect(x: 0, y: 0, width: boardSize, height: boardSize))
@@ -131,6 +158,15 @@ class NumberFactoryViewController: UIViewController {
         view.addSubview(boardView)
     }
     
+    /// Sets up information labels for game rules and goals
+    ///
+    /// This method creates:
+    /// 1. A container to organize the information boxes
+    /// 2. A red-tinted box displaying the rule to avoid
+    /// 3. A green-tinted box displaying the current goal value
+    ///
+    /// The layout uses Auto Layout constraints to position the elements
+    /// properly and ensure they adapt to different screen sizes.
     private func setupInfoLabels() {
         // Create container for the rule boxes
         let infoContainer = UIView()
@@ -198,6 +234,7 @@ class NumberFactoryViewController: UIViewController {
         ])
     }
     
+    /// Sets up the start/end game button and coupon display
     private func setupStartButton() {
         startButton = UIButton(type: .system)
         startButton.translatesAutoresizingMaskIntoConstraints = false
@@ -252,6 +289,8 @@ class NumberFactoryViewController: UIViewController {
     }
     
     // MARK: - Setup Utilities
+    
+    /// sets up swipe gestures recognizers for player movement
     private func setupGestureRecognizers() {
         // Add swipe gesture recognizers
         let directions: [UISwipeGestureRecognizer.Direction] = [.up, .down, .left, .right]
@@ -263,6 +302,12 @@ class NumberFactoryViewController: UIViewController {
         }
     }
     
+    /// Sets up observers for game state changes
+    ///
+    /// This method establishes three key callback closures:
+    /// 1. stateDidChange: Triggers UI updates when the game state changes
+    /// 2. gameDidEnd: Handles game completion
+    /// 3. didReachGoal: Handles when the player reaches the goal value
     private func setupObservers() {
         gameBoard.stateDidChange = { [weak self] newState, oldState in
             DispatchQueue.main.async {
@@ -295,6 +340,9 @@ class NumberFactoryViewController: UIViewController {
     }
     
     // MARK: - Actions
+    
+    /// dismisses view
+    /// if ionboarding, call coordinator
     @objc private func dismissSelf() {
         // check if currently doing onboarding or not
         if coordinator != nil {
@@ -306,6 +354,7 @@ class NumberFactoryViewController: UIViewController {
         self.dismiss(animated: true, completion: nil)
     }
     
+    /// processes swip gesture input for player movement
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         guard gameActive else { return }
         
@@ -331,6 +380,13 @@ class NumberFactoryViewController: UIViewController {
         }
     }
     
+    ///Toggles between starting and ending the game
+    ///
+    /// This method:
+    /// 1. If game is active, ends the current game
+    /// 2. If game is inactive, checks for coupon availability
+    /// 3. If coupon is available, starts a new game and deducts a coupon
+    /// 4. If no coupon is available, shows an alert
     @objc private func toggleGame() {
         if gameActive {
             endGame()
@@ -353,6 +409,15 @@ class NumberFactoryViewController: UIViewController {
     }
     
     // MARK: - Game State
+    
+    /// Starts a new game session
+    ///
+    /// This method:
+    /// 1. Initializes a new game in the model
+    /// 2. Updates the UI to reflect initial state
+    /// 3. Starts the scrolling timer
+    /// 4. Updates button appearance and text
+    /// 5. Sets game active flag
     private func startGame() {
         gameBoard.startNewGame()
         updateUI(animated: false)
@@ -365,6 +430,13 @@ class NumberFactoryViewController: UIViewController {
         gameActive = true
     }
     
+    /// Ends the current game session
+    ///
+    /// This method:
+    /// 1. Stops the scrolling timer
+    /// 2. Resets button appearance and text
+    /// 3. Clears game active flag
+    /// 4. Shows multiplier wheel for final reward calculation
     private func endGame() {
         // Stop scrolling timer
         scrollingEngine.stop()
@@ -376,6 +448,13 @@ class NumberFactoryViewController: UIViewController {
         showMultiplierWheel(baseNumber: gameBoard.playerValue)
     }
     
+    /// Presents the multiplier wheel for reward calculation
+    ///
+    /// This method:
+    /// 1. Retrieves player upgrades from central game model
+    /// 2. If upgrades exist, creates and shows multiplier wheel UI
+    /// 3. Sets callback for final number determination
+    /// 4. If no upgrades, shows simple completion alert
     private func showMultiplierWheel(baseNumber: Int) {
         let upgrades = getUserUpgrades()
         
@@ -395,12 +474,16 @@ class NumberFactoryViewController: UIViewController {
         }
     }
     
+    /// return dictionary mapping upgrade types to current levels
     private func getUserUpgrades() -> [UpgradeType: Int] {
         let upgrades = CentralGameModel.shared.getUpgrades()
         return upgrades
     }
     
     // MARK: - Updates
+    
+    /// scroll down the grid by one row
+    /// if cannot scroll down, user is out of bounds and lost
     private func scrollGridDown() {
         if gameBoard.scrollDown() {
             // Animate the grid scrolling down
@@ -413,10 +496,20 @@ class NumberFactoryViewController: UIViewController {
         }
     }
     
+    /// update coupon count display
     private func updateCouponCount() {
         couponsCountLabel.text = String(couponCount)
     }
     
+    /// Updates the entire game UI to reflect current model state
+    ///
+    /// This comprehensive method:
+    /// 1. Updates rule and goal labels
+    /// 2. Updates all grid cells to show current values
+    /// 3. Highlights the player's current position
+    /// 4. Handles bomb cells differently with emoji
+    /// 5. Adjusts font size based on number magnitude
+    /// 6. Optionally animates the player position
     private func updateUI(animated: Bool) {
         // Update avoid rule and goal
         avoidRuleLabel.text = "AVOID: " + gameBoard.avoidRule.description
@@ -475,6 +568,7 @@ class NumberFactoryViewController: UIViewController {
         }
     }
     
+    /// utility method for showing alert
     private func showAlert(title: String, message: String) {
         let alert = CustomAlertViewController(title: title, message: message)
         present(alert, animated: true)

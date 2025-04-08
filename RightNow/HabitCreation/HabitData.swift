@@ -1,7 +1,7 @@
 import Foundation
 
+/// Habit Data Storage Utilitythat is being added to when the user creates a habit
 struct HabitData {
-    // basic required info
     var name: String?
     var hour: Int?
     var minute: Int?

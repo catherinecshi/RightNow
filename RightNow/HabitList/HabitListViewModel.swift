@@ -1,6 +1,10 @@
 import UIKit
 import Combine
 
+/// A view model that manages habit data and UI state for a habit list view.
+///
+/// This class serves as the intermediary between the UI and the data layer,
+/// providing filtered habits for the current day and handling user interactions.
 class HabitListViewModel {
     // MARK: - Properties
     private let repository: HabitRepositoryProtocol
@@ -14,15 +18,18 @@ class HabitListViewModel {
         setupObservers()
     }
     
-    // publisher for habit changes
+    /// Observers that are notified when habit is changed
+    private var observers: [((HabitRepository.HabitChangeType) -> Void)] = []
+    let habitWillChange = PassthroughSubject<Void, Never>() // publisher of habits changed for UI updates
+    private var cancellables = Set<AnyCancellable>()
+    
+    /// Publisher that emits events when habits change in repository
+    /// Subscribers do CRUD with this
     var habitChangePublisher: AnyPublisher<HabitRepository.HabitChangeType, Never> {
         repository.habitPublisher
     }
     
-    private var observers: [((HabitRepository.HabitChangeType) -> Void)] = []
-    let habitWillChange = PassthroughSubject<Void, Never>()
-    private var cancellables = Set<AnyCancellable>()
-    
+    /// Sets up combine subscribers to react to changes in habits - UI updates
     private func setupObservers() {
         repository.habitPublisher
             .sink { [weak self] _ in
@@ -32,8 +39,12 @@ class HabitListViewModel {
             .store(in: &cancellables)
     }
     
-    // MARK: - UI Methods
+    // MARK: - UI Models
     
+    /// Handles swipe gesture to navigate between days
+    /// - Parameter direction: direction of swipe gesture
+    ///     - left for next day
+    ///     - right for previous day
     @objc func handleSwipe(direction: UISwipeGestureRecognizer.Direction) {
         let dayInterval: TimeInterval = 24 * 60 * 60
         
@@ -46,7 +57,7 @@ class HabitListViewModel {
         habitWillChange.send()
     }
     
-    // filter habits for the current day
+    /// Returns habits scheduled for currently displayed day (by days of week)
     var habitsForCurrentDay: [Habit] {
         let currentDayString = TimeFormatter.weekdayToString(currentDay)
         let filteredHabits = repository.habits.filter { $0.daysOfTheWeek[currentDayString] == true }
@@ -54,7 +65,8 @@ class HabitListViewModel {
         return sortHabits(filteredHabits)
     }
     
-    // check if habit is completed for the current day the screen is on
+    /// Returns true if habit has been completed for currently displayed day
+    /// - Parameter habit: the habit to check for completion
     func isHabitCompletedForDay(_ habit: Habit) -> Bool {
         let currentDayString = TimeFormatter.dateToString(currentDay)
         let currentCompletions = habit.dailyCompletion[currentDayString, default: 0]
@@ -62,38 +74,50 @@ class HabitListViewModel {
         return currentCompletions > 0
     }
     
-    // check if a specific habit should be shown for the day the screen is on
+    /// Returns true if habit is scheduled for today (in time and calendar, not display)
+    /// - Parameter habit: the habit to check
     func isHabitForToday(_ habit: Habit) -> Bool {
         let currentDayString = TimeFormatter.getTodayWeekday()
         return habit.daysOfTheWeek[currentDayString] == true
     }
     
+    /// Returns true if currently displayed day is today
     func isCurrentDayToday() -> Bool {
         let calendar = Calendar.current
         return calendar.isDate(currentDay, inSameDayAs: Date())
     }
     
     // MARK: - Habit Operations (Delegates to Repository)
+    
+    /// Adds parameter habit to repository
     func addHabit(_ habit: Habit) {
         repository.addHabit(habit)
     }
     
+    /// Updates parameter habit with repository
     func updateHabit(_ habit: Habit) async {
         await repository.updateHabit(habit)
     }
     
+    /// Returns all habits from repository
     func getHabits() -> [Habit] {
         return repository.habits
     }
     
+    /// Fetches a specific habit by its ID
+    /// - Parameter habitId: habit id
+    /// - Returns: habit if found, nil otherwise
+    /// - Throws: any errors that occur during operation
     func fetchHabit(_ habitId: String) async throws -> Habit? {
         return try await repository.fetchSingleHabit(habitID: habitId)
     }
     
+    /// Deletes parameter habit from repository
     func deleteHabit(_ habit: Habit) async {
         await repository.deleteHabit(habit)
     }
     
+    /// Marks parameter habit as complete for the day
     func habitCompleted(_ habit: inout Habit) async {
         await repository.completeHabit(&habit)
     }

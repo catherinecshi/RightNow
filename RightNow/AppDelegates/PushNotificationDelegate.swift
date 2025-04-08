@@ -154,8 +154,6 @@ extension PushNotificationDelegate {
             
             if let _ = habit.time { // for time based habits
                 content.body = "Are you starting to \(habit.name) now?"
-            } else if let cue = habit.cue { // for cue based habits
-                content.body = "Did you \(habit.name) after \(cue)?"
             } else {
                 print("something weird going on - no time for habit and no cue either")
             }

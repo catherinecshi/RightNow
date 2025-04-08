@@ -1,25 +1,6 @@
 import UIKit
 
-// Upgrade model
-class Upgrade {
-    let name: String
-    let baseCost: Double
-    let range: Int
-    let description: String
-    var level: Int = 0
-    
-    var currentCost: Double {
-        return baseCost * pow(1.15, Double(level))
-    }
-    
-    init(name: String, baseCost: Double, range: Int, description: String) {
-        self.name = name
-        self.baseCost = baseCost
-        self.range = range
-        self.description = description
-    }
-}
-
+/// Cases for different upgrade types
 enum UpgradeType: String, CaseIterable {
     case d6 = "Dice roll"
     case cards = "Playing Cards"
@@ -37,6 +18,7 @@ enum UpgradeType: String, CaseIterable {
         }
     }
     
+    /// range of what the random number could draw from
     var range: Double {
         switch self {
         case .d6: return 6

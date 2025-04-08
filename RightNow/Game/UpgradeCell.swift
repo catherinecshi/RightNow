@@ -1,17 +1,80 @@
 import UIKit
 
-// MARK: - Upgrade Cell
+/// A custom table view cell that displays game upgrades with:
+/// - Visual representation of upgrade level using emoji indicators
+/// - Expandable/collapsible details view
+/// - Purchase button with cost display
+/// - Support for different upgrade types with appropriate visuals
+///
+/// This cell handles its own state transitions and animations.
 class UpgradeCell: UITableViewCell {
-    private let containerView = UIView()
-    private let emojiContainerView = UIView()
-    private let expandableContentView = UIView()
+    // MARK: - Properties
     
-    private let nameLabel = UILabel()
-    private let descriptionLabel = UILabel()
-    private let dividerView = UIView()
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemGray6
+        view.layer.cornerRadius = 12
+        view.layer.masksToBounds = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
     
-    private let buyButton = UIButton(type: .system)
-    private let costLabel = UILabel()
+    private let emojiContainerView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let expandableContentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.alpha = 0
+        view.isHidden = true
+        return view
+    }()
+    
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textColor = .secondaryLabel
+        label.numberOfLines = 2
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let dividerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemGray3
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let buyButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("+", for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
+        button.backgroundColor = UIConfiguration.tintColor
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    private let costLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textColor = .white
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
     
     private var emojiCount = 0
     private var emojiType = ""
@@ -23,6 +86,11 @@ class UpgradeCell: UITableViewCell {
     private(set) var isExpanded = false
     
     // MARK: - Lifecycle
+    
+    /// Initializes the cell with given style and reuse identifier
+    /// - Parameters:
+    ///     - style: cell style
+    ///     - reuseIdentifier: reuse identifier for cell
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
@@ -32,11 +100,7 @@ class UpgradeCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        //updateBuyButtonMask()
-    }
-    
+    /// prepares cell for reuse by clearing emoji views
     override func prepareForReuse() {
         super.prepareForReuse()
         clearEmojiViews()
@@ -48,64 +112,30 @@ class UpgradeCell: UITableViewCell {
         selectionStyle = .none
         backgroundColor = .clear
         
-        // configure container view
-        containerView.backgroundColor = .systemGray6
-        containerView.layer.cornerRadius = 12
-        containerView.layer.masksToBounds = true
-        containerView.translatesAutoresizingMaskIntoConstraints = false
+        setupContainerView()
+        setupBuyButton()
+        setupEmojiContainer()
+        setupExpandableContainer()
+    }
+    
+    private func setupContainerView() {
         contentView.addSubview(containerView)
         
-        // emoji container
-        emojiContainerView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(emojiContainerView)
-        
-        // configure expandable content view
-        expandableContentView.translatesAutoresizingMaskIntoConstraints = false
-        expandableContentView.alpha = 0
-        expandableContentView.isHidden = true
-        containerView.addSubview(expandableContentView)
-        
-        // Name label
-        nameLabel.font = UIFont.boldSystemFont(ofSize: 16)
-        nameLabel.translatesAutoresizingMaskIntoConstraints = false
-        expandableContentView.addSubview(nameLabel)
-        
-        // Description label
-        descriptionLabel.font = UIFont.systemFont(ofSize: 12)
-        descriptionLabel.textColor = .secondaryLabel
-        descriptionLabel.numberOfLines = 2
-        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-        expandableContentView.addSubview(descriptionLabel)
-        
-        // buy button
-        dividerView.backgroundColor = .systemGray3
-        dividerView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(dividerView)
-        
-        buyButton.setTitle("+", for: .normal)
-        buyButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 24)
-        buyButton.backgroundColor = UIConfiguration.tintColor
-        buyButton.setTitleColor(.white, for: .normal)
-        buyButton.layer.cornerRadius = 8
-        buyButton.addTarget(self, action: #selector(buyButtonPressed), for: .touchUpInside)
-        buyButton.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(buyButton)
-        
-        // Cost label
-        costLabel.textAlignment = .center
-        costLabel.font = UIFont.systemFont(ofSize: 12)
-        costLabel.textColor = .white
-        costLabel.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(costLabel)
-        
-        // Layout constraints
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            
-            // buy button
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+        ])
+    }
+    
+    private func setupBuyButton() {
+        buyButton.addTarget(self, action: #selector(buyButtonPressed), for: .touchUpInside)
+        containerView.addSubview(buyButton)
+        containerView.addSubview(costLabel)
+        containerView.addSubview(dividerView)
+        
+        NSLayoutConstraint.activate([
             dividerView.topAnchor.constraint(equalTo: containerView.topAnchor),
             dividerView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
             dividerView.widthAnchor.constraint(equalToConstant: 1),
@@ -119,14 +149,26 @@ class UpgradeCell: UITableViewCell {
             costLabel.centerXAnchor.constraint(equalTo: buyButton.centerXAnchor),
             costLabel.bottomAnchor.constraint(equalTo: buyButton.bottomAnchor, constant: -4),
             costLabel.leadingAnchor.constraint(equalTo: buyButton.leadingAnchor, constant: 4),
-            costLabel.trailingAnchor.constraint(equalTo: buyButton.trailingAnchor, constant: -4),
-            
-            // Emoji container takes the main area
+            costLabel.trailingAnchor.constraint(equalTo: buyButton.trailingAnchor, constant: -4)
+        ])
+    }
+    
+    private func setupEmojiContainer() {
+        containerView.addSubview(emojiContainerView)
+        
+        NSLayoutConstraint.activate([
             emojiContainerView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
             emojiContainerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
-            emojiContainerView.trailingAnchor.constraint(equalTo: dividerView.leadingAnchor, constant: -10),
-            
-            // Expandable content appears below emojis
+            emojiContainerView.trailingAnchor.constraint(equalTo: dividerView.leadingAnchor, constant: -10)
+        ])
+    }
+    
+    private func setupExpandableContainer() {
+        containerView.addSubview(expandableContentView)
+        expandableContentView.addSubview(nameLabel)
+        expandableContentView.addSubview(descriptionLabel)
+        
+        NSLayoutConstraint.activate([
             expandableContentView.topAnchor.constraint(equalTo: emojiContainerView.bottomAnchor, constant: 8),
             expandableContentView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
             expandableContentView.trailingAnchor.constraint(equalTo: dividerView.leadingAnchor, constant: -10),
@@ -145,6 +187,15 @@ class UpgradeCell: UITableViewCell {
         ])
     }
     
+    // MARK: - Configuration
+    
+    /// Configures the cell with upgrade information
+    /// - Parameters:
+    ///   - upgradeType: The type of upgrade
+    ///   - level: The current level of the upgrade
+    ///   - cost: The cost to purchase the next level
+    ///   - canAfford: Whether the player can afford the upgrade
+    ///   - isExpanded: Whether the cell should be displayed in expanded state
     func configure(with upgradeType: UpgradeType, level: Int, cost: Double, canAfford: Bool, isExpanded: Bool = false) {
         self.upgradeType = upgradeType
         self.isExpanded = isExpanded
@@ -196,11 +247,15 @@ class UpgradeCell: UITableViewCell {
     }
     
     // MARK: - Updates and Actions
+    
+    /// removes all emoji views from the container
     private func clearEmojiViews() {
         emojiViews.forEach { $0.removeFromSuperview() }
         emojiViews.removeAll()
     }
     
+    /// creates and displays emoji indicators representing upgrade level
+    /// handles empty state, grid layout and overflow indicating
     private func refreshEmojiDisplay() {
         // Clear existing emoji views
         clearEmojiViews()
@@ -287,6 +342,7 @@ class UpgradeCell: UITableViewCell {
         }
     }
     
+    /// Updates mask for buy button to create rounded corners only on right side
     private func updateBuyButtonMask() {
         let buyButtonMaskPath = UIBezierPath(
             roundedRect: buyButton.bounds,
@@ -299,6 +355,7 @@ class UpgradeCell: UITableViewCell {
         buyButton.layer.mask = buyButtonMaskLayer
     }
     
+    /// toggles expanded state of cell with animation
     func toggleExpanded() {
         isExpanded = !isExpanded
         
@@ -337,6 +394,7 @@ class UpgradeCell: UITableViewCell {
         })
     }
     
+    /// calls buyButtonTapped closure with current upgrade type
     @objc private func buyButtonPressed() {
         if let upgradeType = upgradeType {
             buyButtonTapped?(upgradeType)
@@ -349,10 +407,21 @@ class UpgradeCell: UITableViewCell {
 
 // MARK: - UICollectionView DataSource & Delegate
 extension UpgradeCell: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    /// Returns the number of emoji items to display in the collection view
+    /// - Parameters:
+    ///   - collectionView: The collection view requesting this information
+    ///   - section: The section index
+    /// - Returns: The number of emoji indicators to show
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return emojiCount > 0 ? emojiCount : 1 // At least one item to show "None yet"
     }
     
+    /// Configures and returns a cell for the emoji collection
+    /// - Parameters:
+    ///   - collectionView: The collection view requesting this information
+    ///   - indexPath: The index path for the cell
+    /// - Returns: A cell displaying an emoji or "None yet" message
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiCell else {
             print("Failed to dequeue EmojiCell - check registrations")
@@ -372,6 +441,12 @@ extension UpgradeCell: UICollectionViewDataSource, UICollectionViewDelegateFlowL
         return cell
     }
     
+    /// Returns the size for items in the emoji collection
+    /// - Parameters:
+    ///   - collectionView: The collection view requesting this information
+    ///   - collectionViewLayout: The layout object requesting the information
+    ///   - indexPath: The index path of the item
+    /// - Returns: The size for the cell at the specified index path
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         // If this is an empty state cell
         if emojiCount == 0 && indexPath.item == 0 {

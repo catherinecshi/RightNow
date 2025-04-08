@@ -1,21 +1,38 @@
 import UIKit
 
+/// A view controller that displays a game-over screen with spinning wheels that provide multipliers
+/// for the player's base score. Each wheel corresponds to a different upgrade type that the player
+/// has acquired during gameplay.
+///
+/// The controller allows players to:
+/// - View their base number
+/// - Spin multiple wheels corresponding to different upgrades
+/// - Collect the final multiplied score
+///
+/// Usage:
+/// ```
+/// let multiplierVC = MultiplierWheelViewController(baseNumber: 100, upgrades: [.d6: 2, .cards: 1])
+/// multiplierVC.onMultiplierDetermined = { finalScore in
+///     // Handle the final score
+/// }
+/// present(multiplierVC, animated: true)
+/// ```
 class MultiplierWheelViewController: UIViewController {
     // MARK: - Properties
     private var containerView: UIView!
-    private var spinnerContainerScrollView: UIScrollView!
-    private var spinnerStackView: UIStackView!
+    private var spinnerContainerScrollView: UIScrollView! // container for multiple spinner wheels
+    private var spinnerStackView: UIStackView! // horizontal stack view for spinner wheels
     private var spinButton: UIButton!
-    private var finalNumber: Int = 1
+    private var finalNumber: Int = 1 // accumulated score after all multipliers have applied
     private var baseNumber: Int = 0
     private var upgrades: [UpgradeType: Int] = [:]
     private var totalLabel: UILabel!
     private var spinnerViews: [SpinnerWheelView] = []
     
-    // Completion handler
+    /// callback final multiplied score
     var onMultiplierDetermined: ((Int) -> Void)?
     
-    // Upgrade emojis
+    /// Upgrade emojis
     private let upgradeEmojis: [UpgradeType: String] = [
         .d6: "🎲",
         .cards: "🃏",
@@ -27,6 +44,12 @@ class MultiplierWheelViewController: UIViewController {
     private var spinnersReady = false
     
     // MARK: - Initialization
+    
+    /// Creates a new multiplier wheel view controller with specified base number and upgrades
+    ///
+    /// - Parameters:
+    ///   - baseNumber: The initial score value before multipliers
+    ///   - upgrades: Dictionary mapping upgrade types to their levels
     init(baseNumber: Int, upgrades: [UpgradeType: Int]) {
         self.baseNumber = baseNumber
         self.upgrades = upgrades
@@ -40,12 +63,15 @@ class MultiplierWheelViewController: UIViewController {
     }
     
     // MARK: - Lifecycle
+    
+    /// sets up user interface and animates controller's entrance
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         animateIn()
     }
     
+    /// mark spinners as ready for animation when view has appeared
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         spinnersReady = true
@@ -168,6 +194,13 @@ class MultiplierWheelViewController: UIViewController {
         setupSpinners()
     }
     
+    /// Creates and configures the spinner wheels based on active upgrades
+    ///
+    /// This method:
+    /// - Filters upgrades that have a level greater than 0
+    /// - Displays a message if no upgrades are active
+    /// - Calculates optimal width for spinner display
+    /// - Creates visual components for each spinner including emoji, level indicator, and wheel
     private func setupSpinners() {
         // Get upgrades sorted by their natural order
         let activeUpgrades = UpgradeType.allCases.filter { upgrades[$0, default: 0] > 0 }
@@ -244,6 +277,8 @@ class MultiplierWheelViewController: UIViewController {
     }
     
     // MARK: - Animations
+    
+    /// Animates the container view entrance with a scale and fade-in effect
     private func animateIn() {
         containerView.alpha = 0
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
@@ -251,7 +286,7 @@ class MultiplierWheelViewController: UIViewController {
             self.containerView.transform = .identity
         })
     }
-    
+    /// Dismisses the view controller with a scale and fade-out animation
     @objc private func dismissWithAnimation() {
         UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseIn, animations: {
             self.containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
@@ -263,6 +298,14 @@ class MultiplierWheelViewController: UIViewController {
     }
     
     // MARK: - Actions
+    
+    /// Handles tap on the spin button to initiate spinner animations
+    ///
+    /// The method:
+    /// - Checks if spinners are ready for animation
+    /// - Disables the button during animation
+    /// - Starts all spinners with a brief delay
+    /// - Schedules stopping of the spinners after a minimum spin time
     @objc private func spinButtonTapped() {
         guard !spinnerViews.isEmpty && spinnersReady else {
             // Delay and retry if spinners aren't ready yet
@@ -305,6 +348,16 @@ class MultiplierWheelViewController: UIViewController {
         }
     }
     
+    /// Stops spinners one by one and accumulates the result values
+    ///
+    /// - Parameter index: The index of the spinner to stop
+    ///
+    /// This method:
+    /// - Stops the spinner at the given index
+    /// - Adds its value to the final score
+    /// - Updates the total label
+    /// - Recursively calls itself to stop the next spinner
+    /// - Shows the final result when all spinners are stopped
     private func stopSpinners(index: Int) {
         guard index < spinnerViews.count else {
             // All spinners have been stopped, show final result
@@ -361,7 +414,13 @@ class MultiplierWheelViewController: UIViewController {
             }
         }
     }
-
+    
+    /// Displays the final result after all spinners have stopped
+    ///
+    /// This method:
+    /// - Updates the button text to show the final score
+    /// - Changes the button's appearance and action
+    /// - Animates the total label to highlight the result
     private func showFinalResult() {
         // Update button
         spinButton.setTitle("Collect \(finalNumber)", for: .normal)
@@ -383,6 +442,11 @@ class MultiplierWheelViewController: UIViewController {
         spinButton.addTarget(self, action: #selector(collectButtonTapped), for: .touchUpInside)
     }
     
+    /// Handles tap on the collect button to finalize the score and dismiss the view
+    ///
+    /// This method:
+    /// - Calls the completion handler with the final score
+    /// - Dismisses the view controller with animation
     @objc private func collectButtonTapped() {
         // Call completion handler with the final number
         onMultiplierDetermined?(finalNumber)

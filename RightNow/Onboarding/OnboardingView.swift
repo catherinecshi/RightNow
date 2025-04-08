@@ -7,15 +7,16 @@ protocol OnboardingViewDelegate {
     func onboardingViewDidTapResponseButton()
 }
 
+/// view handles visual presentation of multiple onboarding
 class OnboardingView: UIView {
-    // MARK: - Normal Properties
+    // MARK: - Properties
     var delegate: OnboardingViewDelegate?
-    let imageView = UIImageView()
+    private let imageView = UIImageView()
     private var imageViewObserver: NSKeyValueObservation?
     private var couponsImageObserver: NSKeyValueObservation?
     
-    var emoji = "😺"  // Default emoji
-    var happyEmoji = "😸" // Emoji for happy state
+    private var emoji = "😺"  // Default emoji
+    private var happyEmoji = "😸" // Emoji for happy state
     
     private lazy var focusView: FocusView = {
        let view = FocusView()
@@ -52,7 +53,7 @@ class OnboardingView: UIView {
         return label
     }()
     
-    let timerLabel: UILabel = {
+    private let timerLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 48, weight: .bold)
         label.textAlignment = .center
@@ -63,7 +64,7 @@ class OnboardingView: UIView {
         return label
     }()
     
-    var timerSlider: UISlider = {
+    private var timerSlider: UISlider = {
         let slider = UISlider()
         slider.minimumValue = 15 // 15 minute minimum
         slider.maximumValue = 120
@@ -74,7 +75,7 @@ class OnboardingView: UIView {
         return slider
     }()
     
-    lazy var startStopButton: UIButton = {
+    private lazy var startStopButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Work", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 20)
@@ -239,11 +240,14 @@ class OnboardingView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    /// cleans up KVO observers when the view is deallocated
     deinit {
         imageViewObserver?.invalidate()
         couponsImageObserver?.invalidate()
     }
     
+    /// key-value observers to track bounds changes
+    /// observes character image view and coupons image view
     private func setupObservers() {
         imageViewObserver = imageView.observe(\.bounds, options: [.new]) { [weak self] _, _ in
             guard let self = self,
@@ -348,9 +352,6 @@ class OnboardingView: UIView {
             timerLabel.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor, constant: 40),
             timerLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor)
         ])
-        
-        // check if the focusTime is supposed to be something different
-        //timerModelDidUpdateTime()
     }
     
     private func setupSlider() {
@@ -392,21 +393,27 @@ class OnboardingView: UIView {
     }
     
     // MARK: - Actions
+    
+    /// stops any ongoing emoji transition sequence, notifies delegate and hides focus view
     @objc private func handleTap() {
         stopEmojiTransitionSequence()
         delegate?.onboardingViewDidTapCharacter()
         hideFocusView()
     }
     
+    /// notifies delegate fo new time value
     @objc private func sliderValueChanged() {
         delegate?.onboardingViewDidAdjustTime(Int(timerSlider.value))
     }
     
+    /// notifies delegate to progress to next onboarding step
     @objc private func responseButtonTapped() {
         delegate?.onboardingViewDidTapResponseButton()
     }
     
     // MARK: - Public Methods
+    
+    /// updates timer display with specified minutes and seconds
     func updateTimeDisplay(minutes: Int, seconds: Int) {
         timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
     }
@@ -415,6 +422,7 @@ class OnboardingView: UIView {
         timerSlider.value = value
     }
     
+    /// updates appearance of controls based on whether a session is active
     func updateControlsForSession(isActive: Bool) {
         startStopButton.setTitle(isActive ? "Give Up" : "Work", for: .normal)
         timerSlider.isEnabled = !isActive
@@ -462,6 +470,8 @@ class OnboardingView: UIView {
     
     private var currentFocusTarget: FocusTarget = .none
     
+    /// shows focus view on maow with optional instructions
+    /// - Parameter text: Optional instruction text to display with focus view
     func showFocusView(withInstructions text: String? = nil) {
         // make sure the view has been laid out
         layoutIfNeeded()
@@ -488,6 +498,8 @@ class OnboardingView: UIView {
         }
     }
     
+    /// show focus view on coupons
+    /// - Parameter text: optional instruction text to display with focus view
     func showFocusViewCoupons(withInstructions text: String? = nil) {
         // make sure the view has been laid out
         layoutIfNeeded()
@@ -513,6 +525,8 @@ class OnboardingView: UIView {
         }
     }
     
+    /// updates focus view position to match the current position of image view
+    /// called when image view's bounds change and focus is active
     func updateFocusView() {
         // get actual frame of image view
         let actualFrame = convert(imageView.frame, from: imageView.superview)
@@ -520,6 +534,8 @@ class OnboardingView: UIView {
         focusView.ovalRect = actualFrame.insetBy(dx: -20, dy: -20)
     }
     
+    /// updates focus view to match current position of coupons
+    /// called when coupons image's bounds change and focus is active
     func updateFocusViewCoupons() {
         // get actual frame of image view
         let actualFrame = convert(couponsImage.frame, from: couponsImage.superview)
@@ -527,6 +543,7 @@ class OnboardingView: UIView {
         focusView.ovalRect = actualFrame.insetBy(dx: -20, dy: -20)
     }
     
+    /// hides focus view with an animation
     func hideFocusView() {
         stopEmojiTransitionSequence()
         
@@ -655,6 +672,11 @@ class OnboardingView: UIView {
     }
     
     // MARK: - Onboarding Animations
+    
+    /// animates appearance of a view with a fade-in effect
+    /// - Parameters:
+    ///     - view: the view to animate
+    ///     - duration: the duration of the animation
     func animateAppearance(of view: UIView, duration: TimeInterval = 0.2) {
         view.alpha = 0
         view.isHidden = false
@@ -664,6 +686,11 @@ class OnboardingView: UIView {
         }
     }
     
+    /// animates the disappearance of a view wiht a fade-out effect
+    /// - Parameters:
+    ///     - view: the view to animate
+    ///     - duration: the duration of the animation
+    ///     - completion: optional closure to call when animation completes
     func animateDisappearance(of view: UIView, duration: TimeInterval = 0.2, completion: ((Bool) -> Void)? = nil) {
         UIView.animate(withDuration: duration, animations: {
             view.alpha = 0
@@ -673,7 +700,7 @@ class OnboardingView: UIView {
         })
     }
     
-    // animate disappearances
+    /// hides all onboarding labels at once
     func hideAllOnboardingLabels() {
         hiLabel.isHidden = true
         meetMaowLabel.isHidden = true
@@ -682,15 +709,18 @@ class OnboardingView: UIView {
         lastOwnerLabel.isHidden = true
     }
     
-    // animate the button and text
+    /// hides response button with animation
     func hideResponseButton(duration: TimeInterval = 0.2) {
         animateDisappearance(of: responseButton, duration: duration)
     }
     
+    /// shows response button with animation
     func showResponseButton(title: String, duration: TimeInterval = 0.2) {
         responseButton.setTitle(title, for: .normal)
         animateAppearance(of: responseButton, duration: duration)
     }
+    
+    // MARK: - Emoji Sequence
     
     // for part 2 of onbaording where it transitions between them
     private var emojiSequence = ["😺", "😿", "😸"]
@@ -698,6 +728,8 @@ class OnboardingView: UIView {
     private var emojiTransitionTimer: Timer?
     private var emojiCycleCompleted: (() -> Void)?
     
+    /// starts a sequence that cycles throuhg different emoji expressions
+    /// - Parameter onCycleCompleted: closure to call when a complet cycle finishes
     func startEmojiTransitionSequence(onCycleCompleted: (() -> Void)?) {
         // store completion handler
         self.emojiCycleCompleted = onCycleCompleted
@@ -726,13 +758,16 @@ class OnboardingView: UIView {
         }
     }
     
+    /// stops emoji transition sequence and invalidates the timer
     func stopEmojiTransitionSequence() {
         emojiTransitionTimer?.invalidate()
         emojiTransitionTimer = nil
         emojiCycleCompleted = nil
     }
 
-    // Reusable method to update emoji display
+    /// Reusable method to update emoji display with specified emoji
+    /// creates custom rendered image
+    /// - Parameter emoji: the emoji character to display
     func updateEmojiDisplay(emoji: String) {
         // Create a clear background for the emoji rendering
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 200))
@@ -765,6 +800,8 @@ class OnboardingView: UIView {
     }
     
     // MARK: - Onboarding Pt 2
+    
+    /// shows timer components with an animation
     func showTimer() {
         // have them be invisible at the start
         timerLabel.alpha = 0.0
@@ -779,6 +816,7 @@ class OnboardingView: UIView {
         }
     }
     
+    /// shows coupons UI wiht an animation
     func showCoupons() {
         startStopButton.alpha = 0.0
         startStopButton.isHidden = false

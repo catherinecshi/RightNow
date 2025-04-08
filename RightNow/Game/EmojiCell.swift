@@ -1,5 +1,6 @@
 import UIKit
 
+/// Cell for a single emoji in a row for upgrade cell
 class EmojiCell: UICollectionViewCell {
     private let emojiLabel = UILabel()
     

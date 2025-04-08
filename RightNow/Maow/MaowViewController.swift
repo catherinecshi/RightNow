@@ -2,6 +2,13 @@ import Foundation
 import Combine
 import UIKit
 
+/// Manages timer functionality with game mechanics
+///
+/// ## Features
+/// - coordination betwen timer and game state model
+/// - start and end focus session
+/// - earn coins
+/// - interact with maow
 class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate {
     private let timerModel = TimerModel.shared
     private let gameModel = CentralGameModel.shared
@@ -46,6 +53,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         fatalError("init(coder:) has not been implemented yet")
     }
     
+    /// Configures view hierarchy and initial state when view loads
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -56,6 +64,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         TimerModel.shared.setupObservers()
     }
     
+    /// Sets up Combine subscribers to react to state changes
     func setupSubscribers() {
         // subscribe to game state changes
         gameModel.$gameState
@@ -67,11 +76,14 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     }
     
     // MARK: - Setup UI
+    
+    /// configures navigation bar with settings button and coin display
     private func setupNavigationBar() {
         setupSettings()
         setupCoins()
     }
     
+    /// adds settings button to navigation bar
     private func setupSettings() {
         // create a settings button
         let settingsButton = UIBarButtonItem(
@@ -84,6 +96,7 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         navigationItem.leftBarButtonItem = settingsButton
     }
     
+    /// configures coin counter display in navigation bar
     private func setupCoins() {
         coinStackView.addArrangedSubview(coinImageView)
         coinStackView.addArrangedSubview(coinCountLabel)
@@ -115,13 +128,14 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         let customBarButton = UIBarButtonItem(customView: coinStackView)
         
         // add tap gesture to stack view
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(coinButtonTapped))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(numberButtonTapped))
         coinStackView.addGestureRecognizer(tapGesture)
         coinStackView.isUserInteractionEnabled = true
         
         navigationItem.rightBarButtonItem = customBarButton
     }
     
+    /// adds main maowview
     private func setupView() {
         maowView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(maowView)
@@ -135,32 +149,40 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     }
     
     // MARK: - Delegate Methods
+    
+    /// performs initial setup of views based on timer model state
     func initialViewSetup() {
         timerModelDidUpdateTime()
         maowView.updateSliderDisplay(value: Float(TimerModel.shared.focusTime))
     }
     
+    /// configures delegation relationship between components
     private func setupDelegates() {
         TimerModel.shared.delegate = self
         maowView.delegate = self
     }
     
+    /// toggle character state from maowview delegate tap
     func maowViewDidTapCharacter() {
         isFirstImage.toggle()
         maowView.updateCharacterState(isHappy: isFirstImage)
     }
     
+    /// toggle timer start/stop from maowview delegate button
     func maowViewDidTapStart() {
         TimerModel.shared.buttonTapped()
         maowView.updateControlsForSession(isActive: TimerModel.shared.isSessionActive)
     }
     
+    /// change time value from maowview delegate slider
+    /// - Parameter minutes: new time value in minutes
     func maowViewDidAdjustTime(_ minutes: Int) {
         TimerModel.shared.focusTime = minutes
         TimerModel.shared.remainingSeconds = minutes * 60
         timerModelDidUpdateTime()
     }
     
+    /// Updates view when timer model changes from timermodel delegate
     func timerModelDidUpdateTime() {
         let minutes = TimerModel.shared.remainingSeconds / 60
         let seconds = TimerModel.shared.remainingSeconds % 60
@@ -169,13 +191,8 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     }
     
     // MARK: - Navigation Bar Views
-    func updateCoinCount(_ count: Int) {
-        if let customView = navigationItem.rightBarButtonItem?.customView as? UIStackView,
-           let label = customView.arrangedSubviews.last as? UILabel {
-            label.text = "\(count)"
-        }
-    }
     
+    /// updates displayed number count from game model
     func updateNumberCount() {
         if let customView = navigationItem.rightBarButtonItem?.customView as? UIStackView,
            let label = customView.arrangedSubviews.last as? UILabel {
@@ -183,14 +200,18 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         }
     }
     
-    @objc private func coinButtonTapped() {
+    /// handles tap on number count to present shop
+    @objc private func numberButtonTapped() {
         let shopVC = ShopViewController()
         let navController = UINavigationController(rootViewController: shopVC)
         navController.modalPresentationStyle = .pageSheet
         present(navController, animated: true, completion: nil)
     }
     
+    /// custom transition delegate for settings presentation
     private var settingsTransitionDelegate: CustomSlideInTransition?
+    
+    /// handles tap on settings button to present settings view with custom transition
     @objc private func settingsButtonTapped() {
         let settingsVC = SettingsViewController()
         let navController = UINavigationController(rootViewController: settingsVC)
@@ -207,11 +228,15 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
     }
     
     // MARK: - Alerts
+    
+    /// displays an alert when timer session fails
     func showFailureAlert() {
         let alert = CustomAlertViewController(title: "Oh No!", message: "You left before the time was up!")
         present(alert, animated: true)
     }
     
+    /// displays an alert when a timer session completes successfully
+    /// - Parameter coupons: optional number of coupons earned during the session
     func showSuccessAlert(coupons: Int? = nil) {
         if let coupons = coupons {
             let alert = CustomAlertViewController(title: "Congrats!", message: "You earned \(coupons) coupons from that session!")

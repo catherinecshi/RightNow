@@ -1,8 +1,19 @@
+///# SelectTimeViewController
+///
+/// The second view controller in the habit creation flow. Allows users to select which days of the week
+/// they want to perform their habit and at what time of day.
+
+/// ## Features
+/// - Day of week selection via button toggles
+/// - Time selection via a customized UIPickerView with hours, minutes, and AM/PM
+/// - Handles navigation to the next step in the habit creation process
+/// - Supports guided onboarding with focused highlighting and instructions
+
 import Foundation
 import UIKit
 
 class SelectTimeViewController: UIViewController {
-    // MARK: - Declaration
+    // MARK: - Properties
     var habitData: HabitData!
     weak var coordinator: OnboardingCoordinator?
     
@@ -113,7 +124,8 @@ class SelectTimeViewController: UIViewController {
     }()
     
     // MARK: - Lifecycle Methods
-
+    
+    /// Sets up UI and initializes the days of week buttons to be false
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIConfiguration.tintColor
@@ -240,6 +252,13 @@ class SelectTimeViewController: UIViewController {
     
     // MARK: - Actions
     
+    /// handles tap on day of week selection buttons
+    /// - toggles state
+    /// - updates appearance
+    /// - updates dictionary
+    /// - enables/disables next button
+    ///
+    /// - Parameter sender: the button that was tapped
     @objc private func dayButtonTapped(_ sender: UIButton) {
         // toggle selection
         sender.isSelected = !sender.isSelected
@@ -251,6 +270,8 @@ class SelectTimeViewController: UIViewController {
         habitData.selectedDays = selectedDays
     }
     
+    /// Handles next button tap to continue to next VC
+    /// completes habit creation process when onboarding
     @objc private func nextButtonTapped() {
         if let coordinator = coordinator { // user onboarding
             coordinator.finishHabitCreation(habitData: habitData)
@@ -279,6 +300,15 @@ class SelectTimeViewController: UIViewController {
     }
     
     // MARK: - Onboarding
+    
+    /// Runs complete onboarding sequence for time selection
+    /// 1. Blocks user interaction
+    /// 2. selects all days of week
+    /// 3. Shows focus view on days selection
+    ///     - wait and remove the focus view
+    /// 4. set time to 9AM & set focus view on time picker
+    ///     - wait and remove the focus view
+    /// 5. show focus view on next button
     func onboardingSequence() async {
         // make sure the user can't tap on anything while waiting for the animations
         await InteractionBlocker.shared.blockInteractions(on: self.view)
@@ -299,6 +329,7 @@ class SelectTimeViewController: UIViewController {
         await showNextFocus()
     }
     
+    /// Selects all days of weeks for the habit during onboarding
     private func allDaysTrue() {
         daysOfWeek.forEach { selectedDays[$0] = true }
         
@@ -315,6 +346,7 @@ class SelectTimeViewController: UIViewController {
         nextButton.isEnabled = true
     }
     
+    /// show focus on all days of weeks during onboarding
     private func showDaysOfWeekFocus() async {
         guard let window = view.window else { return }
         
@@ -351,6 +383,7 @@ class SelectTimeViewController: UIViewController {
         }
     }
     
+    /// Sets time picker to 9AM during onboarding
     private func set9AM() {
         let hourFor9AM = 8 // 1 based indexing
         let minuteRow = 0
@@ -365,6 +398,7 @@ class SelectTimeViewController: UIViewController {
         habitData.minute = 0
     }
     
+    /// Show focus view on time picker during onboarding
     private func showTimeOfDayFocus() async {
         guard let window = view.window else { return }
         
@@ -375,7 +409,6 @@ class SelectTimeViewController: UIViewController {
         
         // convert frame to coords
         let viewFrame = timePicker.convert(timePicker.bounds, to: window)
-        print("time picker frame \(viewFrame)")
         focusView.ovalRect = viewFrame.insetBy(dx: -4, dy: -4)
         
         // add label to window
@@ -404,10 +437,10 @@ class SelectTimeViewController: UIViewController {
         } completion: { success in
             print(self.timeOnboardingLabel.alpha)
             print(self.focusView.alpha)
-            print("completed: \(success)")
         }
     }
     
+    /// Show focus view on next button
     private func showNextFocus() async {
         guard let window = view.window else { return }
         
@@ -447,6 +480,7 @@ class SelectTimeViewController: UIViewController {
         focusView.addGestureRecognizer(tapGesture)
     }
     
+    /// Handles tap gesture on next button
     @objc private func focusViewNextTapped(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: focusView)
         
@@ -475,6 +509,7 @@ class SelectTimeViewController: UIViewController {
         }
     }
     
+    /// Removes any focus views present
     private func removeFocus() async {
         guard let window = view.window else { return }
         
@@ -494,12 +529,27 @@ class SelectTimeViewController: UIViewController {
     }
 }
 
-//data source
+// MARK: - UIPickerViewDataSource
+
+/// Data source for Time Picker in UIPickerViewDataSource
 extension SelectTimeViewController: UIPickerViewDataSource {
+    /// Specifies the number of component in the picker view
+    /// Returns 3 columns: hours, minutes, and AM/PM
+    ///
+    /// - Parameter pickerView: The picker view requesting this information
+    /// - Returns: The number of components
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return 3
     }
     
+    /// Specifies the number of rows in each component of picker view
+    ///
+    /// For hours and minutes, return a large number to create an infinite scroll
+    /// For AM/PM return those two options
+    ///
+    /// - Parameter pickerView: The picker view requesting this information
+    /// - Parameter component: The column being queried
+    /// - Returns: The number of rows in the specified component
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         switch component {
         case 0, 1:
@@ -512,8 +562,20 @@ extension SelectTimeViewController: UIPickerViewDataSource {
     }
 }
 
-//delegate to handle display and selection
+// MARK: - UIPickerViewDelegate
+
+/// delegate to handle display and selection of time picker
 extension SelectTimeViewController: UIPickerViewDelegate {
+    /// Provide the formatted text for each row in the picker view
+    ///
+    /// For hours: 1 - 12
+    /// For minutes: 00 - 59
+    /// For AM/PM: "AM" or "PM"
+    ///
+    /// - Parameter pickerView: The picker view requesting this information
+    /// - Parameter row: The row being queried
+    /// - Parameter component: The column being queried
+    /// - Returns: An attributed string with white text color
     func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
         var title = ""
         
@@ -534,6 +596,15 @@ extension SelectTimeViewController: UIPickerViewDelegate {
         return attributedTitle
     }
     
+    /// Handles selection of a row in picker view
+    /// Makes sure the data being stored matches the 24-hour format
+    ///
+    /// - For PM hours: add 12 to hours 1 - 12 (12 PM stays as 12)
+    /// - For AM hours: Converts 12 AM to 0 (rest stay the same)
+    ///
+    /// - Parameter pickerView: The picker view where selection occurred
+    /// - Parameter row: THe row that was selected
+    /// - Parameter component: The column where selection occurs
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         //modulo arithmetic to determine the actual hour or minute
         let selectedHour = hours[pickerView.selectedRow(inComponent: 0) % hours.count]

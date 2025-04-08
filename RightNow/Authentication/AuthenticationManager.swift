@@ -424,6 +424,7 @@ class AuthenticationManager: AuthenticationServiceProtocol {
                 }
                 Task { // clear local storage so it won't appear when the log into another account
                     await HabitRepository.shared.clearLocalData()
+                    await CentralGameModel.shared.clearLocalData()
                 }
                 try Auth.auth().signOut()
                 AppState.shared.currentUser = nil

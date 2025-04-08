@@ -1,6 +1,25 @@
 import Foundation
 
-/// Model for the logic in the game board
+/// # NumberFactoryBoard
+///
+/// Handles game logic for number factory game
+///
+/// ## Game Overview
+/// This class represents a scrolling grid-based number merging game where:
+/// - Players navigate a grid collecting and merging numbers
+/// - The grid continuously scrolls downward at timed intervals
+/// - The player must reach a goal value by collecting and merging numbers
+/// - The player must avoid specific rule violations (defined by AvoidRule)
+/// - The player must avoid bombs that appear with increasing frequency
+/// - The game continues until the player breaks a rule, hits a bomb, or falls off the grid
+///
+/// ## Core Mechanics
+/// - The player has a position (row, col) and a value
+/// - When moving onto a cell with a number, the player's value increases by that amount
+/// - When reaching or exceeding the goal value, a new higher goal is set
+/// - When violating the avoid rule, the game ends
+/// - When hitting a bomb, the game ends
+/// - When falling off the grid, the game ends
 class NumberFactoryBoard {
     // Game constants
     let gridSize = 7
@@ -10,10 +29,12 @@ class NumberFactoryBoard {
     private let maxBombProbability = 0.4
     
     // MARK: - Game State
-    var stateDidChange: ((NumberFactoryState, NumberFactoryState) -> Void)?
+    var stateDidChange: ((NumberFactoryState, NumberFactoryState) -> Void)? // notify observers when state changes
     var gameDidEnd: (() -> Void)?
     var didReachGoal: (() -> Void)?
     
+    /// state of game
+    /// changes triggers callbacks
     private var currentState: NumberFactoryState {
         didSet {
             // notify observers whenver state changes
@@ -30,7 +51,19 @@ class NumberFactoryBoard {
         }
     }
     
-    // MARK: - Properties
+    // MARK: - Computed Properties
+    
+    /// The current numerical value of the player
+    ///
+    /// When set, this property:
+    /// 1. Checks if the new value violates the current avoid rule
+    /// 2. Checks if the new value reaches or exceeds the goal
+    /// 3. Updates the state accordingly, potentially:
+    ///    - Ending the game due to rule violation
+    ///    - Increasing the goal when reached
+    ///    - Updating the grid with the new value
+    ///
+    /// - Returns: The player's current numerical value
     var playerValue: Int {
         get { return currentState.playerValue }
         set {
@@ -61,12 +94,19 @@ class NumberFactoryBoard {
     var avoidRule: AvoidRule { return currentState.avoidRule }
     
     // MARK: - Initialization
+    
+    /// initiates state and fill grid with random numbers
     init() {
         currentState = NumberFactoryState.initialState(gridSize: gridSize)
         fillGridWithRandomNumbers()
     }
     
     // MARK: - Grid Management
+    
+    /// update grid with player's new value at their current position
+    ///
+    /// - Parameter newPlayerValue: new value to place at player's position
+    /// - Returns: updated grid with new player value
     private func updateGrid(with newPlayerValue: Int) -> [[Int]] {
         var newGrid = currentState.grid
         let (row, col) = currentState.playerPosition
@@ -74,7 +114,7 @@ class NumberFactoryBoard {
         return newGrid
     }
     
-    // Fill the grid with random numbers 1-5
+    /// Fill the grid with random numbers 1 - maxInitialNumber
     private func fillGridWithRandomNumbers() {
         var newGrid = currentState.grid
         
@@ -99,7 +139,9 @@ class NumberFactoryBoard {
         )
     }
     
-    // Generate a new row at the top of the grid
+    /// Generate a new row at the top of the grid
+    ///
+    /// increases bomb probability as time increases
     func generateNewTopRow() -> [Int] {
         var newRow = Array(repeating: 0, count: gridSize)
         var bombCount = 0
@@ -135,7 +177,12 @@ class NumberFactoryBoard {
     }
     
     // MARK: - Game Actions
-    // Scroll the grid down by one row
+    
+    /// Scroll the grid down by one row
+    ///
+    /// removes bottom row and adds top row
+    /// check if the user is falling off the grid
+    /// - Returns: True if scrolling was successful, false otherwise
     func scrollDown() -> Bool {
         // get current grid and player position
         var newGrid = currentState.grid
@@ -187,6 +234,19 @@ class NumberFactoryBoard {
         return true
     }
     
+    /// moves the player in specified direction
+    ///
+    /// This method handles player movement and its consequences:
+    /// 1. Calculates the new position based on direction
+    /// 2. If moving to an empty cell, simply updates the position
+    /// 3. If moving to a cell with a value, merges the player's value with it
+    /// 4. Handles special cases like bombs and rule violations
+    ///
+    /// Movement is bounded by the grid edges; attempts to move beyond
+    /// the edge will place the player at the edge.
+    ///
+    /// - Parameter direction: The direction to move (up, down, left, right)
+    /// - Returns: True if the move was successful, false if the game ended
     func movePlayer(direction: PlayerDirection) -> Bool {
         // Calculate the new position
         let newPosition = calculateNewPosition(from: currentState.playerPosition, direction: direction)
@@ -213,6 +273,16 @@ class NumberFactoryBoard {
         }
     }
     
+    /// calculates new position based on current position and direction
+    /// This helper method:
+    /// 1. Takes the current position coordinates
+    /// 2. Applies the directional change
+    /// 3. Ensures the result stays within grid boundaries
+    ///
+    /// - Parameters:
+    ///   - currentPosition: The starting (row, col) position
+    ///   - direction: The direction to move (up, down, left, right)
+    /// - Returns: The new (row, col) position after movement, bounded by grid edges
     private func calculateNewPosition(from currentPosition: (row: Int, col: Int), direction: PlayerDirection) -> (row: Int, col: Int) {
         let (oldRow, oldCol) = currentPosition
         var newRow = oldRow
@@ -232,14 +302,18 @@ class NumberFactoryBoard {
         return (row: newRow, col: newCol)
     }
     
-    // Create a grid with the player's position cleared
+    /// Create a grid with the player's position cleared
     private func createClearedGrid(from grid: [[Int]], at position: (row: Int, col: Int)) -> [[Int]] {
         var newGrid = grid
         newGrid[position.row][position.col] = 0
         return newGrid
     }
     
-    // Apply a move to an empty cell
+    /// Apply a move to an empty cell
+    ///
+    /// - Parameters:
+    ///     - grid: The grid with player's old position cleared
+    ///     - position: new position to move the player to
     private func applyEmptyMove(to grid: [[Int]], at position: (row: Int, col: Int)) {
         var newGrid = grid
         newGrid[position.row][position.col] = currentState.playerValue
@@ -257,7 +331,18 @@ class NumberFactoryBoard {
         )
     }
     
-    // Apply a merge move
+    /// Apply a merge move with a value or a bomb
+    ///
+    /// 3 scenarios:
+    /// 1. merging with bomb (game over)
+    /// 2. merging with a number that violates avoid rule (game over)
+    /// 3. merging with a valid number (potentially reaching goal)
+    ///
+    /// - Parameters:
+    ///     - grid: the grid with player's old position cleared
+    ///     - position: the new position to move the player to
+    ///     - targetvalue: the value at the target position
+    /// - Returns: true if merge was successful, false if game ended
     private func applyMergeMove(to grid: [[Int]], at position: (row: Int, col: Int), targetValue: Int) -> Bool {
         var newGrid = grid
         let newValue = currentState.playerValue + targetValue
@@ -318,6 +403,8 @@ class NumberFactoryBoard {
     }
     
     // MARK: - Game Reset
+    
+    /// starts a new game with a fresh state
     func startNewGame() {
         // reset to initial conditions wiht random rule
         currentState = NumberFactoryState.initialState(gridSize: gridSize)

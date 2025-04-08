@@ -1,20 +1,20 @@
 import UIKit
 
+/// Edit an existing habit's time, days of week, and notifications settings
 class HabitEditingViewController: UIViewController {
-    
-    // MARK: Properties
+    // MARK: - Properties
     
     let repo = HabitRepository.shared
     let oldHabit: Habit // the habit being modified
-    var tempHabit = HabitData()
-    let daysOfWeek = TimeFormatter.allDays
+    private var tempHabit = HabitData()
+    private let daysOfWeek = TimeFormatter.allDays
     
     // for the time picker
     private let hours = Array(1...12)
     private let minutes = Array(0...59)
     private let amPm = ["AM", "PM"]
     
-    let viewTitle: UILabel = {
+    private let viewTitle: UILabel = {
         let label = UILabel()
         label.font = UIConfiguration.titleFont
         label.textColor = .white
@@ -22,7 +22,7 @@ class HabitEditingViewController: UIViewController {
         return label
     }()
     
-    let whatLabel: UILabel = {
+    private let whatLabel: UILabel = {
         let label = UILabel()
         label.text = "Time"
         label.font = UIConfiguration.subtitleFont
@@ -30,13 +30,13 @@ class HabitEditingViewController: UIViewController {
         return label
     }()
     
-    let timePicker: UIPickerView = {
+    private let timePicker: UIPickerView = {
         let picker = UIPickerView()
         picker.translatesAutoresizingMaskIntoConstraints = false
         return picker
     }()
     
-    let daysStackView: UIStackView = {
+    private let daysStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.distribution = .fillEqually
@@ -45,7 +45,7 @@ class HabitEditingViewController: UIViewController {
         return stackView
     }()
     
-    lazy var notificationLabel: UILabel = {
+    private lazy var notificationLabel: UILabel = {
         let label = UILabel()
         label.text = "Enable Notifications"
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -53,39 +53,12 @@ class HabitEditingViewController: UIViewController {
         return label
     }()
     
-    lazy var notificationSwitch: UISwitch = {
+    private lazy var notificationSwitch: UISwitch = {
         let turnOnOff = UISwitch()
         turnOnOff.isOn = true
         turnOnOff.translatesAutoresizingMaskIntoConstraints = false
         return turnOnOff
     }()
-    
-    let accountabilityLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Accountability Metric"
-        label.textColor = .white
-        return label
-    }()
-    
-    /*
-    let accountabilityMetric: UISegmentedControl = {
-        let segmentedControl = UISegmentedControl(items: ["Location Tracking", "Lock Phone Away", "Take a Photo", "Self Tracking"])
-        segmentedControl.backgroundColor = .lightGray
-        segmentedControl.selectedSegmentTintColor = .white
-
-        // Set white text for all segments
-        let normalAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIConfiguration.tintColor,
-            .font: UIFont.systemFont(ofSize: 16)
-        ]
-        segmentedControl.setTitleTextAttributes(normalAttributes, for: .normal)
-        segmentedControl.setTitleTextAttributes(normalAttributes, for: .selected)
-        
-        segmentedControl.addTarget(self, action: #selector(segmentChanged(_:)), for: .valueChanged)
-        
-        return segmentedControl
-    }()
-     */
     
     //button to go to the next step
     private let saveButton: UIButton = {
@@ -103,8 +76,10 @@ class HabitEditingViewController: UIViewController {
         return button
     }()
     
-    // MARK: Lifecycle Methods
+    // MARK: - Lifecycle Methods
     
+    /// initializes view controller with a habit to edit
+    /// - Parameter habit: the habit to be edited
     init(habit: Habit) {
         self.oldHabit = habit
         super.init(nibName: nil, bundle: nil)
@@ -120,19 +95,17 @@ class HabitEditingViewController: UIViewController {
         
         // pre select stuff based on what's true of old habit
         tempHabit.selectedDays = oldHabit.daysOfTheWeek
-        //selectSegment(withText: oldHabit.accountabilityMetric.displayName)
         
         setupTitle()
         setupWhatLabel()
         setupTimePicker()
         setupDaysStackView()
-        //setupAccountability()
         setupNotificationToggle()
         setupNextButton()
         setupDismissButton()
     }
     
-    // MARK: Setup
+    // MARK: - Setup
     
     private func setupTitle() {
         view.addSubview(viewTitle)
@@ -234,25 +207,6 @@ class HabitEditingViewController: UIViewController {
         ])
     }
     
-    /*
-    private func setupAccountability() {
-        view.addSubview(accountabilityLabel)
-        view.addSubview(accountabilityMetric)
-        accountabilityLabel.translatesAutoresizingMaskIntoConstraints = false
-        accountabilityMetric.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            accountabilityLabel.topAnchor.constraint(equalTo: daysStackView.bottomAnchor, constant: 40),
-            accountabilityLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            
-            accountabilityMetric.topAnchor.constraint(equalTo: accountabilityLabel.bottomAnchor, constant: 20),
-            accountabilityMetric.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            accountabilityMetric.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            accountabilityMetric.heightAnchor.constraint(equalToConstant: 40)
-        ])
-    }
-     */
-    
     func setupNotificationToggle() {
         view.addSubview(notificationLabel)
         view.addSubview(notificationSwitch)
@@ -302,33 +256,19 @@ class HabitEditingViewController: UIViewController {
     
     // MARK: Button Methods
     
+    /// Handles taps on day selection buttons
+    /// - Parameter sender: The button that was tapped
     @objc private func dayButtonTapped(_ sender: UIButton) {
         sender.isSelected = !sender.isSelected
         sender.backgroundColor = sender.isSelected ? .white : .lightGray
         tempHabit.selectedDays![sender.titleLabel?.text ?? ""] = sender.isSelected
     }
     
-    /*
-    @objc private func segmentChanged(_ sender: UISegmentedControl) {
-        print("Selected segment: \(sender.selectedSegmentIndex)")
-    }
-    
-    private func selectSegment(withText text: String) {
-        // Loop through the segments to find the one with the matching title
-        for index in 0..<accountabilityMetric.numberOfSegments {
-            if accountabilityMetric.titleForSegment(at: index) == text {
-                accountabilityMetric.selectedSegmentIndex = index
-                return
-            }
-        }
-
-        // If the text is not found, handle appropriately (e.g., default to no selection)
-        print("Segment with text '\(text)' not found.")
-        accountabilityMetric.selectedSegmentIndex = UISegmentedControl.noSegment
-    }
-     */
-    
-    @objc private func saveButtonTapped() async { // FUTURE CAT REMEMBER TO UPDATE LOCATION TO NIL AS WELL IF METRIC CHANGE
+    /// Saves edited habit and dismisses view controller
+    /// - Updates habit with new values
+    /// - Handles notification scheduling
+    /// - updates the repository
+    @objc private func saveButtonTapped() async {
         let newHabit = Habit(
             id: oldHabit.id,
             name: oldHabit.name,
@@ -342,10 +282,10 @@ class HabitEditingViewController: UIViewController {
             lastUpdateDate: Date()
         )
         
-        //handle notifications
+        // handle notifications
         PushNotificationDelegate.shared.cancelNotificationForHabit(for: oldHabit)
         
-        //enable notifications if user indicates the desire
+        // enable notifications if user indicates the desire
         if newHabit.notificationEnabled {
             PushNotificationDelegate.shared.scheduleNotificationsForHabit(newHabit)
         }
@@ -361,6 +301,8 @@ class HabitEditingViewController: UIViewController {
     }
     
     // MARK: - Helper Methods
+    
+    /// Returns selected time picker values in a Date object format
     private func getSelectedTime() -> Date {
         // Get selected values from picker
         let selectedHour = hours[timePicker.selectedRow(inComponent: 0) % hours.count]
@@ -386,10 +328,19 @@ class HabitEditingViewController: UIViewController {
 
 // MARK: - UIPickerViewDataSource
 extension HabitEditingViewController: UIPickerViewDataSource {
+    
+    /// Returns the number of components in the picker view
+    /// - Parameter pickerView: the picker view requesting the information
+    /// - Returns: number components - 3 for hours, minutes, and AM/PM
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return 3 // Hour, Minute, AM/PM
     }
     
+    /// Returns number of rows in each component of the picker view
+    /// - Parameters:
+    ///     - pickerView: the picker view requesting the information
+    ///     - component: The column being queried
+    /// - Returns: The number of rows in specified column
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         switch component {
         case 0, 1:
@@ -404,6 +355,14 @@ extension HabitEditingViewController: UIPickerViewDataSource {
 
 // MARK: - UIPickerViewDelegate
 extension HabitEditingViewController: UIPickerViewDelegate {
+    
+    /// Returns the hour/minute/AMPM value for the specified row and column
+    ///
+    /// - Parameters:
+    ///     - pickerView: The picker view requesting this information
+    ///     - row: The row being queried
+    ///     - component: The column being queried
+    /// - Returns: An attributed string for specified row and column
     func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
         var title = ""
         
@@ -424,6 +383,12 @@ extension HabitEditingViewController: UIPickerViewDelegate {
         return attributedTitle
     }
     
+    /// Provides the width for each component in the picker view
+    ///
+    /// - Parameters:
+    ///     - pickerView: The picker view requesting the information
+    ///     - component: the column being queried
+    /// - Returns: the width of the specified column
     func pickerView(_ pickerView: UIPickerView, widthForComponent component: Int) -> CGFloat {
         switch component {
         case 0:

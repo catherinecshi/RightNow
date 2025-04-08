@@ -1,5 +1,6 @@
 import UIKit
 
+/// takes user through multi step onboarding process
 class OnboardingViewController: UIViewController, OnboardingViewDelegate {
     private let onboardingView: OnboardingView
     weak var coordinator: OnboardingCoordinator?
@@ -145,6 +146,7 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         onboardingView.showResponseButton(title: "How can I do that?")
     }
     
+    /// switch to habit list view controller
     func showHabitsScreen() async {
         try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
         onboardingView.animateDisappearance(of: onboardingView.newOwnerLabel)
@@ -188,7 +190,6 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         await withCheckedContinuation { continuation in
             onboardingView.startEmojiTransitionSequence {
                 // stop focus vew
-                print("emoji transition ended")
                 self.onboardingView.hideFocusView()
                 
                 continuation.resume()
@@ -198,7 +199,8 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         await showTimer()
     }
     
-    func showTimer() async {
+    /// animate appearance of timer and coupons
+    private func showTimer() async {
         onboardingView.showTimer()
         onboardingView.showCoupons()
         
@@ -212,8 +214,8 @@ class OnboardingViewController: UIViewController, OnboardingViewDelegate {
         await showGameScreen()
     }
     
-    func showGameScreen() async {
-        print("showing game screen")
+    /// switch to central game view controller
+    private func showGameScreen() async {
         coordinator?.switchToGame()
     }
 }

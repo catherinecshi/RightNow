@@ -1,12 +1,18 @@
 import UIKit
 
+/// Cell for one habit
+/// - habit name
+/// - streak count
+/// - time
+/// - completion status
+/// - visual progress to the next level
 class HabitCell: UITableViewCell {
-    
-    // MARK: Initialisation
+    // MARK: - Properties
     
     private let nameLabel = UILabel()
     private let streaksLabel = UILabel()
     
+    /// Container for the name and streak labels and progress visualization layer
     private let containerView: UIView = {
         let containerView = UIView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
@@ -22,8 +28,10 @@ class HabitCell: UITableViewCell {
         return containerView
     }()
     
+    /// Layer used to visualize progress to next habit level
     private let progressLayer = CALayer()
     
+    /// current progress value to next level
     private var currentProgress: CGFloat = 0
     
     private let timeLabel: UILabel = {
@@ -35,6 +43,7 @@ class HabitCell: UITableViewCell {
         return label
     }()
     
+    /// Button for the user to mark habit as done
     private lazy var completionButton: UIButton = {
         let button = UIButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -45,6 +54,12 @@ class HabitCell: UITableViewCell {
         return button
     }()
     
+    // MARK: - Initialization
+    
+    /// Initializes a new habitcell with specified style
+    /// - Parameters:
+    ///     - style: the cell style
+    ///     - reuseIdentifier: the identifier for the cell
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
@@ -61,12 +76,13 @@ class HabitCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    /// Updates progress to next level when cell layout changes
     override func layoutSubviews() {
         super.layoutSubviews()
         updateProgressLayerFrame()
     }
     
-    // MARK: Setup
+    // MARK: - Setup UI
     
     private func setupTimeLabel() {
         contentView.addSubview(timeLabel)
@@ -148,8 +164,18 @@ class HabitCell: UITableViewCell {
         ])
     }
     
-    // MARK: Configuration
+    // MARK: - Configuration
     
+    /// Configures the cell with a habit model.
+    ///
+    /// Updates all UI elements based on the habit's properties, including:
+    /// - Time label
+    /// - Name label
+    /// - Streaks label
+    /// - Progress visualization
+    /// - Completion button state
+    ///
+    /// - Parameter habit: The habit model to display
     func configure(with habit: Habit) {
         let dateFormatter = DateFormatter()
         
@@ -162,10 +188,6 @@ class HabitCell: UITableViewCell {
         
         if let time = habit.time {
             timeLabel.text = dateFormatter.string(from: time)
-        } else if let cue = habit.cue {
-            timeLabel.text = cue
-        } else {
-            print("something weird - no cue or time")
         }
         
         nameLabel.text = habit.name
@@ -180,6 +202,7 @@ class HabitCell: UITableViewCell {
         setNeedsLayout()
     }
     
+    /// Returns true when user device is set to 24 hour time
     func is24HourTimeFormat() -> Bool {
         let dateFormat = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: Locale.current)
         
@@ -187,6 +210,9 @@ class HabitCell: UITableViewCell {
         return !(dateFormat?.contains("a") ?? true)
     }
     
+    /// Updates progress layer's frame based on current progress
+    ///
+    /// Called during layout to ensure visuals are correctly sized and positioned
     private func updateProgressLayerFrame() {
         let containerBounds = containerView.bounds
         progressLayer.frame = CGRect(x: containerBounds.width * currentProgress,
@@ -198,6 +224,12 @@ class HabitCell: UITableViewCell {
         containerView.layer.insertSublayer(progressLayer, at: 0)
     }
     
+    /// Updates completion button appearance based on completion status
+    ///
+    /// Completed -> checkmark with app color
+    /// Incomplete -> gray box
+    ///
+    /// - Parameter isCompleted: whether habit is completed for the day
     private func updateCompletionButtonState(isCompleted: Bool) {
         if isCompleted {
             completionButton.backgroundColor = UIConfiguration.tintColor
@@ -218,8 +250,18 @@ class HabitCell: UITableViewCell {
     }
     
     // MARK: - Actions
+    
+    /// prevent multiple taps during animation
     private var isAnimating = false
     
+    /// Handles tap on completion button
+    ///
+    /// This method:
+    /// 1. Prevents multiple taps during animation
+    /// 2. Gets references to the table view and view controller
+    /// 3. Stores the habit ID for later lookup
+    /// 4. Animates the button
+    /// 5. Completes the habit after animation finishes
     @objc private func completionButtonTapped() {
         // Prevent multiple taps during animation
         if isAnimating { return }
@@ -254,7 +296,12 @@ class HabitCell: UITableViewCell {
         }
     }
     
-    // Update this method to set the animation flag
+    /// Animates completion button when tapped
+    ///
+    /// Performs scale animation + flash effect
+    /// Sets isAnimating flag
+    ///
+    /// - Parameter completion: Closure for animation completion
     private func animateCompletionButton(completion: @escaping () -> Void = {}) {
         isAnimating = true
         

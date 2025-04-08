@@ -1,17 +1,20 @@
 import Foundation
 import UIKit
 
+/// defines delegate methods for handling user interactions with maowview
 protocol MaowViewDelegate {
     func maowViewDidTapStart()
     func maowViewDidAdjustTime(_ minutes: Int)
     func maowViewDidTapCharacter()
 }
 
+/// displays character, timer controls and UI components
 class MaowView: UIView {
+    // MARK: - Properties
     var delegate: MaowViewDelegate?
     
     let imageView = UIImageView()
-    private var imageViewObserver: NSKeyValueObservation?
+    private var imageViewObserver: NSKeyValueObservation? // observer tracking changes in image view bounds
     
     var emoji = "😺"  // Default emoji
     var happyEmoji = "😸" // Emoji for happy state
@@ -69,6 +72,9 @@ class MaowView: UIView {
         return button
     }()
     
+    // MARK: - Initialisation
+    
+    /// initialises view with a frame
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -79,10 +85,14 @@ class MaowView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    /// Clean up KVO observers when view is deallocated
     deinit {
         imageViewObserver?.invalidate()
     }
     
+    // MARK: - Setup
+    
+    /// Set up KVO observers for tracking layout changes
     private func setupObservers() {
         imageViewObserver = imageView.observe(\.bounds, options: [.new]) { [weak self] _, _ in
             guard let self = self, !self.focusView.isHidden else { return }
@@ -101,6 +111,7 @@ class MaowView: UIView {
         setupFocusView()
     }
     
+    /// Sets up image view using the emoji as a label, and drawing it
     private func setupImageView() {
         // Create a clear background for the emoji rendering
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 200, height: 200))
@@ -154,6 +165,7 @@ class MaowView: UIView {
         ])
     }
     
+    /// tap gesture for maow
     private func setupTapGesture() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         imageView.addGestureRecognizer(tapGesture)
@@ -167,9 +179,6 @@ class MaowView: UIView {
             timerLabel.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor, constant: 40),
             timerLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor)
         ])
-        
-        // check if the focusTime is supposed to be something different
-        //timerModelDidUpdateTime()
     }
     
     private func setupSlider() {
@@ -212,19 +221,28 @@ class MaowView: UIView {
     }
     
     // MARK: - Public Methods
+    
+    /// Updates timer display with specified time
+    /// - Parameters: minutes, seconds
     func updateTimeDisplay(minutes: Int, seconds: Int) {
         timerLabel.text = String(format: "%02d:%02d", minutes, seconds)
     }
     
+    /// Updates slider position to specified value
+    /// - Parameter value: new slider value
     func updateSliderDisplay(value: Float) {
         timerSlider.value = value
     }
     
+    /// Updates button title based on whether a session is active
+    /// - Parameter isActive: whether a time session is currently active
     func updateControlsForSession(isActive: Bool) {
         startStopButton.setTitle(isActive ? "Give Up" : "Work", for: .normal)
         timerSlider.isEnabled = !isActive
     }
     
+    /// Updates character emoji based on happiness state
+    /// - Parameter isHappy: whether the character should be in a happy state
     func updateCharacterState(isHappy: Bool) {
         let newEmoji = isHappy ? happyEmoji : emoji
         
@@ -263,6 +281,9 @@ class MaowView: UIView {
     }
     
     // MARK: - Focus View Methods
+    
+    /// Show focus view on maow
+    /// - Parameter text: optional text for instrutions label
     func showFocusView(withInstructions text: String? = nil) {
         // make sure the view has been laid out
         layoutIfNeeded()
@@ -288,6 +309,7 @@ class MaowView: UIView {
         }
     }
     
+    /// updates position and size of focus view
     func updateFocusView() {
         // get actual frame of image view
         let actualFrame = convert(imageView.frame, from: imageView.superview)
@@ -295,6 +317,7 @@ class MaowView: UIView {
         focusView.ovalRect = actualFrame.insetBy(dx: -20, dy: -20)
     }
     
+    /// hides focus view with an animation
     func hideFocusView() {
         UIView.animate(withDuration: 0.3, animations: {
             self.focusView.alpha = 0.0

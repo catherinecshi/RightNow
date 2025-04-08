@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 
+/// manages main navigation structure during onboarding
 class OnboardingTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,6 +42,10 @@ class OnboardingTabBarController: UITabBarController {
         self.tabBar.unselectedItemTintColor = .gray
     }
     
+    /// response to selection of tab bar item by posting notification
+    /// - Parameters:
+    ///     - tabBar: the tab bar containing the selected item
+    ///     - item: the tab bar item that was selected
     override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         super.tabBar(tabBar, didSelect: item)
         
@@ -49,10 +54,12 @@ class OnboardingTabBarController: UITabBarController {
     }
 }
 
+/// adds custom notification name for tab bar selection
 extension NSNotification.Name {
     static let tabBarItemSelected = NSNotification.Name("tabBarItemSelected")
 }
 
+/// adds custom notification name for UITabBarController
 extension UITabBarController {
     static let didSelectItemNotification = NSNotification.Name("UITabBarControllerDidSelectItem")
 }

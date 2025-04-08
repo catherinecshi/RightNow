@@ -18,6 +18,7 @@ protocol HabitRepositoryProtocol {
     func clearLocalData() async
 }
 
+/// Handles synchronization, network monitoring, and publishing of habit changes
 class HabitRepository: HabitRepositoryProtocol {
     static let shared = HabitRepository()
     
@@ -27,15 +28,24 @@ class HabitRepository: HabitRepositoryProtocol {
     
     private(set) var habits: [Habit] = []
     private var isNetworkAvailable = true
-    private var monitor: NWPathMonitor?
+    private var monitor: NWPathMonitor? // observes connectivity changes
     private var needsSync = false
     
+    /// Subject and publisher for publishing habit changes
     private let habitSubject = PassthroughSubject<HabitChangeType, Never>()
     var habitPublisher: AnyPublisher<HabitChangeType, Never> {
         habitSubject.eraseToAnyPublisher()
     }
     
+    /// Subject and publisher for publishing errors
+    private let errorSubject = PassthroughSubject<DataServiceError, Never>()
+    var errorPublisher: AnyPublisher<DataServiceError, Never> {
+        errorSubject.eraseToAnyPublisher()
+    }
+    
     // MARK: - Initialization
+    
+    /// Initiates with reference to dataservice, habits, and network monitoring
     private init(dataService: HabitDataServiceProtocol = DataService.shared) {
         self.dataService = dataService
         
@@ -45,10 +55,12 @@ class HabitRepository: HabitRepositoryProtocol {
         setupNetworkMonitoring()
     }
     
+    /// Clean up resources when instance is deallocated
     deinit {
         monitor?.cancel()
     }
     
+    /// Loads local habits and tries to synchronize with firebase
     private func loadInitialHabits() async {
         // load from local storage
         do {
@@ -65,6 +77,9 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     // MARK: - Network Monitoring
+    
+    /// Sets up network monitoring
+    /// Triggers synchronization after connectivity is restored after being unavailable
     private func setupNetworkMonitoring() {
         let monitor = NWPathMonitor()
         self.monitor = monitor
@@ -89,6 +104,14 @@ class HabitRepository: HabitRepositoryProtocol {
         monitor.start(queue: queue)
     }
     
+    /// Synchronizes local data with Firestore
+    ///
+    /// This method:
+    /// 1. Fetches habits from Firestore
+    /// 2. Merges them with local habits, keeping the most recently updated version
+    /// 3. Updates streaks and other time-dependent data
+    /// 4. Saves the merged data locally
+    /// 5. Updates notifications
     private func syncWithFirestore() async {
         guard isNetworkAvailable else { return }
         
@@ -128,17 +151,23 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     // MARK: - CRUD Operations
+    
+    /// Adds a new habit to the repository
+    /// - Parameter habit: The habit to add
+    ///
+    /// This method:
+    /// 1. Adds the habit to the local collection
+    /// 2. Saves the habit to local storage and Firestore
+    /// 3. Schedules notifications for the habit
+    /// 4. Notifies subscribers of the change
     func addHabit(_ habit: Habit) {
         habits.append(habit)
         
         // save to firestore
         Task {
-            do {
+            await performOperation {
                 try await dataService.saveHabitsLocally(habits)
                 try await dataService.saveHabitsToFirestore(habits: [habit])
-            } catch {
-                print("Error saving habit to firestore: \(error)")
-                needsSync = true
             }
         }
         
@@ -148,6 +177,13 @@ class HabitRepository: HabitRepositoryProtocol {
         notifyChange(.habitCRUD)
     }
     
+    /// Updates an existing habit with new data
+    /// - Parameter habit: The habit with updated information
+    ///
+    /// This method:
+    /// 1. Updates the habit in the local collection
+    /// 2. Saves changes to local storage and Firestore
+    /// 3. Detects and notifies about level and streak changes
     func updateHabit(_ habit: Habit) async {
         var levelChanged = false
         var oldLevel: Level?
@@ -163,7 +199,9 @@ class HabitRepository: HabitRepositoryProtocol {
             habits[index] = habit // update list
             
             // save locally
-            try? await dataService.saveHabitsLocally(habits)
+            await performOperation {
+                try? await dataService.saveHabitsLocally(habits)
+            }
         }
         
         // stupid fucking concurrency domain issues
@@ -173,11 +211,8 @@ class HabitRepository: HabitRepositoryProtocol {
         
         // update firestore
         Task {
-            do {
+            await performOperation {
                 try await dataService.updateHabitInFirestore(habit)
-            } catch {
-                print("Error updating habit in firestore: \(error)")
-                needsSync = true
             }
             
             // notify after local and remote updates
@@ -199,18 +234,39 @@ class HabitRepository: HabitRepositoryProtocol {
         notifyChange(.habitCRUD)
     }
     
+    /// Returns an array of all habits
     func getHabits() -> [Habit] {
         return habits
     }
     
+    /// Fetches a single habit by its ID from the remote data source
+    ///
+    /// - Parameter habitID: The string representation of the habit's UUID
+    /// - Returns: The habit if found, nil otherwise
+    /// - Throws: An error if the fetch operation fails
     func fetchSingleHabit(habitID: String) async throws -> Habit? {
-        return try await dataService.fetchHabitFromFirestore(habitID: habitID)
+        var habit: Habit?
+        await performOperation {
+            habit = try await dataService.fetchHabitFromFirestore(habitID: habitID)
+        }
+        return habit
     }
     
+    /// Removes a habit from the repository
+    /// - Parameter habit: The habit to delete
+    ///
+    /// This method:
+    /// 1. Removes the habit from the local collection
+    /// 2. Updates local storage
+    /// 3. Cancels any scheduled notifications for the habit
+    /// 4. Deletes the habit from Firestore
     func deleteHabit(_ habit: Habit) async {
         // delete locally
         habits.removeAll(where: { $0.id == habit.id })
-        try? await dataService.saveHabitsLocally(habits)
+        
+        await performOperation {
+            try? await dataService.saveHabitsLocally(habits)
+        }
         
         // delete notifications
         let center = UNUserNotificationCenter.current()
@@ -222,15 +278,20 @@ class HabitRepository: HabitRepositoryProtocol {
         
         // delete from firestore
         Task {
-            do {
+            await performOperation {
                 try await dataService.deleteHabitFromFirestore(habitId: habit.id)
-            } catch {
-                print("error deleting habit from firestore: \(error)")
-                needsSync = true
             }
         }
     }
     
+    /// Marks a habit as completed for the current day and updates its stats
+    /// - Parameter habit: The habit to mark as completed (passed as an inout parameter to allow modification)
+    ///
+    /// This method:
+    /// 1. Increments the habit's streak and completion count
+    /// 2. Records the completion for the current day
+    /// 3. Updates the habit in storage
+    /// 4. Notifies subscribers of level and streak changes
     func completeHabit(_ habit: inout Habit) async {
         let currentDayString = TimeFormatter.dateToString(Date())
         let oldLevel = habit.currentLevel
@@ -254,12 +315,16 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     // MARK: - Change Observers
+    
+    /// Defines the types of changes that can happen to habits
     enum HabitChangeType {
         case levelChanged(habitId: UUID, oldLevel: Level, newLevel: Level)
         case streakChanged(habitId: UUID, newStreak: Int)
-        case habitCRUD
+        case habitCRUD // created, updated, deleted
     }
     
+    /// Notify subscribers of change to habits
+    /// - Parameter changeType: The type of change that has occurred
     private func notifyChange(_ changeType: HabitChangeType) {
         DispatchQueue.main.async {
             self.habitSubject.send(changeType)
@@ -267,17 +332,72 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     // MARK: - Data Clearing
+    
+    /// Clears all locally stored habits
     func clearLocalData() async {
         // clear in memory data
         habits = []
         
         // clear persisted data
         do {
-            try await dataService.clearLocalStorage()
+            try await dataService.clearLocalHabitData()
         } catch {
             print("Error clearing local storage: \(error)")
         }
         
         notifyChange(.habitCRUD)
+    }
+    
+    // MARK: - Error Handling
+    
+    /// Reports an error through the error publisher
+    /// - Parameter error: The error to report
+    ///
+    /// Converts multiple error types to a standardized format
+    private func reportError(_ error: Error) {
+        let dataError: DataServiceError
+        
+        if let error = error as? DataServiceError {
+            dataError = error
+        } else if let error = error as? FirebaseError {
+            switch error {
+            case .userNotAuthenticated:
+                dataError = .authenticationRequired
+            default:
+                dataError = .firestoreReadFailure(underlying: error)
+            }
+        } else {
+            dataError = .invalidData(details: error.localizedDescription)
+        }
+        
+        // publish error
+        DispatchQueue.main.async {
+            self.errorSubject.send(dataError)
+        }
+    }
+    
+    /// Performs operation with standardized error handling
+    /// - Parameter operation: The asynchronous operation to perform
+    /// 
+    /// This method:
+    /// 1. Attempts to execute the provided operation
+    /// 2. Catches and reports any errors
+    /// 3. Sets the needsSync flag for network-related errors
+    private func performOperation(_ operation: () async throws -> Void) async {
+        do {
+            try await operation()
+        } catch {
+            reportError(error)
+            
+            // set sync flag if it is a network error
+            if let dataError = error as? DataServiceError {
+                switch dataError {
+                case .networkUnavailable, .firestoreWriteFailure, .firestoreReadFailure, .firestoreDeleteFailure:
+                    needsSync = true
+                default:
+                    break
+                }
+            }
+        }
     }
 }

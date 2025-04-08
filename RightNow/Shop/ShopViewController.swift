@@ -1,5 +1,6 @@
 import UIKit
 
+/// just a simple screen with coming soon for now
 class ShopViewController: UIViewController {
     // MARK: - Properties
     

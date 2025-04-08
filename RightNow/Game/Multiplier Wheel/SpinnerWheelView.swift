@@ -1,5 +1,27 @@
 import UIKit
 
+/// A custom view that displays a spinning wheel of values with animation effects.
+///
+/// `SpinnerWheelView` creates a vertically scrolling list of values that can be animated
+/// to create a slot machine or spinner wheel effect. It handles:
+/// - Configuring possible values based on upgrade type and level
+/// - Animating the spinning motion with acceleration and deceleration
+/// - Selecting a random or specified final value
+/// - Providing visual feedback during spinning
+///
+/// Example usage:
+/// ```
+/// let spinnerView = SpinnerWheelView(upgradeType: .d6, level: 2)
+/// containerView.addSubview(spinnerView)
+///
+/// // Start spinning animation
+/// spinnerView.startSpinning()
+///
+/// // Later, stop spinning and get the final value
+/// spinnerView.stopSpinning { finalValue in
+///     print("Selected value: \(finalValue)")
+/// }
+/// ```
 class SpinnerWheelView: UIView {
     // MARK: - Properties
     private let upgradeType: UpgradeType
@@ -9,7 +31,7 @@ class SpinnerWheelView: UIView {
     // UI components
     private let scrollView = UIScrollView()
     private let contentView = UIView()
-    private let selectionIndicator = UIView()
+    private let selectionIndicator = UIView() // visual indicator that highlights current value
     private var valueLabels: [UILabel] = []
     
     // Animation
@@ -28,6 +50,12 @@ class SpinnerWheelView: UIView {
     private let minimumSpinTime: TimeInterval = 2.0
     
     // MARK: - Initialization
+    
+    /// Creates a new spinner wheel view for the specified upgrade type and level
+    ///
+    /// - Parameters:
+    ///   - upgradeType: The type of upgrade this spinner represents
+    ///   - level: The level of the upgrade, affecting available values
     init(upgradeType: UpgradeType, level: Int) {
         self.upgradeType = upgradeType
         self.level = level
@@ -41,17 +69,25 @@ class SpinnerWheelView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    /// ensure display link is invalidated when view is deallocated
     deinit {
         stopDisplayLink()
     }
     
     // MARK: - Setup
+    
+    /// Generates the array of possible values based on upgrade type and level
+    ///
+    /// This method:
+    /// - Determines the range of values from the upgrade type
+    /// - Multiplies each value by the level to get the final values
     private func setupPossibleValues() {
         // Calculate all possible values based on upgrade type and level
         let range = Int(upgradeType.range)
         possibleValues = (1...range).map { $0 * level }
     }
     
+    /// Configures the view's visual appearance and layout
     private func setupUI() {
         // Container styling
         backgroundColor = .systemGray6
@@ -110,6 +146,9 @@ class SpinnerWheelView: UIView {
         }
     }
     
+    /// Creates and adds value labels to the content view
+    ///
+    /// - Parameter values: Array of integer values to display in the spinner
     private func populateContentView(with values: [Int]) {
         var previousLabel: UILabel?
         
@@ -159,6 +198,14 @@ class SpinnerWheelView: UIView {
     }
     
     // MARK: - Animation Controls
+    
+    /// Begins the spinning animation
+    ///
+    /// This method:
+    /// - Stops any existing animation
+    /// - Initializes animation variables with type-specific settings
+    /// - Creates and starts a display link for smooth animation
+    /// - Positions the spinner at a known starting point
     func startSpinning() {
         // Ensure any previous animation is stopped
         stopDisplayLink()
@@ -200,8 +247,17 @@ class SpinnerWheelView: UIView {
         }
     }
     
+    /// Begins the process of stopping the spinning animation
+    ///
+    /// - Parameter completion: Closure to be called when spinning animation completes,
+    ///   receiving the final selected value as an integer parameter
+    ///
+    /// This method:
+    /// - Stores the completion handler for later invocation
+    /// - Randomly selects a target value if none is specified
+    /// - Marks the spinner for deceleration
+    /// - The actual stopping occurs gradually through the display link updates
     func stopSpinning(completion: @escaping (Int) -> Void) {
-        print("Preparing to stop spinner for \(upgradeType.rawValue)")
         // Store the completion handler
         self.completionHandler = completion
         
@@ -214,12 +270,25 @@ class SpinnerWheelView: UIView {
         isDecelerating = true
     }
     
+    /// invalidates and removes the display link
+    /// called when animation is no longer needed
+    /// prevents unnecessary CPU usage and memory leaks
     private func stopDisplayLink() {
         displayLink?.invalidate()
         displayLink = nil
     }
     
     // MARK: - Animation Update
+    
+    /// Updates the spinner animation for each frame
+    ///
+    /// This method is called by the display link for each frame update and handles:
+    /// - Calculating time deltas for smooth animation
+    /// - Applying different animation phases (acceleration, constant speed, deceleration)
+    /// - Updating scroll position to create spinning effect
+    /// - Tracking total rotation distance
+    /// - Applying visual effects to labels
+    /// - Special handling for dice spinner
     @objc private func updateSpinning() {
         // Get current time and calculate delta
         let currentTime = CACurrentMediaTime()
@@ -307,6 +376,12 @@ class SpinnerWheelView: UIView {
         updateLabelEffects()
     }
     
+    /// Applies visual effects to labels based on their distance from center
+    ///
+    /// This method:
+    /// - Calculates each label's distance from the center of the view
+    /// - Adjusts opacity and scale to create a focus effect on the central value
+    /// - Creates a 3D-like appearance with values further from center appearing smaller
     private func updateLabelEffects() {
         // Apply visual effects to each visible label based on distance from center
         for label in valueLabels {
@@ -324,6 +399,14 @@ class SpinnerWheelView: UIView {
         }
     }
     
+    /// Finalizes the spinner position to show the selected value
+    ///
+    /// This method:
+    /// - Ensures a valid target value is selected
+    /// - Calculates the exact offset needed to center the target value
+    /// - Animates the scroll view to the final position
+    /// - Provides visual feedback by highlighting the selection indicator
+    /// - Calls the completion handler with the final value
     private func finalizePosition() {
         // Ensure we have a target value
         guard let targetValue = targetValue, !possibleValues.isEmpty else {

@@ -1,12 +1,12 @@
 import Foundation
 
+/// Contains data for displaying and tracking progress with habits
 struct Habit: Codable {
     // basic required information
     let id: UUID
     var name: String
     var description: String
     var time: Date?
-    var cue: String?
     var daysOfTheWeek: [String: Bool] // the strings are 3 letter combos
     
     // notification
@@ -21,7 +21,7 @@ struct Habit: Codable {
     // speeds up computation
     var lastUpdateDate: Date
     
-    // dynamically calculates current level based on the current streak
+    /// dynamically calculates current level based on the current streak
     var currentLevel: Level {
         let levels = Level.allCases.sorted { $0.streakForLevel < $1.streakForLevel }
         for level in levels {
@@ -32,11 +32,13 @@ struct Habit: Codable {
         return .mastery
     }
     
-    // if habit is made from habit creation or editing
+    // MARK: - Initializers
+    /// creates habit from habit creation or editing
     init(id: UUID = UUID(),
          name: String,
          description: String,
-         time: Date, daysOfTheWeek: [String: Bool],
+         time: Date, 
+         daysOfTheWeek: [String: Bool],
          notificationEnabled: Bool,
          totalDone: Int = 0,
          totalFailed: Int = 0,
@@ -57,7 +59,9 @@ struct Habit: Codable {
             self.lastUpdateDate = lastUpdateDate
         }
     
-    // if loaded in from firestore - incase new variables are added, this adds default values
+    /// Creates habits from decoders, including firestore
+    /// Adds default values if new variables have been added in codebase
+    /// - Parameter decoder: The decoder to read data from
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
@@ -74,18 +78,21 @@ struct Habit: Codable {
         lastUpdateDate = try container.decodeIfPresent(Date.self, forKey: .lastUpdateDate) ?? Date()
     }
     
-    // update stats when habit is completed/failed
+    // MARK: - Public Methods
+    
+    /// Checks if a streak has been broken and updates stats accordingly
+    ///
+    /// This method:
+    /// 1. Checks if an update is needed (skips if already updated today)
+    /// 2. Iterates through days since the last update
+    /// 3. Breaks the streak and increments failure count if a scheduled day was missed
+    /// 4. Updates the total completion count and last update date
     mutating func updateStats() {
         let calendar = Calendar.current
         let today = Date()
         
-        print("last update \(lastUpdateDate)")
-        print("today \(today)")
-        print("same day check \(TimeFormatter.isSameDay(today, lastUpdateDate))")
-        
         // no need to update if last update is today
         if TimeFormatter.isSameDay(lastUpdateDate, today) {
-            print("checking for the same day")
             return
         }
         
@@ -101,14 +108,10 @@ struct Habit: Codable {
             let dateString = TimeFormatter.dateToString(currentDate)
             let weekdayString = TimeFormatter.weekdayToString(currentDate)
             
-            print("day is now \(dateString)")
-            
             if daysOfTheWeek[weekdayString, default: false] {
-                print("\(weekdayString) found in days of the week")
                 let completionsForDay = dailyCompletion[dateString, default: 0]
                 
                 if !TimeFormatter.isSameDay(currentDate, today) && completionsForDay == 0 {
-                    print("streak is broken")
                     streaks = 0
                     totalFailed += 1
                     break
@@ -120,6 +123,7 @@ struct Habit: Codable {
         lastUpdateDate = today
     }
     
+    /// Returns true if habit has been completed today or not scheduled for today
     func isCompletedToday() -> Bool {
         let todayString = TimeFormatter.dateToString(Date())
         let todayWeekday = TimeFormatter.weekdayToString(Date())

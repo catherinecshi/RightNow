@@ -39,10 +39,8 @@ class AppCoordinator: Coordinator {
     func start() {
         if hasCompletedOnboarding {
             showMainApp()
-            print("show main app")
         } else {
             showOnboarding()
-            print("show onboarding")
         }
     }
     

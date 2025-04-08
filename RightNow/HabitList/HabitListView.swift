@@ -1,9 +1,19 @@
 import UIKit
 
+/// Displays list of habits in table view
 class HabitListView: UIView {
+    // MARK: - Properties
     let tableView = UITableView()
     
-    // MARK: Initialisation
+    let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 24)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    // MARK: - Initialisation
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -17,16 +27,7 @@ class HabitListView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: Setup UI
-    
-    //titlelabel
-    let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 24)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    // MARK: - Setup UI
     
     func setupTitle() {
         addSubview(titleLabel)

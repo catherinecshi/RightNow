@@ -1,9 +1,9 @@
-// Direction enum for player movement
+/// Direction enum for player movement
 enum PlayerDirection {
     case up, down, left, right
 }
 
-// Rules for numbers to avoid
+/// Rules for numbers to avoid
 enum AvoidRule: CaseIterable {
     case endsWithThree
     case endsWithFour

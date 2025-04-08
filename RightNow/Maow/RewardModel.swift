@@ -1,18 +1,18 @@
 import Foundation
 
+/// Determines the coupon rewards for focus timer sesisons
 class RewardModel {
     private let gameModel = CentralGameModel.shared
     
-    // the big boy to call
+    /// calculates coupons amount and add to central game
     public func timeToCoupons(minutes: Int) -> Int {
         let noCoupons = getRewardForSession(minutes: minutes)
         addCoupons(noCoupons)
-        print("big boy making coupons")
         
         return noCoupons
     }
     
-    // Get reward based on session duration
+    /// Get reward based on session duration
     private func getRewardForSession(minutes: Int) -> Int {
         // Base probability tiers based on session duration
         let tier: RewardTier
@@ -39,6 +39,8 @@ class RewardModel {
         return calculateReward(for: tier)
     }
     
+    /// calculate number of coupons based on session duration
+    /// multiplier for an additional coupon with each addition of tier
     private func calculateReward(for tier: RewardTier) -> Int {
         // calculate some random chance of receiving an extra coupon
         let baseReward: Int
@@ -94,11 +96,12 @@ class RewardModel {
         }
     }
     
+    /// add coupons to central game model
     private func addCoupons(_ amount: Int) {
         gameModel.addCoupons(amount)
-        print("rewards adding coupons")
     }
     
+    /// tiers for rewards based on duration
     private enum RewardTier {
         case none
         case I

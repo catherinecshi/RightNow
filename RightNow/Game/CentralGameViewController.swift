@@ -1,28 +1,81 @@
 import UIKit
 import Combine
 
+/// A central view controller that manages the main game interface.
+/// Responsible for:
+/// - Displaying the current game state (numbers, coupons)
+/// - Handling user interactions for generating numbers
+/// - Managing the upgrades table view
+/// - Implementing onboarding functionality
+/// - Handling game state persistence
 class CentralGameViewController: UIViewController {
+    // MARK: - Properties
+    
     // Model
     private let gameModel = CentralGameModel.shared
     var coordinator: OnboardingCoordinator?
+    weak var sceneDelegate: SceneDelegate?
+    let appState: AppState = .shared
     
     // UI elements
-    private let factoryImage = UIImageView()
+    private let factoryImage: UIImageView = {
+        let image = UIImageView()
+        image.translatesAutoresizingMaskIntoConstraints = false
+        image.image = EmojiImage.createImage(from: "🏭", size: 150)
+        image.contentMode = .scaleAspectFit
+        return image
+    }()
     
-    private let buttonStackView = UIStackView()
-    private let factoryButton = UIButton()
-    private let couponsImage = UIImageView()
-    private let couponsCountLabel = UILabel()
+    private let buttonStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.axis = .horizontal
+        stackView.alignment = .center
+        stackView.distribution = .fill
+        stackView.spacing = 8
+        return stackView
+    }()
     
-    private let numbersCountLabel = UILabel()
+    private let factoryButton: UIButton = {
+        let button = UIButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Make Numbers", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIConfiguration.tintColor
+        button.layer.cornerRadius = 12
+        return button
+    }()
+    
+    private let couponsImage: UIImageView = {
+        let image = UIImageView()
+        image.translatesAutoresizingMaskIntoConstraints = false
+        image.image = EmojiImage.createImage(from: "🎟️", size: 20)
+        image.contentMode = .scaleAspectFit
+        return image
+    }()
+    
+    private let couponsCountLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIConfiguration.buttonFont
+        label.textColor = .black
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let numbersCountLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .center
+        label.font = UIFont.boldSystemFont(ofSize: 24)
+        label.text = "0"
+        return label
+    }()
+    
     private let upgradesTableView = UITableView()
+    private var expandedCells = Set<IndexPath>() // tracks which cells are currently expanded
     
-    private var expandedCells = Set<IndexPath>()
-    
-    // Available upgrades
-    private var upgrades: [Upgrade] = []
-    
-    // Timer for automatic cookie generation
+    // Timer for automatic game state persistence
     private var saveTimer: Timer?
     
     // store cancellables to prevent deallocation
@@ -51,13 +104,18 @@ class CentralGameViewController: UIViewController {
         return label
     }()
     
+    // MARK: - Lifecycle Methods
+    
+    /// sets up UI, saving, and subscriptions
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         startSaveTimer()
         setupSubscriptions()
+        self.sceneDelegate = getSceneDelegate()
     }
     
+    /// sets up subscriptions to react to game state changes
     private func setupSubscriptions() {
         // subscribe to game state changes
         gameModel.$gameState
@@ -68,95 +126,92 @@ class CentralGameViewController: UIViewController {
             .store(in: &cancellables)
     }
     
+    /// retrieves scene delegate from window scene
+    /// - Returns: scenedelegate if available, nil otherwise
+    private func getSceneDelegate() -> SceneDelegate? {
+        guard let windowScene = self.view.window?.windowScene,
+              let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+            return nil
+        }
+        return sceneDelegate
+    }
+    
     // MARK: - Game Setup
     
-    private func setupUI() {
-        view.backgroundColor = .systemBackground
-        
-        // Setup cookie button
-        factoryImage.translatesAutoresizingMaskIntoConstraints = false
-        factoryImage.image = EmojiImage.createImage(from: "🏭", size: 150)
-        factoryImage.contentMode = .scaleAspectFit
-        view.addSubview(factoryImage)
-        
-        // coupon image
-        couponsImage.translatesAutoresizingMaskIntoConstraints = false
-        couponsImage.image = EmojiImage.createImage(from: "🎟️", size: 20)
-        couponsImage.contentMode = .scaleAspectFit
-        
-        // coupoins label
-        couponsCountLabel.translatesAutoresizingMaskIntoConstraints = false
-        couponsCountLabel.text = String(gameModel.gameState.coupons) 
-        couponsCountLabel.font = UIConfiguration.buttonFont
-        couponsCountLabel.textColor = .black
-        couponsCountLabel.textAlignment = .center
-        
-        // setup tap button
-        factoryButton.translatesAutoresizingMaskIntoConstraints = false
-        factoryButton.setTitle("Make Numbers", for: .normal)
-        factoryButton.setTitleColor(.white, for: .normal)
-        factoryButton.backgroundColor = UIConfiguration.tintColor
-        factoryButton.layer.cornerRadius = 12
-        factoryButton.addTarget(self, action: #selector(numbersTapped), for: .touchUpInside)
-        
-        // setup stack view
-        buttonStackView.translatesAutoresizingMaskIntoConstraints = false
-        buttonStackView.axis = .horizontal
-        buttonStackView.alignment = .center
-        buttonStackView.distribution = .fill
-        buttonStackView.spacing = 8
-        
-        // add it all up together
-        buttonStackView.addArrangedSubview(couponsImage)
-        buttonStackView.addArrangedSubview(couponsCountLabel)
-        buttonStackView.addArrangedSubview(factoryButton)
-        view.addSubview(buttonStackView)
-        
-        // Setup numbers count label
-        numbersCountLabel.translatesAutoresizingMaskIntoConstraints = false
-        numbersCountLabel.textAlignment = .center
-        numbersCountLabel.font = UIFont.boldSystemFont(ofSize: 24)
-        numbersCountLabel.text = "0"
-        view.addSubview(numbersCountLabel)
-        
-        // Setup upgrades table view
-        upgradesTableView.translatesAutoresizingMaskIntoConstraints = false
-        upgradesTableView.delegate = self
-        upgradesTableView.dataSource = self
-        upgradesTableView.register(UpgradeCell.self, forCellReuseIdentifier: "UpgradeCell")
-        view.addSubview(upgradesTableView)
-        
-        // Layout constraints
-        NSLayoutConstraint.activate([
-            // Factory Image constraints
-            factoryImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            factoryImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
-            factoryImage.widthAnchor.constraint(equalToConstant: 200),
-            factoryImage.heightAnchor.constraint(equalToConstant: 200),
+    /// sets up UI with layout and constraints
+    /// Sets up the user interface including layout and constraints
+        private func setupUI() {
+            view.backgroundColor = .systemBackground
             
-            // factory button constraints
-            couponsImage.widthAnchor.constraint(equalToConstant: 28),
-            couponsImage.heightAnchor.constraint(equalToConstant: 28),
+            setupFactoryImage()
+            setupCouponAndButtonStack()
+            setupNumbersCountLabel()
+            setupUpgradesTableView()
+        }
+        
+        /// Configures the factory image view
+        private func setupFactoryImage() {
+            view.addSubview(factoryImage)
             
-            factoryButton.widthAnchor.constraint(equalToConstant: 150),
-            factoryButton.heightAnchor.constraint(equalToConstant: 44),
+            NSLayoutConstraint.activate([
+                factoryImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                factoryImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
+                factoryImage.widthAnchor.constraint(equalToConstant: 200),
+                factoryImage.heightAnchor.constraint(equalToConstant: 200),
+            ])
+        }
+        
+        /// Configures the coupon display and factory button stack
+        private func setupCouponAndButtonStack() {
+            couponsCountLabel.text = String(gameModel.gameState.coupons)
+            factoryButton.addTarget(self, action: #selector(numbersTapped), for: .touchUpInside)
             
-            buttonStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            buttonStackView.topAnchor.constraint(equalTo: factoryImage.bottomAnchor, constant: 20),
+            // Add components to stack view
+            buttonStackView.addArrangedSubview(couponsImage)
+            buttonStackView.addArrangedSubview(couponsCountLabel)
+            buttonStackView.addArrangedSubview(factoryButton)
+            view.addSubview(buttonStackView)
             
-            // Cookie count label constraints
-            numbersCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            numbersCountLabel.topAnchor.constraint(equalTo: factoryButton.bottomAnchor, constant: 20),
-            numbersCountLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            numbersCountLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            NSLayoutConstraint.activate([
+                // Factory button constraints
+                couponsImage.widthAnchor.constraint(equalToConstant: 28),
+                couponsImage.heightAnchor.constraint(equalToConstant: 28),
+                
+                factoryButton.widthAnchor.constraint(equalToConstant: 150),
+                factoryButton.heightAnchor.constraint(equalToConstant: 44),
+                
+                buttonStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                buttonStackView.topAnchor.constraint(equalTo: factoryImage.bottomAnchor, constant: 20)
+            ])
+        }
+        
+        /// Configures the numbers count label
+        private func setupNumbersCountLabel() {
+            view.addSubview(numbersCountLabel)
             
-            // Upgrades table view constraints
-            upgradesTableView.topAnchor.constraint(equalTo: numbersCountLabel.bottomAnchor, constant: 20),
-            upgradesTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            upgradesTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            upgradesTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
-    }
+            NSLayoutConstraint.activate([
+                numbersCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                numbersCountLabel.topAnchor.constraint(equalTo: factoryButton.bottomAnchor, constant: 20),
+                numbersCountLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                numbersCountLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            ])
+        }
+        
+        /// Configures the upgrades table view
+        private func setupUpgradesTableView() {
+            upgradesTableView.translatesAutoresizingMaskIntoConstraints = false
+            upgradesTableView.delegate = self
+            upgradesTableView.dataSource = self
+            upgradesTableView.register(UpgradeCell.self, forCellReuseIdentifier: "UpgradeCell")
+            view.addSubview(upgradesTableView)
+            
+            NSLayoutConstraint.activate([
+                upgradesTableView.topAnchor.constraint(equalTo: numbersCountLabel.bottomAnchor, constant: 20),
+                upgradesTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                upgradesTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                upgradesTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            ])
+        }
     
     private func startSaveTimer() {
         saveTimer = Timer.scheduledTimer(timeInterval: 25.0, target: self, selector: #selector(saveGame), userInfo: nil, repeats: true)
@@ -164,6 +219,7 @@ class CentralGameViewController: UIViewController {
     
     // MARK: - Game Logic
     
+    /// Presents NumberFactoryViewController when factory button is tapped
     @objc private func numbersTapped() {
         let factoryVC = NumberFactoryViewController()
         factoryVC.couponCount = gameModel.gameState.coupons
@@ -196,6 +252,7 @@ class CentralGameViewController: UIViewController {
         }
     }
     
+    /// Updates UI to reflect current game state
     private func updateUI() {
         // Format large numbers
         let formatter = NumberFormatter()
@@ -215,10 +272,21 @@ class CentralGameViewController: UIViewController {
 // MARK: - TableView DataSource & Delegate
 
 extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate {
+    
+    /// Returns the number of rows in the upgrades table view
+    /// - Parameters:
+    ///   - tableView: The table view requesting this information
+    ///   - section: The section index
+    /// - Returns: The number of upgrade types available
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return UpgradeType.allCases.count
     }
     
+    /// Configures and returns a cell for the specified index path
+    /// - Parameters:
+    ///   - tableView: The table view requesting this information
+    ///   - indexPath: The index path for the cell
+    /// - Returns: A configured cell displaying upgrade information
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "UpgradeCell", for: indexPath) as? UpgradeCell else {
             return UITableViewCell()
@@ -240,10 +308,20 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
         return cell
     }
     
+    /// Returns the height for the cell at the specified index path
+    /// - Parameters:
+    ///   - tableView: The table view requesting this information
+    ///   - indexPath: The index path for the cell
+    /// - Returns: The cell height (expanded or collapsed)
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return expandedCells.contains(indexPath) ? 140 : 80
     }
     
+    /// Handles selection of a cell in the upgrades table view
+    /// Toggles the expanded state of the selected cell
+    /// - Parameters:
+    ///   - tableView: The table view in which a row was selected
+    ///   - indexPath: The index path of the selected row
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -269,6 +347,8 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
 
 // MARK: - Onboarding
 extension CentralGameViewController {
+    
+    /// sets up focus view and onboarding label
     func setupOnboarding() {
         // this makes sure that the focusview is added on top of everything, including the tab bar controller, because there were issues where only putting on top of the current view controller creates additional tab bar controller that causes crashes if tapped on when focus view was up
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -305,6 +385,8 @@ extension CentralGameViewController {
         ])
     }
     
+    /// show onboarding foucs view highlighting button stack view
+    /// adds tap gesture to focus view that activates when tapped in button vicinity
     func showOnboardingFocus() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
@@ -381,6 +463,8 @@ extension CentralGameViewController {
         focusView.addGestureRecognizer(tapGesture)
     }
     
+    /// hides onboarding foucs view with animation
+    /// removes all gesture recognizer from focus view
     func hideOnboardingFocus() {
         UIView.animate(withDuration: 0.3, animations: {
             self.focusView.alpha = 0.0
@@ -398,6 +482,8 @@ extension CentralGameViewController {
         })
     }
     
+    /// Shows completion alert at the end of onboarding
+    /// - Parameter completion: Optional closure to execute after alert dismissal
     func showCompletionAlert(completion: (() -> Void)? = nil) {
         let alert = CustomAlertViewController(
             title: "That's it!",
@@ -405,5 +491,55 @@ extension CentralGameViewController {
             completionOk: completion
         )
         present(alert, animated: true)
+    }
+}
+
+// MARK: - Error Handling
+extension CentralGameViewController {
+    
+    /// sets up subscriptions to handle errors from game model
+    func setupErrorHandling() {
+        CentralGameModel.shared.errorOccurred
+            .receive(on: RunLoop.main)
+            .sink { [weak self] error in
+                self?.showError(error)
+            }
+            .store(in: &cancellables)
+    }
+    
+    /// handles different types of errors
+    private func showError(_ error: DataServiceError) {
+        switch error {
+        case .authenticationRequired:
+            navigateToWelcome()
+        default:
+            print(error.localizedDescription)
+        }
+    }
+    
+    /// Handles navigation for sending the user to initial welcome view
+    /// Uses custom transition to present WelcomeViewController
+    /// Removes current view from root view controller
+    private func navigateToWelcome() {
+        if let sceneDelegate = self.sceneDelegate, let window = sceneDelegate.window {
+            let welcomeVC = WelcomeViewController(state: appState)
+            
+            // Create a navigation controller with the sign-in VC as the root
+            let navigationController = UINavigationController(rootViewController: welcomeVC)
+            
+            // Create a transition animation
+            let transition = CATransition()
+            transition.duration = 0.3
+            transition.type = CATransitionType.push
+            transition.subtype = CATransitionSubtype.fromLeft
+            transition.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+            
+            // Set the window's root view controller to the navigation controller
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                window.layer.add(transition, forKey: nil)
+                window.rootViewController = navigationController
+            }
+        }
     }
 }
