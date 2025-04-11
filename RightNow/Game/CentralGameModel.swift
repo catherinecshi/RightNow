@@ -9,7 +9,7 @@ import Combine
 /// - Handles saving and loading game state from local storage and Firestore
 /// - Publishes events related to game state changes and errors
 /// - Calculates upgrade costs and purchase eligibility
-class CentralGameModel {
+class CentralGameModel: Resettable {
     static let shared = CentralGameModel()
     
     // data service reference
@@ -19,6 +19,7 @@ class CentralGameModel {
     @Published private(set) var gameState: CentralGameState
     private var isNetworkAvailable = true
     private var isSyncing = false
+    private var isFirebaseReady = false
     
     // Publishers
     let saveGameCompleted = PassthroughSubject<Void, Never>()
@@ -29,8 +30,36 @@ class CentralGameModel {
         self.dataService = dataService
         self.gameState = CentralGameState()
         
+        // register with singleton registry
+        SingletonRegistry.shared.register(self)
+        
+        checkFirebaseReadiness()
+    }
+    
+    func checkFirebaseReadiness() {
+        // chekc if firebase is already configured
+        if (FirebaseManager.shared as? FirebaseManager)?.isConfigured == true {
+            isFirebaseReady = true
+            Task {
+                await loadGameState()
+            }
+            
+            return
+        }
+        
+        // if not, check after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.checkFirebaseReadiness()
+        }
+    }
+    
+    /// reset if user logs out
+    func reset() {
+        // reset to default state
+        gameState = CentralGameState()
+        
         Task {
-            await loadGameState()
+            await clearLocalData()
         }
     }
     
@@ -184,7 +213,7 @@ class CentralGameModel {
         // then check firestore and see if it is up to date
         do {
             if let firebaseGameState = try await dataService.loadGameStateFromFirestore() {
-                if firebaseGameState.lastUpdateTime > gameState.lastUpdateTime {
+                if firebaseGameState.lastUpdateTime >= gameState.lastUpdateTime {
                     gameState = firebaseGameState
                     
                     // save the more recent state locally
@@ -211,11 +240,14 @@ class CentralGameModel {
             
             handleError(error)
         }
+        
+        print("game state id\(gameState.id)")
     }
     
     /// Clears all locally stored game data
     func clearLocalData() async {
         do {
+            print("trying to delete \(gameState.id) id")
             try await dataService.clearLocalGameState()
         } catch {
             print("Error clearing local storage: \(error)")

@@ -123,4 +123,33 @@ class AccountConversionViewModel: ObservableObject {
             }
         }
     }
+    
+    /// Converts user with apple credentials
+    /// Takes viewController - view controller the apple sign in UI will appear upon
+    func convertWithApple(from viewController: UIViewController) {
+        // check if user is anonymous
+        if !authManager.isAnonymous {
+            statusViewModel = AuthenticationStatus(title: "Error", message: "You're already signed in with an account")
+            return
+        }
+        
+        Task {
+            do {
+                let user = try await authManager.convertAnonymousUserWithApple(presentingViewController: viewController)
+                DispatchQueue.main.async { [weak self] in
+                    self?.statusViewModel = AuthenticationStatus(
+                        title: "Successful",
+                        message: "Your account has been created successfully"
+                    )
+                }
+            } catch {
+                DispatchQueue.main.async { [weak self] in
+                    self?.statusViewModel = AuthenticationStatus(
+                        title: "Apple Sign-In Failed",
+                        message: error.localizedDescription
+                    )
+                }
+            }
+        }
+    }
 }

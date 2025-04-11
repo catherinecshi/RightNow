@@ -1,5 +1,5 @@
 import UIKit
-import Firebase
+import FirebaseCore
 import FirebaseAuth
 import FirebaseFirestore
 
@@ -68,7 +68,7 @@ protocol FirebaseConfigurable {
 /// - Retry logic
 /// - Error handling
 /// - Consistent API
-class FirebaseManager: FirebaseConfigurable {
+class FirebaseManager: FirebaseConfigurable, Resettable {
     static let shared: FirebaseConfigurable = FirebaseManager()
     
     /// Defines all collection names
@@ -82,7 +82,7 @@ class FirebaseManager: FirebaseConfigurable {
     
     private(set) var isConfigured = false
     
-    private init() {}
+    private init() { }
     
     /// Firebase authentication service
     var auth: Auth {
@@ -107,9 +107,27 @@ class FirebaseManager: FirebaseConfigurable {
     
     /// Configures firebase services for use
     func configure() {
+        print("configuring")
         guard !isConfigured else { return }
+        
         FirebaseApp.configure()
-        isConfigured = true
+        
+        // Verify configuration was successful
+        do {
+            let _ = Firestore.firestore()
+            isConfigured = true
+            print("has been configured")
+        } catch {
+            print("Firebase configuration failed: \(error)")
+        }
+        
+        SingletonRegistry.shared.register(self)
+    }
+    
+    /// reset user when logging out
+    func reset() {
+        try? Auth.auth().signOut()
+        AppState.shared.currentUser = nil
     }
     
     // MARK: - Firestore Operations
@@ -197,6 +215,8 @@ class FirebaseManager: FirebaseConfigurable {
         collection: String,
         subcollection: String? = nil
     ) async throws -> [T] {
+        print("before figuring out configuration")
+        
         guard isConfigured else {
             throw FirebaseError.notConfigured
         }
@@ -204,6 +224,8 @@ class FirebaseManager: FirebaseConfigurable {
         guard let userId = currentUserId else {
             throw FirebaseError.userNotAuthenticated
         }
+        
+        print("current user \(currentUserId)")
         
         let colRef: CollectionReference
         
@@ -266,7 +288,7 @@ class FirebaseManager: FirebaseConfigurable {
         collection: String,
         subcollection: String? = nil,
         subdocument: String? = nil
-    ) async throws where T : Encodable {
+    ) async throws where T: Encodable {
         guard isConfigured else {
             throw FirebaseError.notConfigured
         }

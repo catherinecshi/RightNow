@@ -79,7 +79,7 @@ class SettingsViewController: UIViewController {
     }
     
     private func getSceneDelegate() -> SceneDelegate? {
-        guard let windowScene = self.view.window?.windowScene,
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let sceneDelegate = windowScene.delegate as? SceneDelegate else {
             return nil
         }

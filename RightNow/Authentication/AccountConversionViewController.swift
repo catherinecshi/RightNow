@@ -1,5 +1,6 @@
 import UIKit
 import Combine
+import AuthenticationServices
 
 /// Informs SettingsVC of account conversion success
 protocol AccountConversionDelegate: AnyObject {
@@ -24,6 +25,7 @@ class AccountConversionViewController: UIViewController {
     private var passwordMismatchLabel: UILabel!
     private var convertButton: UIButton!
     private var googleSignInButton: UIButton!
+    private var appleSignInButton: ASAuthorizationAppleIDButton!
     
     // MARK: - Lifecycle
     /// Initialize controller with corresponding model
@@ -124,6 +126,10 @@ class AccountConversionViewController: UIViewController {
         googleSignInButton.layer.cornerRadius = 8
         googleSignInButton.addTarget(self, action: #selector(googleSignInButtonTapped), for: .touchUpInside)
         
+        // apple sign in button
+        appleSignInButton = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
+        appleSignInButton.addTarget(self, action: #selector(appleSignInButtonTapped), for: .touchUpInside)
+        
         // Adding subviews
         view.addSubview(logoImageView)
         view.addSubview(titleLabel)
@@ -134,6 +140,7 @@ class AccountConversionViewController: UIViewController {
         view.addSubview(passwordMismatchLabel)
         view.addSubview(convertButton)
         view.addSubview(googleSignInButton)
+        view.addSubview(appleSignInButton)
         
         // Setting frames
         logoImageView.frame = CGRect(x: (view.bounds.width - 100) / 2, y: 80, width: 100, height: 100)
@@ -145,6 +152,7 @@ class AccountConversionViewController: UIViewController {
         passwordMismatchLabel.frame = CGRect(x: 20, y: confirmPasswordTextField.frame.maxY + 5, width: view.bounds.width - 40, height: 20)
         convertButton.frame = CGRect(x: 20, y: passwordMismatchLabel.frame.maxY + 20, width: view.bounds.width - 40, height: 50)
         googleSignInButton.frame = CGRect(x: 20, y: convertButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
+        appleSignInButton.frame = CGRect(x: 20, y: appleSignInButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
     }
     
     /// Sets up button to dismiss view
@@ -218,6 +226,11 @@ class AccountConversionViewController: UIViewController {
     /// Calls publisher methods and initiates conversion process by linking google credentials
     @objc func googleSignInButtonTapped() {
         viewModel.convertWithGoogle(from: self)
+    }
+    
+    /// Calls publisher methods and initiates conversion process by linking apple credentials
+    @objc func appleSignInButtonTapped() {
+        viewModel.convertWithApple(from: self)
     }
     
     /// Updates model with email value

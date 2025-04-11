@@ -21,6 +21,7 @@ final class FirebaseDelegate: AppDelegateType {
     ///
     /// - Returns: Returns true to allow app launch to continue
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        print("trying to configure")
         firebaseManager.configure()
         
         return true

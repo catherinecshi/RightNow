@@ -463,6 +463,7 @@ class NumberFactoryViewController: UIViewController {
             let wheelVC = MultiplierWheelViewController(baseNumber: baseNumber, upgrades: upgrades)
             
             wheelVC.onMultiplierDetermined = { [weak self] finalNumber in
+                print(finalNumber)
                 self?.onNumbersGenerated?(finalNumber)
             }
             

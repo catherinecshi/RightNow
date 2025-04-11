@@ -1,6 +1,7 @@
 import UIKit
 import Combine
 import GoogleSignIn
+import AuthenticationServices
 
 /// Presents Welcome Screen when the user is not logged in
 class WelcomeViewController: UIViewController {
@@ -17,6 +18,7 @@ class WelcomeViewController: UIViewController {
     private var loginButton: UIButton!
     private var signUpButton: UIButton!
     private var googleSignInButton: UIButton!
+    private var appleSignInButton: ASAuthorizationAppleIDButton!
     private var guestButton: UIButton!
     
     // MARK: - Lifecycle
@@ -106,6 +108,10 @@ class WelcomeViewController: UIViewController {
         googleSignInButton.layer.cornerRadius = 4
         googleSignInButton.addTarget(self, action: #selector(googleSignInButtonTapped), for: .touchUpInside)
         
+        // Apple sign in button
+        appleSignInButton = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
+        appleSignInButton.addTarget(self, action: #selector(appleSignInButtonTapped), for: .touchUpInside)
+        
         // continue as guest button
         guestButton = UIButton(type: .system)
         guestButton.setTitle("Continue as Guest", for: .normal)
@@ -122,16 +128,18 @@ class WelcomeViewController: UIViewController {
         view.addSubview(loginButton)
         view.addSubview(signUpButton)
         view.addSubview(googleSignInButton)
+        view.addSubview(appleSignInButton)
         view.addSubview(guestButton)
         
         // Setting frames
         logoImageView.frame = CGRect(x: (view.bounds.width - 200) / 2, y: 100, width: 200, height: 200)
         titleLabel.frame = CGRect(x: 20, y: logoImageView.frame.maxY + 20, width: view.bounds.width - 40, height: 30)
-        subtitleLabel.frame = CGRect(x: 20, y: titleLabel.frame.maxY + 10, width: view.bounds.width - 40, height: 60)
+        subtitleLabel.frame = CGRect(x: 20, y: titleLabel.frame.maxY + 10, width: view.bounds.width - 40, height: 20)
         loginButton.frame = CGRect(x: 20, y: subtitleLabel.frame.maxY + 20, width: view.bounds.width - 40, height: 50)
         signUpButton.frame = CGRect(x: 20, y: loginButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
         googleSignInButton.frame = CGRect(x: 20, y: signUpButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
-        guestButton.frame = CGRect(x: 20, y: googleSignInButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
+        appleSignInButton.frame = CGRect(x: 20, y: googleSignInButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
+        guestButton.frame = CGRect(x: 20, y: appleSignInButton.frame.maxY + 10, width: view.bounds.width - 40, height: 50)
     }
     
     // MARK: - Actions
@@ -167,6 +175,10 @@ class WelcomeViewController: UIViewController {
     
     @objc func googleSignInButtonTapped() {
         viewModel.signInWithGoogle(from: self)
+    }
+    
+    @objc func appleSignInButtonTapped() {
+        viewModel.signInWithApple(from: self)
     }
     
     @objc func guestButtonTapped() {

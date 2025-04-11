@@ -5,6 +5,7 @@ struct User {
         case email
         case guest
         case google
+        case apple
     }
     
     let id: String // UID used when retrieving data from Firestore

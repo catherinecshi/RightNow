@@ -86,6 +86,7 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         self.sceneDelegate = getSceneDelegate()
         
         setupSubscriptions() // setup combine subscriptions
+        setupNotifications() // for logging in and out
         
         habitListView.tableView.reloadData()
         habitListView.tableView.register(HabitCell.self, forCellReuseIdentifier: "HabitCell")
@@ -129,11 +130,15 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
         }
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     // MARK: - Private Helpers
     
     /// Returns scene delegate from current window scene if available, nil otherwise
     private func getSceneDelegate() -> SceneDelegate? {
-        guard let windowScene = self.view.window?.windowScene,
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let sceneDelegate = windowScene.delegate as? SceneDelegate else {
             return nil
         }
@@ -201,6 +206,19 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
                 }
             }
             .store(in: &cancellables)
+    }
+    
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleUserLogin),
+            name: .userDidLogin,
+            object: nil
+        )
+    }
+    
+    @objc private func handleUserLogin() {
+        viewModel.reloadData()
     }
     
     /// displays message when no habits are available for current displayed day
@@ -347,8 +365,6 @@ class HabitListViewController: UIViewController, UITableViewDelegate, UITableVie
     /// presents appropriate alert depending on completion status and date
     /// - Parameter habit: habit to check and potentially complete
     func isHabitDone(for habit: inout Habit) async {
-        await viewModel.habitCompleted(&habit)
-        
         if viewModel.isCurrentDayToday() {
             if viewModel.isHabitCompletedForDay(habit) {
                 let alertController = CustomAlertViewController(title: "Habit already completed!", message: "You've already \(habit.name) today!")
@@ -523,7 +539,6 @@ extension HabitListViewController {
         
         containerView.bringSubviewToFront(focusView)
         containerView.bringSubviewToFront(onboardingLabel)
-        //containerView.bringSubviewToFront(addButton)
         
         // make focus oval around add button
         let convertedButtonFrame = view.convert(addButton.frame, to: containerView)

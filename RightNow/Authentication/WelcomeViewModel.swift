@@ -64,4 +64,25 @@ class WelcomeViewModel: ObservableObject {
             })
             .store(in: &cancellableBag)
     }
+    
+    func signInWithApple(from viewController: UIViewController) {
+        authManager.appleSignIn(presentingViewController: viewController)
+            .receive(on: RunLoop.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                if case .failure(let error) = completion {
+                    self?.statusViewModel = AuthenticationStatus(
+                        title: "Apple Sign-In Failed",
+                        message: error.localizedDescription
+                    )
+                }
+            }, receiveValue: { [weak self] user in
+                if let user = user {
+                    self?.state.currentUser = user
+                    self?.statusViewModel = AuthenticationStatus.logInSuccessStatus
+                } else {
+                    self?.statusViewModel = AuthenticationStatus.errorStatus
+                }
+            })
+            .store(in: &cancellableBag)
+    }
 }

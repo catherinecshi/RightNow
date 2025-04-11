@@ -40,6 +40,8 @@ class SignUpViewModel: ObservableObject {
     /// - password being over 6 characters
     /// Updates publisher with success or failure
     func signUp() {
+        print("📱 ViewModel: Attempting sign up with email: \(email)")
+        
         // Basic validation
         guard !email.isEmpty else {
             statusViewModel = AuthenticationStatus(title: "Error", message: "Please enter your email address")
@@ -61,20 +63,26 @@ class SignUpViewModel: ObservableObject {
             return
         }
         
+        print("📱 ViewModel: Validation passed, calling authManager.signUp")
         authManager.signUp(email: email, password: password)
             .receive(on: RunLoop.main)
             .sink(receiveCompletion: { [weak self] completion in
                 if case .failure(let error) = completion {
+                    print("❌ ViewModel: Received error completion: \(error.localizedDescription)")
                     self?.statusViewModel = AuthenticationStatus(
                         title: "Error",
                         message: error.localizedDescription
                     )
+                } else {
+                    print("✅ ViewModel: Sign up operation completed successfully")
                 }
             }, receiveValue: { [weak self] user in
                 if let user = user {
+                    print("✅ ViewModel: Received user after sign up: \(user.id), email: \(user.email ?? "no email")")
                     self?.state.currentUser = user
                     self?.statusViewModel = AuthenticationStatus.signUpSuccessStatus
                 } else {
+                    print("❌ ViewModel: Received nil user")
                     self?.statusViewModel = AuthenticationStatus.errorStatus
                 }
             })

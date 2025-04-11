@@ -12,3 +12,4 @@ disabled_rules:
 - type_body_length
 - file_length
 - comment_spacing
+- function_body_length

@@ -64,6 +64,12 @@ class MaowViewController: UIViewController, TimerModelDelegate, MaowViewDelegate
         TimerModel.shared.setupObservers()
     }
     
+    /// makes sure that the numbers are up to date
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        coinCountLabel.text = String(Int(CentralGameModel.shared.gameState.numbers))
+    }
+    
     /// Sets up Combine subscribers to react to state changes
     func setupSubscribers() {
         // subscribe to game state changes

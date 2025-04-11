@@ -8,6 +8,8 @@ protocol HabitRepositoryProtocol {
     var habits: [Habit] { get }
     var habitPublisher: AnyPublisher<HabitRepository.HabitChangeType, Never> { get }
     
+    func checkFirebaseReadiness() // this is when reloading data entirely
+    
     func addHabit(_ habit: Habit)
     func updateHabit(_ habit: Habit) async
     func getHabits() -> [Habit]
@@ -19,7 +21,7 @@ protocol HabitRepositoryProtocol {
 }
 
 /// Handles synchronization, network monitoring, and publishing of habit changes
-class HabitRepository: HabitRepositoryProtocol {
+class HabitRepository: HabitRepositoryProtocol, Resettable {
     static let shared = HabitRepository()
     
     // MARK: - Properties
@@ -30,6 +32,7 @@ class HabitRepository: HabitRepositoryProtocol {
     private var isNetworkAvailable = true
     private var monitor: NWPathMonitor? // observes connectivity changes
     private var needsSync = false
+    private var isFirebaseReady = false // checks if firebase has been configured yet
     
     /// Subject and publisher for publishing habit changes
     private let habitSubject = PassthroughSubject<HabitChangeType, Never>()
@@ -49,15 +52,33 @@ class HabitRepository: HabitRepositoryProtocol {
     private init(dataService: HabitDataServiceProtocol = DataService.shared) {
         self.dataService = dataService
         
-        Task {
-            await loadInitialHabits()
-        }
+        // register with singleton registry
+        SingletonRegistry.shared.register(self)
+        
+        checkFirebaseReadiness()
         setupNetworkMonitoring()
     }
     
     /// Clean up resources when instance is deallocated
     deinit {
         monitor?.cancel()
+    }
+    
+    func checkFirebaseReadiness() {
+        // chekc if firebase is already configured
+        if (FirebaseManager.shared as? FirebaseManager)?.isConfigured == true {
+            isFirebaseReady = true
+            Task {
+                await loadInitialHabits()
+            }
+            
+            return
+        }
+        
+        // if not, check after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.checkFirebaseReadiness()
+        }
     }
     
     /// Loads local habits and tries to synchronize with firebase
@@ -74,6 +95,27 @@ class HabitRepository: HabitRepositoryProtocol {
         await syncWithFirestore()
         
         notifyChange(.habitCRUD)
+    }
+    
+    func reset() {
+        // clear in memory habit data
+        habits = []
+        
+        // reset flags
+        needsSync = false
+        isNetworkAvailable = true
+        
+        // cancel network monitoring
+        monitor?.cancel()
+        monitor = nil
+        
+        // clear all subscriptions
+        cancellables.removeAll()
+        
+        // clear local data
+        Task {
+            await clearLocalData()
+        }
     }
     
     // MARK: - Network Monitoring
@@ -113,7 +155,7 @@ class HabitRepository: HabitRepositoryProtocol {
     /// 4. Saves the merged data locally
     /// 5. Updates notifications
     private func syncWithFirestore() async {
-        guard isNetworkAvailable else { return }
+        guard isFirebaseReady && isNetworkAvailable else { return }
         
         do {
             // load from firestore

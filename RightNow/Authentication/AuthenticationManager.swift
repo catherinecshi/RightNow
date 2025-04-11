@@ -1,7 +1,9 @@
 import Combine
+import CryptoKit
 import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
+import AuthenticationServices
 
 /// Types of Errors Authentication Manager can throw
 enum AuthError: Error {
@@ -23,6 +25,7 @@ protocol AuthenticationServiceProtocol {
     func login(email: String, password: String) -> Future<User?, Error>
     func signUp(email: String, password: String) -> Future<User?, Error>
     func googleSignIn(presentingViewController: UIViewController) -> Future<User?, Error>
+    func appleSignIn(presentingViewController: UIViewController) -> Future<User?, Error>
     func signInAnonymously() -> Future<User?, Error>
     func convertAnonymousUserWithEmail(email: String, password: String) -> Future<User?, Error>
     func convertAnonymousUserWithGoogle(presentingViewController: UIViewController) async throws -> User
@@ -30,12 +33,14 @@ protocol AuthenticationServiceProtocol {
 }
 
 /// Handles all interaction with FirebaseAuth from authentication models
-class AuthenticationManager: AuthenticationServiceProtocol {
+class AuthenticationManager: AuthenticationServiceProtocol, Resettable {
     static let shared = AuthenticationManager()
     
     @Published private(set) var currentUser: User?
     @Published private(set) var isLoading: Bool = false // flag for when an operation is processing
     private var cancellables = Set<AnyCancellable>()
+    private var currentNonce: String? // for apple sign in security
+    private var currentAppleSignInDelegate: ASAuthorizationControllerDelegate? // for apple sign in delegate storage
 
     /// Returns true when user is logged in
     var isUserAuthenticated: Bool {
@@ -55,6 +60,8 @@ class AuthenticationManager: AuthenticationServiceProtocol {
     ///     - Authentication revocations
     /// - Updates currentUser accordingly
     private init() {
+        SingletonRegistry.shared.register(self)
+        
         Auth.auth().addStateDidChangeListener { [weak self] (_, firebaseUser) in
             guard let self = self else { return }
             
@@ -72,6 +79,11 @@ class AuthenticationManager: AuthenticationServiceProtocol {
                 self.currentUser = nil
             }
         }
+    }
+    
+    /// reset cancellables when signing out
+    func reset() {
+        cancellables.removeAll()
     }
     
     /// Determines login type using Firebase authentication provider data
@@ -155,21 +167,29 @@ class AuthenticationManager: AuthenticationServiceProtocol {
     /// Returns:
     /// - User object
     func signUp(email: String, password: String) -> Future<User?, Error> {
+        print("📱 AuthManager: Attempting to sign up with email: \(email)")
         isLoading = true
         return Future { [weak self] promise in
+            print("📱 AuthManager: Calling Firebase createUser")
             Auth.auth().createUser(withEmail: email, password: password) { (result, error) in
                 self?.isLoading = false // finished processing
                 
                 if let error = error {
+                    print("❌ AuthManager: Sign up failed with error: \(error)")
+                    print("❌ Error code: \((error as NSError).code)")
+                    print("❌ Error domain: \((error as NSError).domain)")
+                    print("❌ Error description: \(error.localizedDescription)")
                     promise(.failure(error))
                     return
                 }
                 
                 guard let result = result else {
+                    print("❌ AuthManager: Sign up failed with unknown error (nil result)")
                     promise(.failure(NSError(domain: "AuthError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown error occurred"])))
                     return
                 }
                 
+                print("✅ AuthManager: Sign up successful for user: \(result.user.uid)")
                 let user = User(
                     id: result.user.uid,
                     email: result.user.email,
@@ -264,6 +284,103 @@ class AuthenticationManager: AuthenticationServiceProtocol {
                     promise(.success(user))
                 }
             }
+        }
+    }
+    
+    // Apple Sign In implementation
+    func appleSignIn(presentingViewController: UIViewController) -> Future<User?, Error> {
+        isLoading = true
+        return Future { [weak self] promise in
+            guard let self = self else {
+                promise(.failure(AuthError.unknown(message: "Self is deallocated")))
+                return
+            }
+            
+            print("Starting Apple Sign-In flow")
+            
+            // Generate nonce for authentication
+            let nonce = self.randomNonceString()
+            self.currentNonce = nonce
+            
+            // Create Apple Sign In request
+            let appleIDProvider = ASAuthorizationAppleIDProvider()
+            let request = appleIDProvider.createRequest()
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = self.sha256(nonce)
+            
+            // Create authorization controller
+            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+            
+            // Create a completion handler
+            let completionHandler: (ASAuthorization?, Error?) -> Void = { authResult, error in
+                self.isLoading = false
+                
+                if let error = error {
+                    print("❌ Apple Sign-In error: \(error.localizedDescription)")
+                    promise(.failure(error))
+                    return
+                }
+                
+                guard let authResult = authResult,
+                      let appleIDCredential = authResult.credential as? ASAuthorizationAppleIDCredential,
+                      let nonce = self.currentNonce,
+                      let identityToken = appleIDCredential.identityToken,
+                      let tokenString = String(data: identityToken, encoding: .utf8) else {
+                    print("❌ Missing Apple credentials")
+                    promise(.failure(AuthError.missingCredentials))
+                    return
+                }
+                
+                // Create Firebase credential
+                let credential = OAuthProvider.credential(
+                    withProviderID: "apple.com",
+                    idToken: tokenString,
+                    rawNonce: nonce
+                )
+                
+                print("✅ Apple Sign-In successful, proceeding to Firebase auth")
+                
+                // Sign in with Firebase
+                Auth.auth().signIn(with: credential) { authResult, error in
+                    if let error = error {
+                        print("❌ Firebase auth error: \(error.localizedDescription)")
+                        promise(.failure(error))
+                        return
+                    }
+                    
+                    guard let authResult = authResult else {
+                        print("❌ Firebase auth result is nil")
+                        promise(.failure(AuthError.unknown(message: "Firebase auth result is nil")))
+                        return
+                    }
+                    
+                    print("✅ Firebase auth successful")
+                    
+                    // Create and return user
+                    let user = User(
+                        id: authResult.user.uid,
+                        email: authResult.user.email,
+                        loginType: User.LoginType.apple,
+                        isAnonymous: false
+                    )
+                    
+                    print("✅ User created: \(user.id), email: \(user.email ?? "no email")")
+                    promise(.success(user))
+                }
+            }
+            
+            // Create delegate
+            let delegate = AppleSignInDelegate(completionHandler: completionHandler)
+            
+            // Set delegate and present
+            authorizationController.delegate = delegate
+            authorizationController.presentationContextProvider = PresentationContextProvider(presentingViewController: presentingViewController)
+            
+            // Store delegate to prevent it from being deallocated
+            self.currentAppleSignInDelegate = delegate
+            
+            // Perform request
+            authorizationController.performRequests()
         }
     }
     
@@ -414,24 +531,152 @@ class AuthenticationManager: AuthenticationServiceProtocol {
         }
     }
     
+    /// Links an anonymous account to a permanent apple id account
+    /// updates currentUser upon successful authentication
+    ///
+    /// - Parameters:
+    /// - presentingViewController : UIViewController
+    ///     - view controller to present the apple sign in upon
+    ///
+    /// - Returns:
+    /// - User Object
+    ///
+    /// - Throws:
+    /// - AuthError.notAnonymous
+    ///     - user didn't start as an anonymous user
+    /// - AuthError.missingCredentials
+    ///     - apple authentication succeds but required tokens are missing
+    @MainActor
+    func convertAnonymousUserWithApple(presentingViewController: UIViewController) async throws -> User {
+        guard let currentUser = Auth.auth().currentUser, currentUser.isAnonymous else {
+            throw AuthError.notAnonymous
+        }
+        
+        isLoading = true
+        
+        do {
+            // generate nonce of authentication
+            let nonce = self.randomNonceString()
+            self.currentNonce = nonce
+            
+            // create apple sign in request
+            let appleIDProvider = ASAuthorizationAppleIDProvider()
+            let request = appleIDProvider.createRequest()
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = self.sha256(nonce)
+            
+            // create and configure authorization controller
+            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+            
+            // create completion handle closure to handle the result
+            let result = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ASAuthorization, Error>) in
+                let delegate = AppleSignInContinuationDelegate(continuation: continuation)
+                authorizationController.delegate = delegate
+                authorizationController.presentationContextProvider = PresentationContextProvider(presentingViewController: presentingViewController)
+                self.currentAppleSignInDelegate = delegate
+                authorizationController.performRequests()
+            }
+            
+            // process authorization result
+            guard let appleIDCredential = result.credential as? ASAuthorizationAppleIDCredential,
+                  let identityToken = appleIDCredential.identityToken,
+                  let tokenString = String(data: identityToken, encoding: .utf8) else {
+                isLoading = false
+                throw AuthError.missingCredentials
+            }
+            
+            // Create Apple credential for Firebase
+            let credential = OAuthProvider.credential(
+                withProviderID: "apple.com",
+                idToken: tokenString,
+                rawNonce: nonce
+            )
+            
+            // Link the anonymous account with Apple credential
+            let authResult = try await currentUser.link(with: credential)
+            
+            isLoading = false
+            
+            // Return updated user
+            return User(
+                id: authResult.user.uid,
+                email: authResult.user.email,
+                loginType: User.LoginType.apple,
+                isAnonymous: false
+            )
+        } catch {
+            isLoading = false
+            throw error
+        }
+    }
+    
     /// Signs out current user out of firebase and session
     /// Throws firebase authentication error if sign out fails
     func signOut() -> Future<Void, Error> {
         return Future { promise in
-            do {
+            Task {
                 if let uid = Auth.auth().currentUser?.uid {
                     print("Current user UID \(uid)")
                 }
-                Task { // clear local storage so it won't appear when the log into another account
-                    await HabitRepository.shared.clearLocalData()
-                    await CentralGameModel.shared.clearLocalData()
+                
+                // delete all local userdefault files
+                if let bundleIdentifier = Bundle.main.bundleIdentifier {
+                    UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
                 }
-                try Auth.auth().signOut()
-                AppState.shared.currentUser = nil
+                
+                // reset all singletons
+                SingletonRegistry.shared.resetAll()
+                
                 promise(.success(()))
-            } catch let error {
-                promise(.failure(error))
             }
         }
+    }
+}
+
+/// Extension for nonce methods for apple sign in
+extension AuthenticationManager {
+    
+    // generate random nonce for authentication
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var result = ""
+        var remainingLength = length
+        
+        while remainingLength > 0 {
+            let randoms: [UInt8] = (0 ..< 16).map { _ in
+                var random: UInt8 = 0
+                let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+                if errorCode != errSecSuccess {
+                    fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+                }
+                
+                return random
+            }
+            
+            randoms.forEach { random in
+                if remainingLength == 0 {
+                    return
+                }
+                
+                if random < charset.count {
+                    result.append(charset[Int(random)])
+                    remainingLength -= 1
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    // hash nonce for security
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+        let hashString = hashedData.compactMap {
+            return String(format: "%02x", $0)
+        }.joined()
+        
+        return hashString
     }
 }

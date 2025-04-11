@@ -20,7 +20,7 @@ protocol TimerModelDelegate: AnyObject {
 }
 
 /// Manages timer functionality, session state, and rewards
-class TimerModel {
+class TimerModel: Resettable {
     static let shared = TimerModel()
     weak var delegate: TimerModelDelegate?
     let rewardModel = RewardModel()
@@ -78,12 +78,45 @@ class TimerModel {
         let savedFocusTime = UserDefaults.standard.integer(forKey: "userFocusTime")
         let initialFocusTime = savedFocusTime != 0 ? savedFocusTime : 25
         self.remainingSeconds = initialFocusTime * 60
+        
+        // register with singleton registry
+        SingletonRegistry.shared.register(self)
     }
     
     /// cleans up by removing notification observers when model is deallocated
     deinit {
         NotificationCenter.default.removeObserver(self)
         observersSetup = false
+    }
+    
+    func reset() {
+        // stop any active timer sessions
+        timer?.invalidate()
+        timer = nil
+        isSessionActive = false
+        
+        // reset session state
+        sessionStartTime = nil
+        intoBackgroundTime = nil
+        remainingSeconds = focusTime * 60
+        
+        // reset notification state
+        if currentNotificationIdentifier != "workFailed" {
+            Task {
+                await PushNotificationDelegate.shared.cancelNotification(withIdentifier: currentNotificationIdentifier)
+            }
+        }
+        currentNotificationIdentifier = "workFailed"
+        
+        // reset device state tracking
+        isDeviceLocked = false
+        
+        // reset observers
+        if observersSetup {
+            NotificationCenter.default.removeObserver(self)
+            observersSetup = false
+            setupObservers()
+        }
     }
     
     // MARK: - Session Management

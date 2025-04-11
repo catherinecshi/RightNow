@@ -20,12 +20,15 @@ import FirebaseAuth
 /// let habit = Habit(...)
 /// PushNotificationDelegate.shared.scheduleNotificationsForHabit(habit)
 /// ```
-final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterDelegate {
+final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterDelegate, Resettable {
     static let shared = PushNotificationDelegate()
     let repo = HabitRepository.shared
     
     // avoid unnecessary initialisation
-    private override init() { }
+    private override init() {
+        super.init()
+        SingletonRegistry.shared.register(self)
+    }
     
     /// Errors that can occur when scheduling notifications
     enum NotificationError: LocalizedError {
@@ -50,6 +53,11 @@ final class PushNotificationDelegate: AppDelegateType, UNUserNotificationCenterD
     private var _cachedPermissionStatus: UNAuthorizationStatus = .notDetermined // last known status
     public var cachedPermissionStatus: UNAuthorizationStatus { // cache - returns last known status
         _cachedPermissionStatus
+    }
+    
+    // resetting
+    func reset() {
+        removePendingNotifications()
     }
     
     // MARK: - UIApplicationDelegate Methods

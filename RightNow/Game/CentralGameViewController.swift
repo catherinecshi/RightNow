@@ -112,6 +112,7 @@ class CentralGameViewController: UIViewController {
         setupUI()
         startSaveTimer()
         setupSubscriptions()
+        setupNotifications()
         self.sceneDelegate = getSceneDelegate()
     }
     
@@ -126,10 +127,23 @@ class CentralGameViewController: UIViewController {
             .store(in: &cancellables)
     }
     
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleUserLogin),
+            name: .userDidLogin,
+            object: nil
+        )
+    }
+    
+    @objc private func handleUserLogin() {
+        gameModel.checkFirebaseReadiness()
+    }
+    
     /// retrieves scene delegate from window scene
     /// - Returns: scenedelegate if available, nil otherwise
     private func getSceneDelegate() -> SceneDelegate? {
-        guard let windowScene = self.view.window?.windowScene,
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let sceneDelegate = windowScene.delegate as? SceneDelegate else {
             return nil
         }
@@ -235,10 +249,18 @@ class CentralGameViewController: UIViewController {
         // set up callback to receive the numbers
         factoryVC.onNumbersGenerated = { [weak self] amount in
             self?.gameModel.addNumbers(Double(amount))
+            
+            Task {
+                await self?.gameModel.saveGameState()
+            }
         }
         
         factoryVC.onCouponUsed = { [weak self] amount in
             self?.gameModel.useCoupons(amount)
+            
+            Task {
+                await self?.gameModel.saveGameState()
+            }
         }
         
         let navController = UINavigationController(rootViewController: factoryVC)
@@ -303,6 +325,10 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
         
         cell.buyButtonTapped = { [weak self] upgradeType in
             _ = self?.gameModel.purchaseUpgrade(upgradeType)
+            
+            Task {
+                await self?.gameModel.saveGameState()
+            }
         }
         
         return cell
@@ -324,8 +350,6 @@ extension CentralGameViewController: UITableViewDataSource, UITableViewDelegate 
     ///   - indexPath: The index path of the selected row
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
-        gameModel.addNumbers(10000)
         
         // toggle expanded state
         if expandedCells.contains(indexPath) {

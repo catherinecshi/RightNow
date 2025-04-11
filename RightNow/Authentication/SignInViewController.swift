@@ -74,7 +74,7 @@ class SignInViewController: UIViewController {
     }
     
     private func getSceneDelegate() -> SceneDelegate? {
-        guard let windowScene = self.view.window?.windowScene,
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let sceneDelegate = windowScene.delegate as? SceneDelegate else {
             return nil
         }
@@ -131,6 +131,7 @@ class SignInViewController: UIViewController {
             .sink(receiveValue: { [weak self] status in
                 if status.title == "Successful" {
                     // This means the login was successful
+                    print("success trasitioning now")
                     self?.transitionToMainApp()
                 } else {
                     let alert = CustomAlertViewController(title: status.title, message: status.message)
@@ -146,6 +147,8 @@ class SignInViewController: UIViewController {
             if let sceneDelegate = self?.sceneDelegate, let appCoordinator = sceneDelegate.appCoordinator {
                 // Use the existing app coordinator
                 appCoordinator.start()
+            } else {
+                print("scene delegate not present")
             }
         }
     }

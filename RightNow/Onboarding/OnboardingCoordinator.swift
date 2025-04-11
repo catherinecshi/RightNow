@@ -121,14 +121,24 @@ class OnboardingCoordinator: Coordinator {
     
     // MARK: - How to make a habit
     func startOnboardingSequence() {
-        let onboardingVC = createOnboardingViewController()
-        window.rootViewController = onboardingVC
-        window.makeKeyAndVisible()
-        
-        onboardingState = .meetingMaow
-        
-        Task {
-            await onboardingVC.startOnboardingSequence()
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            let onboardingVC = createOnboardingViewController()
+            
+            guard self.window != nil else {
+                print("Error window is nil in startonboardingsequence")
+                return
+            }
+            
+            self.window.rootViewController = onboardingVC
+            self.window.makeKeyAndVisible()
+            
+            self.onboardingState = .meetingMaow
+            
+            Task {
+                await onboardingVC.startOnboardingSequence()
+            }
         }
     }
     
@@ -238,7 +248,6 @@ class OnboardingCoordinator: Coordinator {
         guard let habitListVC = habitListViewController else { return }
         
         Task {
-            print("trying ot show deletion")
             await habitListVC.showDeletion()
         }
     }
@@ -254,9 +263,11 @@ class OnboardingCoordinator: Coordinator {
     
     func showMaowHealth() {
         guard let onboardingVC = onboardingViewController else { return }
+        guard let tabBarController = onboardingTabBarController else { return }
         onboardingState = .saveMaow
         
         Task {
+            await InteractionBlocker.shared.blockInteractions(on: tabBarController.view)
             await onboardingVC.sixthOnboardingSequence()
         }
     }
@@ -267,6 +278,7 @@ class OnboardingCoordinator: Coordinator {
         onboardingState = .switchToGame
         
         Task {
+            await InteractionBlocker.shared.unblockInteractions()
             await focusOnTabBarItem(in: tabBarController, for: 0, with: "You can use the coupons at the number factory")
         }
     }
@@ -406,19 +418,29 @@ class OnboardingCoordinator: Coordinator {
     /// focuses on tab bar item without crashes by blocking all other tap gestures
     @MainActor
     private func focusOnTabBarItem(in tabBarController: OnboardingTabBarController, for position: Int, with text: String) async {
-        // Calculate the frame of the second tab item based on the tab bar's width
+        print("--- Focus Debug ---")
+        print("Device: \(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")")
+        
+        // Calculate frame metrics
         let tabBarWidth = tabBarController.tabBar.bounds.width
         let numberOfItems = CGFloat(tabBarController.tabBar.items?.count ?? 0)
         let tabWidth = tabBarWidth / numberOfItems
         
-        // make sure that the number provided in the function doesn't exceed the number of items in the tab
-        if CGFloat(position) > numberOfItems {
+        print("Tab bar width: \(tabBarWidth), Items: \(numberOfItems), Tab width: \(tabWidth)")
+        print("Target position: \(position)")
+        
+        // Validate position
+        if CGFloat(position) >= numberOfItems {
+            print("Error: Position \(position) exceeds number of items \(numberOfItems)")
             return
         }
+        
         let tabX = CGFloat(position) * tabWidth
         let tabBarHeight = tabBarController.tabBar.bounds.height
         
-        // Create a frame for the third tab item
+        print("Tab X: \(tabX), Tab bar height: \(tabBarHeight)")
+        
+        // Create the frame
         let tabFrame = CGRect(
             x: tabX,
             y: 0,
@@ -426,10 +448,14 @@ class OnboardingCoordinator: Coordinator {
             height: tabBarHeight
         )
         
-        // Convert this frame to the tab bar controller's view coordinates
+        print("Tab frame in tab bar: \(tabFrame)")
+        
+        // Convert to controller's view coordinates
         let buttonFrame = tabBarController.tabBar.convert(tabFrame, to: tabBarController.view)
         
-        // Create and configure the focus view
+        print("Button frame in controller view: \(buttonFrame)")
+        
+        // Create focus view and label
         let focusView = FocusView()
         focusView.translatesAutoresizingMaskIntoConstraints = false
         focusView.shapeType = .circle
@@ -448,86 +474,136 @@ class OnboardingCoordinator: Coordinator {
         tabBarController.view.addSubview(focusView)
         tabBarController.view.addSubview(instructionLabel)
         
-        NSLayoutConstraint.activate([
-            focusView.topAnchor.constraint(equalTo: tabBarController.view.topAnchor, constant: -20),
-            focusView.leadingAnchor.constraint(equalTo: tabBarController.view.leadingAnchor),
-            focusView.trailingAnchor.constraint(equalTo: tabBarController.view.trailingAnchor),
-            focusView.bottomAnchor.constraint(equalTo: tabBarController.view.bottomAnchor, constant: -20),
-            
-            instructionLabel.bottomAnchor.constraint(equalTo: tabBarController.tabBar.topAnchor, constant: -40),
-            instructionLabel.centerXAnchor.constraint(equalTo: tabBarController.tabBar.centerXAnchor, constant: tabWidth/2),
-            instructionLabel.leadingAnchor.constraint(greaterThanOrEqualTo: tabBarController.view.leadingAnchor, constant: 40),
-            instructionLabel.trailingAnchor.constraint(lessThanOrEqualTo: tabBarController.view.trailingAnchor, constant: -40)
-        ])
-        
         // Set the focus area
         let paddedFrame = buttonFrame.insetBy(dx: -10, dy: -10)
+        print("Padded frame for focus: \(paddedFrame)")
         focusView.ovalRect = paddedFrame
         
-        // Animate the focus view appearance
+        // Log focus view bounds
+        print("Focus view initial bounds: \(focusView.bounds)")
+        
+        // Setup constraints with device-specific adjustments
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            print("Using iPad constraints")
+            NSLayoutConstraint.activate([
+                focusView.topAnchor.constraint(equalTo: tabBarController.view.topAnchor),
+                focusView.leadingAnchor.constraint(equalTo: tabBarController.view.leadingAnchor),
+                focusView.trailingAnchor.constraint(equalTo: tabBarController.view.trailingAnchor),
+                focusView.bottomAnchor.constraint(equalTo: tabBarController.view.bottomAnchor),
+                
+                instructionLabel.bottomAnchor.constraint(equalTo: tabBarController.tabBar.topAnchor, constant: -40),
+                // Fix for iPad - position label properly above the correct tab
+                instructionLabel.centerXAnchor.constraint(equalTo: tabBarController.view.leadingAnchor, constant: tabX + tabWidth/2),
+                instructionLabel.leadingAnchor.constraint(greaterThanOrEqualTo: tabBarController.view.leadingAnchor, constant: 40),
+                instructionLabel.trailingAnchor.constraint(lessThanOrEqualTo: tabBarController.view.trailingAnchor, constant: -40)
+            ])
+        } else {
+            print("Using iPhone constraints")
+            NSLayoutConstraint.activate([
+                focusView.topAnchor.constraint(equalTo: tabBarController.view.topAnchor, constant: -20),
+                focusView.leadingAnchor.constraint(equalTo: tabBarController.view.leadingAnchor),
+                focusView.trailingAnchor.constraint(equalTo: tabBarController.view.trailingAnchor),
+                focusView.bottomAnchor.constraint(equalTo: tabBarController.view.bottomAnchor, constant: -20),
+                
+                instructionLabel.bottomAnchor.constraint(equalTo: tabBarController.tabBar.topAnchor, constant: -40),
+                instructionLabel.centerXAnchor.constraint(equalTo: tabBarController.tabBar.centerXAnchor, constant: tabWidth/2),
+                instructionLabel.leadingAnchor.constraint(greaterThanOrEqualTo: tabBarController.view.leadingAnchor, constant: 40),
+                instructionLabel.trailingAnchor.constraint(lessThanOrEqualTo: tabBarController.view.trailingAnchor, constant: -40)
+            ])
+        }
+        
+        // Force layout update
+        tabBarController.view.layoutIfNeeded()
+        
+        print("Focus view after layout bounds: \(focusView.bounds)")
+        print("Focus view after layout frame: \(focusView.frame)")
+        
+        // Animate appearance
         UIView.animate(withDuration: 0.3) {
             focusView.alpha = 1.0
             instructionLabel.alpha = 1.0
         }
         
-        // Add tap gesture recognizer to the focus view
+        // Add tap gesture with proper weak references
         let tapGesture = UITapGestureRecognizer(target: nil, action: nil)
         
-        // Use closure-based handler for the tap gesture
-        tapGesture.addTarget { [weak tabBarController, weak focusView, weak instructionLabel] _ in
-            // Check if we still have the tab bar controller
-            guard let tabBarController = tabBarController else { return }
+        tapGesture.addTarget { [weak self, weak tabBarController, weak focusView, weak instructionLabel] _ in
+            guard let self = self else {
+                print("Error: self is nil in tap gesture handler")
+                return
+            }
             
-            // Get the tap location
+            guard let tabBarController = tabBarController, let focusView = focusView else {
+                print("Error: tabBarController or focusView is nil in tap gesture handler")
+                return
+            }
+            
+            // Get tap location and convert to the proper coordinate space
             let location = tapGesture.location(in: focusView)
+            print("Tap location in focus view: \(location)")
             
-            // Check if the tap is within the highlighted area
+            // Check if tap is within highlighted area
             let isInHighlightedArea: Bool
-            switch focusView?.shapeType {
+            
+            switch focusView.shapeType {
             case .circle:
-                // For circle, check if distance from center is less than radius
-                if let focusView = focusView {
-                    let diameter = min(paddedFrame.width, paddedFrame.height)
-                    let radius = diameter / 2
-                    let centerX = paddedFrame.midX
-                    let centerY = paddedFrame.midY
-                    
-                    let dx = location.x - centerX
-                    let dy = location.y - centerY
-                    let distance = sqrt(dx*dx + dy*dy)
-                    
-                    isInHighlightedArea = distance <= radius
-                } else {
-                    isInHighlightedArea = false
-                }
+                // For circle, check distance from center
+                let diameter = min(paddedFrame.width, paddedFrame.height)
+                let radius = diameter / 2
+                let centerX = paddedFrame.midX - focusView.frame.origin.x
+                let centerY = paddedFrame.midY - focusView.frame.origin.y
+                
+                let dx = location.x - centerX
+                let dy = location.y - centerY
+                let distance = sqrt(dx*dx + dy*dy)
+                
+                print("Circle center: (\(centerX), \(centerY)), Radius: \(radius), Distance: \(distance)")
+                
+                isInHighlightedArea = distance <= radius
                 
             case .roundedRect:
-                // For rounded rect, check if point is inside the rect
-                isInHighlightedArea = paddedFrame.contains(location)
+                // Adjust for coordinate space differences
+                let localPaddedFrame = CGRect(
+                    x: paddedFrame.origin.x - focusView.frame.origin.x,
+                    y: paddedFrame.origin.y - focusView.frame.origin.y,
+                    width: paddedFrame.width,
+                    height: paddedFrame.height
+                )
+                print("Checking if point \(location) is in rect \(localPaddedFrame)")
+                isInHighlightedArea = localPaddedFrame.contains(location)
                 
             default:
+                print("Unknown shape type")
                 isInHighlightedArea = false
             }
             
-            // If tap is in the highlighted area, select the second tab
+            print("Is tap in highlighted area: \(isInHighlightedArea)")
+            
             if isInHighlightedArea {
-                // Switch to the habits tab
+                print("Tab at position \(position) selected")
+                
+                // Switch to tab first, then do cleanup
                 tabBarController.selectedIndex = position
                 
-                // Animate out the focus view and instruction label
+                // Animate out and clean up
                 UIView.animate(withDuration: 0.3, animations: {
-                    focusView?.alpha = 0
+                    focusView.alpha = 0
                     instructionLabel?.alpha = 0
                 }, completion: { _ in
-                    focusView?.removeFromSuperview()
+                    print("Animation completed, removing focus view")
+                    focusView.removeFromSuperview()
                     instructionLabel?.removeFromSuperview()
                     
+                    print("Calling tabBarItemTapped() with state: \(self.onboardingState)")
                     self.tabBarItemTapped()
                 })
+            } else {
+                print("Tap outside highlighted area - no action")
             }
         }
         
         focusView.addGestureRecognizer(tapGesture)
+        print("--- End Focus Debug ---")
     }
     
     private func tabBarItemTapped() {

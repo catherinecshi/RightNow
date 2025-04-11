@@ -226,6 +226,7 @@ class DataService: HabitDataServiceProtocol {
     // MARK: - Local Storage Operations
     
     /// Returns file URL for habits JSON file
+    /// Uses separate directories for user id, to allow for cross checking with firestore
     private func getHabitsFileURL() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0].appendingPathComponent("habits.json")
@@ -279,6 +280,7 @@ class DataService: HabitDataServiceProtocol {
     /// - Returns: Array of habits (empty if no file exists)
     /// - Throws: Error if reading or decoding file fails
     func loadHabitsLocally() async throws -> [Habit] {
+        print("loading locally")
         let fileURL = getHabitsFileURL()
         let fileName = fileURL.lastPathComponent
         
@@ -370,11 +372,22 @@ extension DataService: GameDataServiceProtocol {
         )
     }
     
+    /// deletes game state from firestore
+    func deleteGameStateFromFirestore() async throws {
+        try await firebaseManager.deleteDocument(
+            collection: "users",
+            subcollection: "gameData",
+            subdocument: "centralGame"
+        )
+    }
+    
     // MARK: - Local Operations
     
     /// Returns file URL for game state JSON file
+    /// Includes user ID to allow for cross checking with firestore
     private func getGameStateFileURL() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let fileName = "game_state_\(firebaseManager.currentUserId ?? "anonymous").json"
         return paths[0].appendingPathComponent("central_game_state.json")
     }
     

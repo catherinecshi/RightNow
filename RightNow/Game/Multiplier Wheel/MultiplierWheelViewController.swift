@@ -287,7 +287,10 @@ class MultiplierWheelViewController: UIViewController {
         })
     }
     /// Dismisses the view controller with a scale and fade-out animation
+    /// Feeds back the number generated
     @objc private func dismissWithAnimation() {
+        onMultiplierDetermined?(baseNumber)
+        
         UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseIn, animations: {
             self.containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
             self.containerView.alpha = 0
