@@ -30,6 +30,7 @@ protocol AuthenticationServiceProtocol {
     func convertAnonymousUserWithEmail(email: String, password: String) -> Future<User?, Error>
     func convertAnonymousUserWithGoogle(presentingViewController: UIViewController) async throws -> User
     func signOut() -> Future<Void, Error>
+    func deleteCurrentAccount() -> Future<Void, Error>
 }
 
 /// Handles all interaction with FirebaseAuth from authentication models
@@ -625,6 +626,41 @@ class AuthenticationManager: AuthenticationServiceProtocol, Resettable {
                 }
                 
                 // reset all singletons
+                SingletonRegistry.shared.resetAll()
+                
+                promise(.success(()))
+            }
+        }
+    }
+    
+    /// Deletes the current user's acocunt from Firebase
+    /// - Returns: Future that completes when account becomes deleted
+    func deleteCurrentAccount() -> Future<Void, Error> {
+        isLoading = true
+        return Future { [weak self] promise in
+            guard let currentUser = Auth.auth().currentUser else {
+                self?.isLoading = false
+                promise(.failure(AuthError.notAuthenticated))
+                return
+            }
+            
+            currentUser.delete { error in
+                self?.isLoading = false
+                
+                if let error = error {
+                    print("❌ Account deletion failed: \(error.localizedDescription)")
+                    promise(.failure(error))
+                    return
+                }
+                
+                print("✅ Account successfully deleted")
+                
+                // Account successfully deleted, now clean up local data
+                if let bundleIdentifier = Bundle.main.bundleIdentifier {
+                    UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
+                }
+                
+                // Reset all singletons
                 SingletonRegistry.shared.resetAll()
                 
                 promise(.success(()))

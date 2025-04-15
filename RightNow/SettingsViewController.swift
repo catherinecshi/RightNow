@@ -52,6 +52,18 @@ class SettingsViewController: UIViewController {
         return button
     }()
     
+    private lazy var deleteAccountButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.backgroundColor = .systemRed
+        button.setTitle("Delete Account", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.addTarget(self, action: #selector(deleteAccountTapped), for: .touchUpInside)
+        button.isHidden = false
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
     // MARK: - Lifecycle
     /// Initializes settings with current app state
     init(state: AppState = .shared, authManager: AuthenticationManager = .shared) {
@@ -105,11 +117,13 @@ class SettingsViewController: UIViewController {
             signOutButton.isHidden = true
             linkAccountButton.isHidden = false
             logIntoAnotherAccountButton.isHidden = false
+            deleteAccountButton.isHidden = false
         } else {
             // signed in user
             signOutButton.isHidden = false
             linkAccountButton.isHidden = true
             logIntoAnotherAccountButton.isHidden = true
+            deleteAccountButton.isHidden = false
         }
     }
     
@@ -120,6 +134,7 @@ class SettingsViewController: UIViewController {
         view.addSubview(signOutButton)
         view.addSubview(linkAccountButton)
         view.addSubview(logIntoAnotherAccountButton)
+        view.addSubview(deleteAccountButton)
         
         NSLayoutConstraint.activate([
             signOutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -140,6 +155,13 @@ class SettingsViewController: UIViewController {
             logIntoAnotherAccountButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             logIntoAnotherAccountButton.topAnchor.constraint(equalTo: linkAccountButton.bottomAnchor, constant: 20),
             logIntoAnotherAccountButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        
+        NSLayoutConstraint.activate([
+            deleteAccountButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            deleteAccountButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            deleteAccountButton.topAnchor.constraint(equalTo: signOutButton.bottomAnchor, constant: 20),
+            deleteAccountButton.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
     
@@ -188,6 +210,23 @@ class SettingsViewController: UIViewController {
         present(alert, animated: true)
     }
     
+    /// User decides to delete their account
+    /// Prompt the user for confirmation before deletion
+    @objc func deleteAccountTapped() {
+        // Show confirmation alert using your custom alert controller
+        let alert = CustomAlertViewController(
+            title: "Delete Account?",
+            message: "This action cannot be undone. All your data will be permanently deleted.",
+            okButtonTitle: "Delete",
+            cancelButtonTitle: "Cancel",
+            completionOk: { [weak self] in
+                self?.deleteAccount()
+            },
+            completionCancel: nil
+        )
+        present(alert, animated: true)
+    }
+    
     /// Back button tapped and exits out of the settings
     var customTransitionDelegate: CustomSlideInTransition?
     @objc private func backButtonTapped() {
@@ -195,6 +234,36 @@ class SettingsViewController: UIViewController {
             navController.transitioningDelegate = customTransitionDelegate
         }
         dismiss(animated: true)
+    }
+    
+    private func deleteAccount() {
+        authManager.deleteCurrentAccount()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                guard let self = self else { return }
+                
+                switch completion {
+                case .failure(let error):
+                    let alert = CustomAlertViewController(
+                        title: "Account Deletion Failed",
+                        message: "There was a problem deleting your account: \(error.localizedDescription)"
+                    )
+                    self.present(alert, animated: true)
+                case .finished:
+                    break
+                }
+            }, receiveValue: { [weak self] _ in
+                // Account was successfully deleted
+                let alert = CustomAlertViewController(
+                    title: "Account Deleted",
+                    message: "Your account has been successfully deleted.",
+                    completionOk: { [weak self] in
+                        self?.navigateToWelcome()
+                    }
+                )
+                self?.present(alert, animated: true)
+            })
+            .store(in: &cancellableBag)
     }
     
     /// Signs the user out of Firebase and AppState

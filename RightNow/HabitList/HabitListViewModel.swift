@@ -122,6 +122,10 @@ class HabitListViewModel {
         await repository.completeHabit(&habit)
     }
     
+    func reloadData() {
+        repository.checkFirebaseReadiness()
+    }
+    
     // MARK: - Helper Methods
     
     /// Sorts habits based on time, chains, and name

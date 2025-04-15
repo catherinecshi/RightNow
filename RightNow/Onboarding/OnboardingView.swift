@@ -197,7 +197,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.numberOfLines = 0
-        label.text = "Umm... Of course not..."
+        label.text = "I hope you mean that"
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -209,7 +209,7 @@ class OnboardingView: UIView {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.numberOfLines = 0
-        label.text = "I'm sure you wouldn't do that..."
+        label.text = "Her last owner said the same thing..."
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
